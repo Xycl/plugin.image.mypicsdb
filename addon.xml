@@ -12,6 +12,7 @@
     </extension>
   <extension point="xbmc.addon.metadata">
     <platform>all</platform>
+    <language>en de fr dk nl</language>
     <summary lang="en">Advanced Pictures manager</summary>
     <summary lang="fr">Gestion avancée de votre photothèque</summary>
     <summary lang="de">Datenbank gestützter Bildermanager</summary>
