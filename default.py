@@ -26,7 +26,6 @@ sys_encoding = sys.getfilesystemencoding()
 #these few lines are taken from AppleMovieTrailers script
 # Shared resources
 BASE_RESOURCE_PATH = join( home, "resources" )
-#DATA_PATH = xbmc.translatePath( "special://profile/addon_data/plugin.image.mypicsdb/")
 DATA_PATH = Addon.getAddonInfo('profile')
 PIC_PATH = join( BASE_RESOURCE_PATH, "images")
 DB_PATH = xbmc.translatePath( "special://database/")
@@ -207,11 +206,18 @@ class Main:
 
             if coords: suffix = suffix + "[COLOR=C0C0C0C0][G][/COLOR]"
 
-            infolabels = { "picturepath":picname+" "+suffix,"title": "title of the pic", "date": date  }
+            (exiftime,) = MPDB.Request( """select "EXIF DateTimeOriginal" from files where strPath='%s' and strFilename='%s'"""%(picpath,picname))
+            resolution = MPDB.Request( """select "EXIF ExifImageWidth", "EXIF ExifImageLength" from files where strPath='%s' and strFilename='%s'"""%(picpath,picname))
+            infolabels = { "picturepath":picname+" "+suffix,
+                           "date": date, 
+                           "exif:resolution": str(resolution[0][0]) + ',' + str(resolution[0][1]),
+                           "exif:exiftime": exiftime[0]
+                           }   
+
 
             if rating:
                 suffix = suffix + "[COLOR=C0FFFF00]"+("*"*int(rating))+"[/COLOR][COLOR=C0C0C0C0]"+("*"*(5-int(rating)))+"[/COLOR]"
-            liz.setInfo( type="pictures", infoLabels=infolabels )
+            liz.setInfo( type="pictures", infoLabels=infolabels ), 
         liz.setLabel(picname+" "+suffix)
         #liz.setLabel2(suffix)
         if contextmenu:
