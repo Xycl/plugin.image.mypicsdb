@@ -26,6 +26,7 @@ sys_encoding = sys.getfilesystemencoding()
 #these few lines are taken from AppleMovieTrailers script
 # Shared resources
 BASE_RESOURCE_PATH = join( home, "resources" )
+#DATA_PATH = xbmc.translatePath( "special://profile/addon_data/plugin.image.mypicsdb/")
 DATA_PATH = Addon.getAddonInfo('profile')
 PIC_PATH = join( BASE_RESOURCE_PATH, "images")
 DB_PATH = xbmc.translatePath( "special://database/")
@@ -208,16 +209,16 @@ class Main:
 
             (exiftime,) = MPDB.Request( """select "EXIF DateTimeOriginal" from files where strPath='%s' and strFilename='%s'"""%(picpath,picname))
             resolution = MPDB.Request( """select "EXIF ExifImageWidth", "EXIF ExifImageLength" from files where strPath='%s' and strFilename='%s'"""%(picpath,picname))
-            infolabels = { "picturepath":picname+" "+suffix,
-                           "date": date, 
-                           "exif:resolution": str(resolution[0][0]) + ',' + str(resolution[0][1]),
-                           "exif:exiftime": exiftime[0]
-                           }   
 
-
+            if exiftime[0] != None and resolution[0][0] != None and resolution[0][1] != None:
+                infolabels = { "picturepath":picname+" "+suffix, "date": date, "exif:resolution": str(resolution[0][0]) + ',' + str(resolution[0][1]), "exif:exiftime": exiftime[0] } 
+            else:
+                infolabels = { "picturepath":picname+" "+suffix, "date": date  }
+            
+            
             if rating:
                 suffix = suffix + "[COLOR=C0FFFF00]"+("*"*int(rating))+"[/COLOR][COLOR=C0C0C0C0]"+("*"*(5-int(rating)))+"[/COLOR]"
-            liz.setInfo( type="pictures", infoLabels=infolabels ), 
+            liz.setInfo( type="pictures", infoLabels=infolabels )
         liz.setLabel(picname+" "+suffix)
         #liz.setLabel2(suffix)
         if contextmenu:
@@ -233,7 +234,13 @@ class Main:
         if fanart:
             liz.setProperty( "Fanart_Image", fanart )
 
-        ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=join(picpath,picname),listitem=liz,isFolder=False)
+        # revert smb:// to \\ replacement
+        fullfilepath = join(picpath,picname)
+
+        fullfilepath=fullfilepath.replace("\\\\", "smb://")
+        fullfilepath=fullfilepath.replace("\\", "/")
+        
+        ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=fullfilepath,listitem=liz,isFolder=False)
 
     def show_home(self):
 ##        # last month
@@ -818,7 +825,7 @@ class Main:
             if not newroot:
                 return
             if not RunningOS.startswith("darwin") and newroot.startswith("smb:"):
-                newroot=newroot.replace("smb:","")
+                newroot=newroot.replace("smb://","\\\\")
                 newroot=newroot.replace("/","\\")
 
             if str(self.args.exclude)=="1":
@@ -835,11 +842,12 @@ class Main:
                 xbmc.executebuiltin( "Notification(%s,%s,%s,%s)"%(__language__(30000).encode("utf8"),__language__(30204).encode("utf8"),3000,join(home,"icon.png").encode("utf8") ) )
                 if not(xbmc.getInfoLabel( "Window.Property(DialogAddonScan.IsAlive)" ) == "true"): #si dialogaddonscan n'est pas en cours d'utilisation...
                     if dialog.yesno(__language__(30000),__language__(30206)):#do a scan now ?
-                        xbmc.executebuiltin( "RunScript(%s,%s--rootpath=%s) "%( join( home, "scanpath.py").encode('utf-8'),
-                                                                              recursive and "-r, " or "",
-                                                                              decoder.smart_unicode(newroot).encode('utf-8')
-                                                                                )
-                                             )
+                        xbmc.executebuiltin( "RunScript(%s,%s--rootpath=%s)"%( join( home, "scanpath.py"),
+                                                                               recursive and "-r, " or "",
+                                                                               quote_plus(newroot.encode('utf-8'))
+                                                                              )
+                                           )
+
                         xbmc.executebuiltin( "Container.Refresh(\"%s?action='rootfolders'&do='showroots'&exclude='1'&viewmode='view'\",)"%(sys.argv[0],))
 
                 else:
@@ -865,8 +873,8 @@ class Main:
                     path,recursive,update,exclude = MPDB.getRoot(unquote_plus(self.args.rootpath))
                     xbmc.executebuiltin( "RunScript(%s,%s--rootpath=%s)"%( join( home, "scanpath.py"),
                                                                            recursive and "-r, " or "",
-                                                                              quote_plus(path.encode('utf-8'))
-                                                                            )
+                                                                           quote_plus(path.encode('utf-8'))
+                                                                          )
                                          )
                 else:#clic sur un chemin à exclure...
                     pass

@@ -1,3 +1,7 @@
+2012/09/08 --> v 1.0.2
+Update: Resolution and EXIF:Datetime infolabels set for "Pic Thumbs" view
+Fix:    Error "no such column: files.GPS GPSLatitudeRef" now fixed
+
 2012/08/07 --> v 1.0.1
 Update: New dutch translation from mhdebokx
 

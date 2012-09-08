@@ -1366,9 +1366,12 @@ def Request(SQLrequest):
         conn.commit()
         retour = [row for row in cn]
     except Exception,msg:
-        log( "The request failed :", LOGDEBUG )
-        log( "%s - %s"%(Exception,msg), LOGDEBUG )
-        log( "---", LOGDEBUG )
+        if msg.args[0].startswith("no such column: files.GPS GPSLatitudeRef"):
+            pass
+        else:
+            log( "The request failed :", LOGDEBUG )
+            log( "%s - %s"%(Exception,msg), LOGDEBUG )
+            log( "---", LOGDEBUG )
         retour= []
     cn.close()
     return retour
