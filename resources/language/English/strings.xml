@@ -182,7 +182,7 @@
     <string id="30601">Tags</string>
     <string id="30602">Contents</string>
 
-    <string id="30610">Please select tags</string>
+    <string id="30610">Please select tags (red checkbox means "not")</string>
     <string id="30611">1 tag checked</string>
     <string id="30612">%s tags checked</string>
     <string id="30613">OK</string>    

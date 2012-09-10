@@ -182,7 +182,7 @@
 	<string id="30601">Tags</string>
 	<string id="30602">Waarde</string>
 
-	<string id="30610">Selecteer een tags</string>
+	<string id="30610">Selecteer een tags (red checkbox means "not")</string>
 	<string id="30611">1 tag ingevoerd</string>
 	<string id="30612">%s tags ingevoerd</string>
 	<string id="30613">OK</string>
