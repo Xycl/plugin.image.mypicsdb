@@ -465,22 +465,36 @@ class Main:
         del ui
 
     def show_wizard(self):
-        global GlobalFilter, GlobalMatchAll
+        global GlobalFilterTrue, GlobalFilterFalse, GlobalMatchAll
         picfanart = join(PIC_PATH,"fanart-keyword.png")
         ui = FilterWizard.FilterWizard( "FilterWizard.xml" , Addon.getAddonInfo('path'), "Default", FilterWizardDelegate)
         ui.doModal()
         del ui
-
+        
+        newtagtrue = ""
+        newtagfalse = ""
         matchall = (1 if GlobalMatchAll else 0)
-        if len(GlobalFilter) > 0:
-            newtag = ""
-            for tag in GlobalFilter:
-                if len(newtag)==0:
-                    newtag = tag
+        
+        if len(GlobalFilterTrue) > 0:
+            
+            for tag in GlobalFilterTrue:
+                if len(newtagtrue)==0:
+                    newtagtrue = tag
                 else:
-                    newtag += "|||" + tag
-            newtag = decoder.smart_unicode(newtag)
-            xbmc.executebuiltin("XBMC.Container.Update(%s?action='showpics'&viewmode='view'&method='wizard'&matchall='%s'&kw='%s')" % ( sys.argv[0], matchall, quote_plus(newtag.encode('utf-8'))))
+                    newtagtrue += "|||" + tag
+            newtagtrue = decoder.smart_unicode(newtagtrue)
+
+        if len(GlobalFilterFalse) > 0:
+            
+            for tag in GlobalFilterFalse:
+                if len(newtagfalse)==0:
+                    newtagfalse = tag
+                else:
+                    newtagfalse += "|||" + tag
+            newtagfalse = decoder.smart_unicode(newtagfalse)
+
+        if len(GlobalFilterTrue) > 0 or len(GlobalFilterFalse) > 0:
+            xbmc.executebuiltin("XBMC.Container.Update(%s?action='showpics'&viewmode='view'&method='wizard'&matchall='%s'&kw='%s'&nkw='%s')" % ( sys.argv[0], matchall, quote_plus(newtagtrue.encode('utf-8')), quote_plus(newtagfalse.encode('utf-8'))))
 
 
     def show_tagtypes(self):
@@ -816,11 +830,11 @@ class Main:
 
         refresh=True
 
-        print "Argument " + self.args.do
+        #print "Argument " + self.args.do
 
         if self.args.do=="addroot":#add a root to scan
             dialog = xbmcgui.Dialog()
-            newroot = dialog.browse(0, __language__(30201), 'pictures')
+            newroot = dialog.browse(0, __language__(30201) , 'pictures')
             
             if not newroot:
                 return
@@ -1291,7 +1305,7 @@ class Main:
 
         # we are showing pictures for a TAG selection
         elif self.args.method == "wizard":
-            filelist = MPDB.search_filter_tags(unquote_plus(self.args.kw).decode("utf8"), self.args.matchall)
+            filelist = MPDB.search_filter_tags(unquote_plus(self.args.kw).decode("utf8"), unquote_plus(self.args.nkw).decode("utf8"), self.args.matchall)
 
         # we are showing pictures for a TAG selection
         elif self.args.method == "tag":
@@ -1588,12 +1602,14 @@ class Main:
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 
-GlobalFilter  = []
+GlobalFilterTrue  = []
+GlobalFilterFalse  = []
 GlobalMatchAll = False
 Handle        = 0
-def FilterWizardDelegate(Array, MatchAll = False):
-    global GlobalFilter, GlobalMatchAll, Handle
-    GlobalFilter  = Array
+def FilterWizardDelegate(ArrayTrue, ArrayFalse, MatchAll = False):
+    global GlobalFilterTrue, GlobalFilterFalse, GlobalMatchAll, Handle
+    GlobalFilterTrue  = ArrayTrue
+    GlobalFilterFalse  = ArrayFalse
     GlobalMatchAll = MatchAll
     Handle        = int(sys.argv[ 1 ] )
 

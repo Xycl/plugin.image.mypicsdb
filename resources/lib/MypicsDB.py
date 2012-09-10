@@ -1376,45 +1376,84 @@ def Request(SQLrequest):
     cn.close()
     return retour
 
-def search_filter_tags(FilterInlineArray, MatchAll):
+def search_filter_tags(FilterInlineArrayTrue, FilterInlineArrayFalse, MatchAll):
 
-    FilterInlineArray = unquote_plus(FilterInlineArray) #.decode("utf8")     
-    FilterArray = FilterInlineArray.split("|||")
+    if len(FilterInlineArrayTrue) == 0 and len(FilterInlineArrayFalse) == 0:
+        return
+        
+    FilterInlineArrayTrue = unquote_plus(FilterInlineArrayTrue)
+    FilterArrayTrue = FilterInlineArrayTrue.split("|||")
+
+    FilterInlineArrayFalse = unquote_plus(FilterInlineArrayFalse)
+    FilterArrayFalse = FilterInlineArrayFalse.split("|||")    
+    
     OuterSelect = "SELECT distinct strPath,strFilename FROM FILES WHERE 1=1 "
     # These selects are joined with IN clause
     InnerSelect = "SELECT tif.idfile FROM TagContents tc, TagsInFiles tif , TagTypes tt WHERE tif.idTagContent = tc.idTagContent AND tc.idTagType = tt.idTagType "
     # Build the conditions
     if MatchAll == "1":
-        for Filter in FilterArray:
+        if len(FilterInlineArrayTrue) > 0:
+            for Filter in FilterArrayTrue:
 
-            KeyValue = Filter.split("||")
-            Key = KeyValue[0]
-            Value = KeyValue[1]
-            
-            Condition = "AND tt.TagTranslation = '"+Key+"' AND tc.TagContent = '"+Value+"' "
-            OuterSelect += " AND idFile in ( " + InnerSelect + Condition + " ) "
+                KeyValue = Filter.split("||")
+                Key = KeyValue[0]
+                Value = KeyValue[1]
+                
+                Condition = "AND tt.TagTranslation = '"+Key+"' AND tc.TagContent = '"+Value+"' "
+                OuterSelect += " AND idFile in ( " + InnerSelect + Condition + " ) "
+
+        if len(FilterInlineArrayFalse) > 0:
+            for Filter in FilterArrayFalse:
+
+                KeyValue = Filter.split("||")
+                Key = KeyValue[0]
+                Value = KeyValue[1]
+                
+                Condition = "AND tt.TagTranslation = '"+Key+"' AND tc.TagContent = '"+Value+"' "
+                OuterSelect += " AND idFile not in ( " + InnerSelect + Condition + " ) "            
                 
     else:
         OldKey = ""
         OldValue = ""
-        for Filter in FilterArray:
 
-            KeyValue = Filter.split("||")
-            Key = KeyValue[0]
-            Value = KeyValue[1]
-            
-            if Key != OldKey:
-                if len(OldKey) > 0:
-                    Condition = "AND tt.TagTranslation = '"+OldKey+"' AND tc.TagContent in( "+OldValue+" ) "
-                    OuterSelect += " AND idFile in ( " + InnerSelect + Condition + " ) "
-                OldKey = Key
-                OldValue = "'" + Value + "'"
-            else:
-                OldValue += ", '" + Value + "'"
+        if len(FilterInlineArrayTrue) > 0:        
+            for Filter in FilterArrayTrue:
+
+                KeyValue = Filter.split("||")
+                Key = KeyValue[0]
+                Value = KeyValue[1]
                 
-        Condition = "AND tt.TagTranslation = '"+OldKey+"' AND tc.TagContent in( "+OldValue+" ) "
-        OuterSelect += " AND idFile in ( " + InnerSelect + Condition + " ) "
-      
+                if Key != OldKey:
+                    if len(OldKey) > 0:
+                        Condition = "AND tt.TagTranslation = '"+OldKey+"' AND tc.TagContent in( "+OldValue+" ) "
+                        OuterSelect += " AND idFile in ( " + InnerSelect + Condition + " ) "
+                    OldKey = Key
+                    OldValue = "'" + Value + "'"
+                else:
+                    OldValue += ", '" + Value + "'"
+            Condition = "AND tt.TagTranslation = '"+OldKey+"' AND tc.TagContent in( "+OldValue+" ) "
+            OuterSelect += " AND idFile in ( " + InnerSelect + Condition + " ) "
+        
+        
+        if len(FilterInlineArrayFalse) > 0:
+            for Filter in FilterArrayFalse:
+
+                KeyValue = Filter.split("||")
+                Key = KeyValue[0]
+                Value = KeyValue[1]
+                
+                if Key != OldKey:
+                    if len(OldKey) > 0:
+                        Condition = "AND tt.TagTranslation = '"+OldKey+"' AND tc.TagContent in( "+OldValue+" ) "
+                        OuterSelect += " AND idFile not in ( " + InnerSelect + Condition + " ) "
+                    OldKey = Key
+                    OldValue = "'" + Value + "'"
+                else:
+                    OldValue += ", '" + Value + "'"
+                    
+            Condition = "AND tt.TagTranslation = '"+OldKey+"' AND tc.TagContent in( "+OldValue+" ) "
+            OuterSelect += " AND idFile in ( " + InnerSelect + Condition + " ) "
+
     return [row for row in Request(OuterSelect)]
 
 def search_tag(tag=None,tagtype='a',limit=-1,offset=-1):
