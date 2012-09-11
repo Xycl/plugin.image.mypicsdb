@@ -1395,7 +1395,7 @@ class Main:
 
         elif self.args.method =="videos":#show all videos __OK
             picfanart = join(PIC_PATH,"fanart-videos.png")
-            filelist = [row for row in MPDB.Request( """SELECT strPath,strFilename FROM files WHERE "EXIF DateTimeOriginal" NOT NULL AND UseIt=1 AND ftype="video" ORDER BY "EXIF DateTimeOriginal" DESC LIMIT %s OFFSET %s"""%(limit,offset) )]
+            filelist = [row for row in MPDB.Request( """SELECT strPath,strFilename FROM files WHERE UseIt=1 AND ftype="video" ORDER BY strFilename DESC LIMIT %s OFFSET %s"""%(limit,offset) )]
 
         #on teste l'argumen 'viewmode'
             #si viewmode = view : on liste les images
