@@ -966,7 +966,7 @@ class Main:
 
             #Show excluded folders
             for path,recursive,update in excludefolders:
-                self.addAction(name      = "[COLOR=FFFF0000][B][ - ][/B][/COLOR] "+path.decode("utf8"),
+                self.addAction(name      = "[COLOR=FFFF0000][B][ - ][/B][/COLOR] "+path,
                             params    = [("do","rootclic"),("rootpath",path),("viewmode","view"),("exclude","1")],#paramètres
                             action    = "rootfolders",#action
                             iconimage = join(PIC_PATH,"settings.png"),#icone
