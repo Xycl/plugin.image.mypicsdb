@@ -11,13 +11,7 @@ import os,sys,re
 from os.path import join, exists, isfile, isdir
 from urllib import unquote_plus
 
-try:
-    import xbmc
-    makepath=xbmc.translatePath(os.path.join)
-except:
-    makepath=os.path.join
-
-import  xbmcaddon
+import  xbmcaddon, xbmc
 from XMP import XMP_Tags
  
 Addon = xbmcaddon.Addon(id='plugin.image.mypicsdb')
@@ -25,7 +19,7 @@ home = Addon.getAddonInfo('path')
 
 #these few lines are taken from AppleMovieTrailers script
 # Shared resources
-BASE_RESOURCE_PATH = makepath( home, "resources" )
+BASE_RESOURCE_PATH = join( home, "resources" )
 DATA_PATH = Addon.getAddonInfo('profile')
 DB_PATH = xbmc.translatePath( "special://database/")
 sys.path.append( os.path.join( BASE_RESOURCE_PATH, "lib" ) )

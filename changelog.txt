@@ -1,3 +1,8 @@
+2012/10/09 --> v 1.1.2
+Update: New XMP tag Iptc4xmpExt:PersonInImage for people tagging and several more from Iptc4xmpExt extension
+Fix:    Now Frodo compatible
+Fix:    Warning message "problems with charset recognition" removed from IPTC parser
+
 2012/10/06 --> v 1.1.1
 Fix:    Two UTF-8 / Unicode conversion errors fixed.
 
