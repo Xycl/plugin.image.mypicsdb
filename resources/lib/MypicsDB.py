@@ -1260,8 +1260,8 @@ def get_xmp(dirname, picfile):
                 MPDB.addColumn("files", key)
         else:           
             addColumn("files", tagname)
-        
-    del(tags['Iptc4xmpExt:PersonInImage'])
+    if tags.has_key('Iptc4xmpExt:PersonInImage'):
+        del(tags['Iptc4xmpExt:PersonInImage'])
     return tags
 
 
@@ -1498,7 +1498,9 @@ def DefaultTagTypesTranslation():
     Request("update TagTypes set TagTranslation = 'Keywords' where TagTranslation =  'MicrosoftPhoto:LastKeywordXMP'")
     Request("update TagTypes set TagTranslation = 'Keywords' where TagTranslation =  'Dc:subject'")
 
-    Request("update TagTypes set TagTranslation = 'Category' where TagTranslation =  'photoshop:Category'")
+    Request("update TagTypes set TagTranslation = 'Category' where TagTranslation =  'Photoshop:Category'")
+    Request("update TagTypes set TagTranslation = 'Supplemental Category' where TagTranslation =  'Photoshop:SupplementalCategories'")
+    Request("update TagTypes set TagTranslation = 'Supplemental Category' where TagTranslation =  'Supplemental category'")
 
     Request("update TagTypes set TagTranslation = 'Persons' where TagTranslation =  'Iptc4xmpExt:PersonInImage'")
 
