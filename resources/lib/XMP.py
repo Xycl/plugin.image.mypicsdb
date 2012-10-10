@@ -15,7 +15,7 @@ tag_set = {'persons' : 'MPReg:PersonDisplayName',
            'City' : 'Iptc4xmpExt:City', 
            'country/primary location name' : 'Iptc4xmpExt:CountryName', 
            'Province/state' : 'Iptc4xmpExt:ProvinceState', 
-           'Iptc4xmpExt:Event' : 'Iptc4xmpExt:Event', 
+           'events' : 'Iptc4xmpExt:Event', 
            
            'Iptc4xmpCore:Location' : 'Iptc4xmpCore:Location',
 
