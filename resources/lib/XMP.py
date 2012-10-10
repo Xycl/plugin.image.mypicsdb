@@ -11,24 +11,24 @@ from HTMLParser import HTMLParser
 
 tag_set = {'persons' : 'MPReg:PersonDisplayName',
 
-           'persons' : 'Iptc4xmpExt:PersonInImage', 
-           'City' : 'Iptc4xmpExt:City', 
-           'country/primary location name' : 'Iptc4xmpExt:CountryName', 
-           'Province/state' : 'Iptc4xmpExt:ProvinceState', 
-           'events' : 'Iptc4xmpExt:Event', 
+           'Iptc4xmpExt:PersonInImage' : 'Iptc4xmpExt:PersonInImage', 
+           'Iptc4xmpExt:City' : 'Iptc4xmpExt:City', 
+           'Iptc4xmpExt:CountryName' : 'Iptc4xmpExt:CountryName', 
+           'Iptc4xmpExt:ProvinceState' : 'Iptc4xmpExt:ProvinceState', 
+           'Iptc4xmpExt:Event' : 'Iptc4xmpExt:Event', 
            
            'Iptc4xmpCore:Location' : 'Iptc4xmpCore:Location',
 
            'xmp:Label' : 'xmp:Label',
-           'Image Rating' : 'xmp:Rating',
+           'xmp:Rating' : 'xmp:Rating',
            
-           'Category' : 'photoshop:Category',
-           'City' : 'photoshop:City',
-           'country/primary location name' : 'photoshop:Country',
+           'photoshop:Category' : 'photoshop:Category',
+           'photoshop:City' : 'photoshop:City',
+           'photoshop:Country' : 'photoshop:Country',
            'photoshop:DateCreated' : 'photoshop:DateCreated',
            'photoshop:Headline' : 'photoshop:Headline',
-           'Province/state' : 'photoshop:State',
-           'Supplemental category' : 'photoshop:SupplementalCategories',
+           'photoshop:State' : 'photoshop:State',
+           'photoshop:SupplementalCategories' : 'photoshop:SupplementalCategories',
 
            'dc:creator' : 'dc:creator',
            'dc:description' : 'dc:description',

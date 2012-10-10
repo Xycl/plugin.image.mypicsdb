@@ -1249,25 +1249,20 @@ def get_xmp(dirname, picfile):
     xmpclass = XMP_Tags()
     tags = xmpclass.get_xmp(dirname, picfile)
     
-    for k in tags:
-        addColumn("files", k)
-    
+    for tagname in tags:
+        if tagname == 'Iptc4xmpExt:PersonInImage':
+            key = 'persons'
+            
+            if tags.has_key(key):
+                tags[key] += '||' + tags[tagname]
+            else:
+                tags[key] = tags[tagname]
+                MPDB.addColumn("files", key)
+        else:           
+            addColumn("files", tagname)
+        
+    del(tags['Iptc4xmpExt:PersonInImage'])
     return tags
-    
-    tags = xmpclass.get_xmp(dirname, picfile, tagname)
-    xmp = {}    
-    if tags.has_key(tagname) and tagname == 'MPReg:PersonDisplayName':
-        xmp['persons'] = tags[tagname]
-        addColumn("files", 'persons')
-    elif tags.has_key(tagname):
-        xmp[tagname]   = tags[tagname]
-        addColumn("files", tagname)
-    else:
-        xmp[tagname] = ''
-    return xmp
-    
-    
-
 
 
 def get_iptc(path,filename):
@@ -1461,38 +1456,51 @@ If tag is not given, pictures with no keywords are returned"""
 
 def DefaultTagTypesTranslation():
     """Return a list of all keywords in database """
-    Request("update TagTypes set TagTranslation = 'State' where TagTranslation =  'Province/state'")
-    Request("update TagTypes set TagTranslation = 'State' where TagTranslation =  'Photoshop:State'")
-    Request("update TagTypes set TagTranslation = 'City' where TagTranslation = 'Photoshop:City'")
-    
     Request("update TagTypes set TagTranslation = 'Country' where TagTranslation =  'Country/primary location name'")
     Request("update TagTypes set TagTranslation = 'Country' where TagTranslation =  'Photoshop:Country'")
+    Request("update TagTypes set TagTranslation = 'Country' where TagTranslation =  'Iptc4xmpExt:CountryName'")
+
+    Request("update TagTypes set TagTranslation = 'Country Code' where TagTranslation =  'Country/primary location code'")
     
-    Request("update TagTypes set TagTranslation = 'DateCreated' where TagTranslation =  'EXIF DateTimeOriginal'")
-    Request("update TagTypes set TagTranslation = 'DateCreated' where TagTranslation =  'Photoshop:DateCreated'")
-    Request("update TagTypes set TagTranslation = 'DateCreated' where TagTranslation =  'Image DateTime'")
+    Request("update TagTypes set TagTranslation = 'State' where TagTranslation =  'Province/state'")
+    Request("update TagTypes set TagTranslation = 'State' where TagTranslation =  'Photoshop:State'")
+    Request("update TagTypes set TagTranslation = 'State' where TagTranslation =  'Iptc4xmpExt:ProvinceState'")
+    
+    Request("update TagTypes set TagTranslation = 'City' where TagTranslation = 'Photoshop:City'")
+    Request("update TagTypes set TagTranslation = 'City' where TagTranslation = 'Iptc4xmpExt:City'")
+    Request("update TagTypes set TagTranslation = 'Location' where TagTranslation =  'Iptc4xmpCore:Location'")
+    Request("update TagTypes set TagTranslation = 'Event' where TagTranslation = 'Iptc4xmpExt:Event'")
+    
+    Request("update TagTypes set TagTranslation = 'Date Added' where TagTranslation =  'DateAdded'")
+    Request("update TagTypes set TagTranslation = 'Date Created' where TagTranslation =  'EXIF DateTimeOriginal'")
+    Request("update TagTypes set TagTranslation = 'Date Created' where TagTranslation =  'Photoshop:DateCreated'")
+    Request("update TagTypes set TagTranslation = 'Date Created' where TagTranslation =  'Image DateTime'")
     
     Request("update TagTypes set TagTranslation = 'Description' where TagTranslation =  'Photoshop:Headline'")
     Request("update TagTypes set TagTranslation = 'Description' where TagTranslation = 'Caption/abstract'")
     Request("update TagTypes set TagTranslation = 'Description' where TagTranslation = 'Dc:description'")
-    
+
     Request("update TagTypes set TagTranslation = 'Creator' where TagTranslation = 'Writer/editor'")
     Request("update TagTypes set TagTranslation = 'Creator' where TagTranslation = 'By-line'")
     Request("update TagTypes set TagTranslation = 'Creator' where TagTranslation = 'Dc:creator'")
     Request("update TagTypes set TagTranslation = 'Creator Title' where TagTranslation = 'By-line title'")
+
     Request("update TagTypes set TagTranslation = 'Title' where TagTranslation = 'Object name'")
     Request("update TagTypes set TagTranslation = 'Title' where TagTranslation = 'Dc:title'")
 
     Request("update TagTypes set TagTranslation = 'Copyright' where TagTranslation = 'Dc:rights'")
     Request("update TagTypes set TagTranslation = 'Copyright' where TagTranslation = 'Copyright notice'")
-    
+
     Request("update TagTypes set TagTranslation = 'Label' where TagTranslation =  'Xmp:Label'")
     Request("update TagTypes set TagTranslation = 'Image Rating' where TagTranslation =  'Xmp:Rating'")
-    Request("update TagTypes set TagTranslation = 'Location' where TagTranslation =  'Iptc4xmpCore:Location'")
-    
+
     Request("update TagTypes set TagTranslation = 'Keywords' where TagTranslation =  'MicrosoftPhoto:LastKeywordIPTC'")
     Request("update TagTypes set TagTranslation = 'Keywords' where TagTranslation =  'MicrosoftPhoto:LastKeywordXMP'")
     Request("update TagTypes set TagTranslation = 'Keywords' where TagTranslation =  'Dc:subject'")
+
+    Request("update TagTypes set TagTranslation = 'Category' where TagTranslation =  'photoshop:Category'")
+
+    Request("update TagTypes set TagTranslation = 'Persons' where TagTranslation =  'Iptc4xmpExt:PersonInImage'")
 
     Request("update TagTypes set TagTranslation = 'Image Width' where TagTranslation =  'EXIF ExifImageWidth'")
     Request("update TagTypes set TagTranslation = 'Image Length' where TagTranslation =  'EXIF ExifImageLength'")
@@ -1508,6 +1516,11 @@ def DefaultTagTypesTranslation():
     Request("update TagTypes set TagTranslation = '' where TagTranslation =  'Image ResolutionUnit'")
     Request("update TagTypes set TagTranslation = '' where TagTranslation =  'Image XResolution'")
     Request("update TagTypes set TagTranslation = '' where TagTranslation =  'Image YResolution'")
+    Request("update TagTypes set TagTranslation = '' where TagTranslation =  'GPS GPSLatitude'")
+    Request("update TagTypes set TagTranslation = '' where TagTranslation =  'GPS GPSLatitudeRef'")
+    Request("update TagTypes set TagTranslation = '' where TagTranslation =  'GPS GPSLongitude'")
+    Request("update TagTypes set TagTranslation = '' where TagTranslation =  'GPS GPSLongitudeRef'")
+    
     
     #Request("delete from TagTypes where idTagType not in (select distinct idTagType from TagContents)")
     
