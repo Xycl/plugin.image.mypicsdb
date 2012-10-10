@@ -844,6 +844,7 @@ class Main:
 
             if str(self.args.exclude)=="1":
                 MPDB.AddRoot(newroot,0,0,1)
+                xbmc.executebuiltin( "Container.Refresh(\"%s?action='rootfolders'&do='showroots'&exclude='1'&viewmode='view'\",)"%(sys.argv[0],))
             else:
                 recursive = dialog.yesno(__language__(30000),__language__(30202)) and 1 or 0 #browse recursively this folder ?
                 update = dialog.yesno(__language__(30000),__language__(30203)) and 1 or 0 # Remove files from database if pictures does not exists?
@@ -862,7 +863,7 @@ class Main:
                                                                               )
                                            )
 
-                        xbmc.executebuiltin( "Container.Refresh(\"%s?action='rootfolders'&do='showroots'&exclude='1'&viewmode='view'\",)"%(sys.argv[0],))
+                        xbmc.executebuiltin( "Container.Refresh(\"%s?action='rootfolders'&do='showroots'&exclude='0'&viewmode='view'\",)"%(sys.argv[0],))
 
                 else:
                     #dialogaddonscan était en cours d'utilisation, on return

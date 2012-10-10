@@ -1,3 +1,6 @@
+2012/10/10 --> v 1.1.3
+Update: Container.Refresh(...) for new exclude path(s)
+
 2012/10/09 --> v 1.1.2
 Update: New XMP tag Iptc4xmpExt:PersonInImage for people tagging and several more from Iptc4xmpExt extension
 Fix:    Now Frodo compatible
