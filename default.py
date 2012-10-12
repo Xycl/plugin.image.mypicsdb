@@ -18,7 +18,7 @@ from os.path import join,isfile,basename,dirname,splitext
 import xbmc, xbmcaddon
 from xbmcgui import Window
 
-Addon = xbmcaddon.Addon(id='plugin.image.mypicsdb')
+Addon = xbmcaddon.Addon(id='plugin.image.mypicsdb.svn')
 
 home = Addon.getAddonInfo('path').decode('utf-8')
 sys_encoding = sys.getfilesystemencoding()
@@ -1396,7 +1396,7 @@ class Main:
 
         elif self.args.method =="videos":#show all videos __OK
             picfanart = join(PIC_PATH,"fanart-videos.png")
-            filelist = [row for row in MPDB.Request( """SELECT strPath,strFilename FROM files WHERE "EXIF DateTimeOriginal" NOT NULL AND UseIt=1 AND ftype="video" ORDER BY "EXIF DateTimeOriginal" DESC LIMIT %s OFFSET %s"""%(limit,offset) )]
+            filelist = [row for row in MPDB.Request( """SELECT strPath,strFilename FROM files WHERE UseIt=1 AND ftype="video" ORDER BY "EXIF DateTimeOriginal" DESC LIMIT %s OFFSET %s"""%(limit,offset) )]
 
         #on teste l'argumen 'viewmode'
             #si viewmode = view : on liste les images

@@ -1,3 +1,6 @@
+2012/10/12 --> v 1.1.4
+Fix:    Video menu didn't show any videos
+
 2012/10/10 --> v 1.1.3
 Update: Container.Refresh(...) for new exclude path(s)
 
