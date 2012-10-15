@@ -18,7 +18,7 @@ from os.path import join,isfile,basename,dirname,splitext
 import xbmc, xbmcaddon
 from xbmcgui import Window
 
-Addon = xbmcaddon.Addon(id='plugin.image.mypicsdb.svn')
+Addon = xbmcaddon.Addon(id='plugin.image.mypicsdb')
 
 home = Addon.getAddonInfo('path').decode('utf-8')
 sys_encoding = sys.getfilesystemencoding()
@@ -845,6 +845,9 @@ class Main:
             if str(self.args.exclude)=="1":
                 MPDB.AddRoot(newroot,0,0,1)
                 xbmc.executebuiltin( "Container.Refresh(\"%s?action='rootfolders'&do='showroots'&exclude='1'&viewmode='view'\",)"%(sys.argv[0],))
+                #xbmc.executebuiltin( "Notification(%s,%s,%s,%s)"%(__language__(30000).encode("utf8"),__language__(30204).encode("utf8"),3000,join(home,"icon.png").encode("utf8") ) )
+                dialogok = xbmcgui.Dialog()
+                dialogok.ok(__language__(30000), __language__(30217), __language__(30218) )
             else:
                 recursive = dialog.yesno(__language__(30000),__language__(30202)) and 1 or 0 #browse recursively this folder ?
                 update = dialog.yesno(__language__(30000),__language__(30203)) and 1 or 0 # Remove files from database if pictures does not exists?
@@ -932,7 +935,7 @@ class Main:
                         contextmenu   = None)#menucontextuel
 
             # Scan all paths
-            if len(includefolders) > 1:
+            if len(includefolders) > 0:
                 self.addAction(name      = __language__(30213),#scan all distinct root paths
                             params    = [("do","scanall"),("viewmode","view"),],#paramètres
                             action    = "rootfolders",#action
@@ -957,7 +960,7 @@ class Main:
                                              ]
                             )
             #Add a folder to exclude
-            if len(includefolders)>0:
+            if len(includefolders)>=0:
                 self.addAction(name      = __language__(30211),#add a folder to exclude
                             params    = [("do","addroot"),("viewmode","view"),("exclude","1")],#paramètres
                             action    = "rootfolders",#action

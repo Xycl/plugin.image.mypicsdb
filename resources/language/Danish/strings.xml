@@ -140,6 +140,8 @@
     <string id="30214">Yes = scan all pictures.</string>
     <string id="30215">No = scan only modified/new pictures.</string>
     <string id="30216"></string> <!-- placeholder for third line of above questions -->
+    <string id="30217">You must rescan the folders</string>
+    <string id="30218">to exclude the pictures!</string>
     
     <string id="30220">Geolocation</string>
     <string id="30221">Henter kortet... (%0.2f%%)</string>  <!-- %0.2f%% will be replaced by the percent of download for a map -->

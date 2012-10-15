@@ -1,3 +1,7 @@
+2012/10/15 --> v 1.1.5
+Update: After adding an exclude path a hint dialog box is display to inform the user to rescan the paths.
+Update: Exclude path can be entered before adding the first include path
+
 2012/10/12 --> v 1.1.4
 Fix:    Video menu didn't show any videos
 

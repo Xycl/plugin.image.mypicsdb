@@ -140,7 +140,9 @@
 	<string id="30214">Ja = alle afbeeldingen scannen</string>
 	<string id="30215">Nee = alleen gewijzigde/nieuwe afbeelinegn scannen</string>
 	<string id="30216"></string> <!-- placeholder for third line of above questions -->
-
+    <string id="30217">You must rescan the folders</string>
+    <string id="30218">to exclude the pictures!</string>
+    
 	<string id="30220">Geolocatie</string>
 	<string id="30221">Opvragen kaart... (%0.2f%%)</string>
 	<string id="30222">Zoom=%s</string>
