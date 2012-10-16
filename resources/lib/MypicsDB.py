@@ -1528,7 +1528,11 @@ def DefaultTagTypesTranslation():
     
 def list_TagTypes():
     DefaultTagTypesTranslation()
-    return [row for (row,) in Request( """SELECT distinct TagTranslation FROM TagTypes where length(trim(TagTranslation))>0 ORDER BY LOWER(TagTranslation) ASC""" )]
+    return [row for (row,) in Request( """SELECT distinct tt.TagTranslation FROM TagTypes tt, TagContents tc, TagsInFiles tif 
+where length(trim(TagTranslation))>0 
+and tt.idTagType = tc.idTagType
+and tc.idTagContent = tif.idTagContent
+ORDER BY LOWER(TagTranslation) ASC""" )]
 
 def countTagTypes(kw,limit=-1,offset=-1):
     if kw is not None:

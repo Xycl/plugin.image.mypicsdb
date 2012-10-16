@@ -13,30 +13,13 @@ TODO :
 """
 import os, sys, time
 from os.path import join,isfile,basename,dirname,splitext
+from urllib import quote_plus,unquote_plus
+from time import strftime,strptime,gmtime
+from traceback import print_exc
 
+import xbmc, xbmcaddon, xbmcplugin,xbmcgui
 
-import xbmc, xbmcaddon
 from xbmcgui import Window
-
-Addon = xbmcaddon.Addon(id='plugin.image.mypicsdb')
-
-home = Addon.getAddonInfo('path').decode('utf-8')
-sys_encoding = sys.getfilesystemencoding()
-
-#these few lines are taken from AppleMovieTrailers script
-# Shared resources
-BASE_RESOURCE_PATH = join( home, "resources" )
-#DATA_PATH = xbmc.translatePath( "special://profile/addon_data/plugin.image.mypicsdb/")
-DATA_PATH = Addon.getAddonInfo('profile')
-PIC_PATH = join( BASE_RESOURCE_PATH, "images")
-DB_PATH = xbmc.translatePath( "special://database/")
-sys.path.append( join( BASE_RESOURCE_PATH, "lib" ) )
-
-#catching the OS :
-#   win32 -> win
-#   darwin -> mac
-#   linux -> linux
-RunningOS = sys.platform
 
 # MikeBZH44
 try:
@@ -53,27 +36,43 @@ try:
    import StorageServer
 except:
    import storageserverdummy as StorageServer
-
-
-cache = StorageServer.StorageServer("MyPicsDB",1)
-
-from urllib import quote_plus,unquote_plus
-import xbmcplugin,xbmcgui
-
-from time import strftime,strptime,gmtime
-
-from traceback import print_exc
-
+   
+# set variables used by other modules   
+Addon = xbmcaddon.Addon(id='plugin.image.mypicsdb')
 __language__ = Addon.getLocalizedString
-sys_enc = sys.getfilesystemencoding()
+home = Addon.getAddonInfo('path').decode('utf-8')
+sys_encoding = sys.getfilesystemencoding()
 
 if sys.modules.has_key("MypicsDB"):
     del sys.modules["MypicsDB"]
-import MypicsDB as MPDB
-import CharsetDecoder as decoder
-import FilterWizard, TranslationEditor
+import resources.lib.MypicsDB as MPDB
+import resources.lib.CharsetDecoder as decoder
+import resources.lib.FilterWizard as FilterWizard
+import resources.lib.TranslationEditor as TranslationEditor
+import resources.lib.Viewer as Viewer
+
+
+ 
+
+#these few lines are taken from AppleMovieTrailers script
+# Shared resources
+BASE_RESOURCE_PATH = join( home, "resources" )
+#DATA_PATH = xbmc.translatePath( "special://profile/addon_data/plugin.image.mypicsdb/")
+DATA_PATH = Addon.getAddonInfo('profile')
+PIC_PATH = join( BASE_RESOURCE_PATH, "images")
+DB_PATH = xbmc.translatePath( "special://database/")
+#sys.path.append( join( BASE_RESOURCE_PATH, "lib" ) )
+
+#catching the OS :
+#   win32 -> win
+#   darwin -> mac
+#   linux -> linux
+RunningOS = sys.platform
+
+cache = StorageServer.StorageServer("MyPicsDB",1)
 
 global pictureDB
+
 pictureDB = join(DB_PATH,"MyPictures.db")
 
 files_fields_description={"strFilename":__language__(30300),
@@ -342,6 +341,11 @@ class Main:
         self.addAction(unescape(__language__(30620)),[("showtranslationeditor",""),("viewmode","view")],"showtranslationeditor",
                     join(PIC_PATH,"keywords.png"),
                     fanart=join(PIC_PATH,"fanart-keyword.png"))
+                    
+        # Show readme
+        self.addAction(unescape(__language__(30123)),[("help",""),("viewmode","view")],"help",
+                    join(PIC_PATH,"keywords.png"),
+                    fanart=join(PIC_PATH,"fanart-keyword.png"))        
 
         xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_NONE)
         #xbmcplugin.setPluginCategory( handle=int( sys.argv[ 1 ] ), category=unquote_plus("My Pictures Library".encode("utf-8")) )
@@ -418,7 +422,7 @@ class Main:
                                 contextmenu   = context,#menucontextuel
                                 total = total)#nb total d'éléments
 
-        xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_NONE)
+        xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_UNSORTED)
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
     def show_folders(self):
@@ -465,6 +469,9 @@ class Main:
         ui.doModal()
         del ui
 
+    def show_help(self):
+        Viewer.Viewer()
+        
     def show_wizard(self):
         global GlobalFilterTrue, GlobalFilterFalse, GlobalMatchAll
         picfanart = join(PIC_PATH,"fanart-keyword.png")
@@ -1664,6 +1671,8 @@ if __name__=="__main__":
     # tags submenu
     elif m.args.action=="showtranslationeditor":
         m.show_translationeditor()
+    elif m.args.action=="help":
+        m.show_help()
     elif m.args.action=='showwizard':
         m.show_wizard()
     elif m.args.action=='showtagtypes':

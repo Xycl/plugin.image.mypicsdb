@@ -1,5 +1,9 @@
+2012/10/16 --> v 1.1.6
+Update: Filter Wizard only show tags if there are pictures
+Update: Main menu contains a help menu item which shows the readme.txt
+
 2012/10/15 --> v 1.1.5
-Update: After adding an exclude path a hint dialog box is display to inform the user to rescan the paths.
+Update: After adding an exclude path a hint dialog box is displayed to inform the user to rescan the paths.
 Update: Exclude path can be entered before adding the first include path
 Update: Browse by folder now with sort method label
 

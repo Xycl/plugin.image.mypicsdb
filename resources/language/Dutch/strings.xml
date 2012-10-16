@@ -88,7 +88,8 @@
 	<string id="30120">Weergeven personen</string>
 	<string id="30121">Afbeeldingen zonder personen</string>
 	<string id="30122">Weergeven tags</string>
-
+    <string id="30123">Help</string>
+    
 	<string id="30130">Laatste %s afbeeldingen</string>
 	<string id="30131">Recente afbeeldingen (aantal afbeeldingen)</string>
 	<string id="30132"></string>
