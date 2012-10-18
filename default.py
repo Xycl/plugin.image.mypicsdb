@@ -51,17 +51,12 @@ import resources.lib.FilterWizard as FilterWizard
 import resources.lib.TranslationEditor as TranslationEditor
 import resources.lib.Viewer as Viewer
 
-
- 
-
 #these few lines are taken from AppleMovieTrailers script
 # Shared resources
 BASE_RESOURCE_PATH = join( home, "resources" )
-#DATA_PATH = xbmc.translatePath( "special://profile/addon_data/plugin.image.mypicsdb/")
 DATA_PATH = Addon.getAddonInfo('profile')
 PIC_PATH = join( BASE_RESOURCE_PATH, "images")
 DB_PATH = xbmc.translatePath( "special://database/")
-#sys.path.append( join( BASE_RESOURCE_PATH, "lib" ) )
 
 #catching the OS :
 #   win32 -> win
@@ -188,32 +183,28 @@ class Main:
         extension = splitext(picname)[1].upper()
         #is the file a video ?
         if extension in ["."+ext.replace(".","").upper() for ext in Addon.getSetting("vidsext").split("|")]:
-            #print "is video"
-            #file is a video
-            #infolabels = { "picturepath":picname+" "+suffix,"title": "title of the pic", "date": date  }
             infolabels = { "date": date }
             liz.setInfo( type="video", infoLabels=infolabels )
         #or is the file a picture ?
         elif extension in ["."+ext.replace(".","").upper() for ext in Addon.getSetting("picsext").split("|")]:
-            #file is a picture
-            #print "is picture"
-
             rating = MPDB.getRating(picpath,picname)
             if int(Addon.getSetting("ratingmini"))>0:#un rating mini est configuré
                 if not rating:  return
                 if int(rating) < int(Addon.getSetting("ratingmini")): return #si on a un rating dans la photo
-            coords = MPDB.getGPS(picpath,picname)
 
-            if coords: suffix = suffix + "[COLOR=C0C0C0C0][G][/COLOR]"
+            coords = MPDB.getGPS(picpath,picname)
+            if coords: 
+                suffix = suffix + "[COLOR=C0C0C0C0][G][/COLOR]"
 
             (exiftime,) = MPDB.Request( """select "EXIF DateTimeOriginal" from files where strPath='%s' and strFilename='%s'"""%(picpath,picname))
             resolution = MPDB.Request( """select "EXIF ExifImageWidth", "EXIF ExifImageLength" from files where strPath='%s' and strFilename='%s'"""%(picpath,picname))
+            infolabels = { "picturepath":picname+" "+suffix, "date": date  }
+            if exiftime[0] != None:
+                infolabels["exif:exiftime"] = exiftime[0]
+            if resolution[0][0] != None and resolution[0][1] != None:
+                infolabels["exif:resolution"] = str(resolution[0][0]) + ',' + str(resolution[0][1])
 
-            if exiftime[0] != None and resolution[0][0] != None and resolution[0][1] != None:
-                infolabels = { "picturepath":picname+" "+suffix, "date": date, "exif:resolution": str(resolution[0][0]) + ',' + str(resolution[0][1]), "exif:exiftime": exiftime[0] } 
-            else:
-                infolabels = { "picturepath":picname+" "+suffix, "date": date  }
-            
+
             
             if rating:
                 suffix = suffix + "[COLOR=C0FFFF00]"+("*"*int(rating))+"[/COLOR][COLOR=C0C0C0C0]"+("*"*(5-int(rating)))+"[/COLOR]"
