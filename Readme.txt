@@ -1,4 +1,4 @@
-1) Howto
+1) How to include picture paths
 ==================================================================================
 Don't change the plugin configuration unless you know what you do!
 
@@ -20,6 +20,11 @@ c) Linux, MacOS, OpenELEC
    These OS are Unix based and they don't support UNC paths like Windows.
    You must locally mount your remote directory and then add the local mount point to XBMC as a picture source.
    Afterwards MyPicsDB can access the "local" pictures.
+
+   
+Excluding paths
+a) Add the exclude path(s) via menu "Paths of pictures folders".
+b) Rescan the paths which contain these added exclude paths to remove the pictures from MyPicsDB
 
 
 2) Please translate MyPicsDB into your native language!
