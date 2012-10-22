@@ -1,3 +1,6 @@
+2012/10/22 --> v 1.1.7
+Fix:    SQL statement to get the "EXIF DateTimeOriginal" changed due to exceptions if tag isn't set.
+
 2012/10/16 --> v 1.1.6
 Update: Filter Wizard only show tags if there are pictures
 Update: Main menu contains a help menu item which shows the readme.txt
