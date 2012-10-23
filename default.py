@@ -196,8 +196,8 @@ class Main:
             if coords: 
                 suffix = suffix + "[COLOR=C0C0C0C0][G][/COLOR]"
 
-            (exiftime,) = MPDB.Request( """select  coalesce("EXIF DateTimeOriginal", '0') from files where strPath='%s' and strFilename='%s'"""%(picpath,picname))
-            resolution = MPDB.Request( """select  coalesce("EXIF ExifImageWidth", '0'),  coalesce("EXIF ExifImageLength", '0') from files where strPath='%s' and strFilename='%s'"""%(picpath,picname))
+            (exiftime,) = MPDB.Request( """select coalesce("EXIF DateTimeOriginal", '0') from files where strPath="%s" and strFilename="%s" """%(picpath,picname))
+            resolution = MPDB.Request( """select coalesce("EXIF ExifImageWidth", '0'),  coalesce("EXIF ExifImageLength", '0') from files where strPath="%s" and strFilename="%s" """%(picpath,picname))
             infolabels = { "picturepath":picname+" "+suffix, "date": date  }
             if exiftime[0] != None and exiftime[0] != "0":
                 infolabels["exif:exiftime"] = exiftime[0]
