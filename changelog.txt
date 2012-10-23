@@ -1,5 +1,6 @@
-2012/10/23 --> v 1.1.7.1
+2012/10/23 --> v 1.1.8
 Fix:    Path fixed when retrieving "EXIF DateTimeOriginal", "EXIF ExifImageWidth" and "EXIF ExifImageLength".
+Fix:    EXIF parser now handles JPEG marker APP14 (0xFFEE) with Segment Adobe correctly.
 
 2012/10/22 --> v 1.1.7
 Fix:    SQL statement to get the "EXIF DateTimeOriginal" changed due to exceptions if tag isn't set.
