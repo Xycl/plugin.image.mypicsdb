@@ -339,14 +339,14 @@ def browse_folder(dirname,parentfolderID=None,recursive=True,updatepics=False,ad
                     if updatepics: #si le paramètre est configuré pour mettre à jour les metas d'une photo
                         #Il faut mettre à jour les images...
                         if extension in vidsext:
-                            print "Video"
+                            #print "Video"
                             DoScan = True
                             update = True
                             straction = __language__(30242)#Updating
                             if file_is_accessible(dirname, picfile):
                                 cptchanged = cptchanged + 1
                         elif not (MPDB.fileSHA(join(dirname,picfile))==MPDB.getFileSha(dirname,picfile)): #si l'image a changé depuis qu'elle est en base
-                            print "No Video"
+                            #print "No Video"
                             #Scan les metas et ajoute l'image avec un paramètre de mise à jour = true
                             DoScan = True
                             update = True

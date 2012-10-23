@@ -612,7 +612,7 @@ def DB_file_insert(path,filename,dictionnary,update=False):
     if update :#si update alors on doit updater et non pas insert
         if DB_exists(path,filename):
             #print "file exists in database and rescan is set to true..."
-            Request("DELETE FROM files WHERE idFolder = (SELECT idFolder FROM folders WHERE FullPath='%s') AND strFilename='%s'"%(path,filename))
+            Request(""" DELETE FROM files WHERE idFolder = (SELECT idFolder FROM folders WHERE FullPath="%s") AND strFilename="%s" """%(path,filename))
             DB_cleanup_keywords()
     conn = sqlite.connect(pictureDB)
     cn=conn.cursor()
@@ -917,16 +917,19 @@ def DB_del_pic(picpath,picfile=None): #TODO : revoir la vérif du dossier inutil
     """Supprime le chemin/fichier de la base. Si aucun fichier n'est fourni, toutes les images du chemin sont supprimées de la base"""
     if picfile:
         #on supprime le fichier de la base
-        Request("""DELETE FROM files WHERE idFolder = (SELECT idFolder FROM folders WHERE FullPath='%s') AND strFilename='%s'"""%(picpath,picfile))
+        #print """DELETE FROM files WHERE idFolder = (SELECT idFolder FROM folders WHERE FullPath="%s") AND strFilename="%s" """%(picpath,picfile)
+        Request("""DELETE FROM files WHERE idFolder = (SELECT idFolder FROM folders WHERE FullPath="%s") AND strFilename="%s" """%(picpath,picfile))
 
     else:
-        idpath = Request("SELECT idFolder FROM folders WHERE FullPath = '%s'"%picpath)[0][0]#le premier du tuple à un élément
+        idpath = Request("""SELECT idFolder FROM folders WHERE FullPath = "%s" """%picpath)[0][0]#le premier du tuple à un élément
         log( idpath )
         deletelist=[]#va lister les id des dossiers à supprimer
         deletelist.append(idpath)#le dossier en paramètres est aussi à supprimer
         deletelist.extend(get_children(str(idpath)))#on ajoute tous les enfants en sous enfants du dossier
-        Request( "DELETE FROM files WHERE idFolder in ('%s')"%"','".join([str(i) for i in deletelist]) )
-        Request( "DELETE FROM folders WHERE idFolder in ('%s')"%"','".join([str(i) for i in deletelist]) )
+        #print """DELETE FROM files WHERE idFolder in ("%s")"""%""" "," """.join([str(i) for i in deletelist])
+        #print """DELETE FROM folders WHERE idFolder in ("%s") """%""" "," """.join([str(i) for i in deletelist])
+        Request( """DELETE FROM files WHERE idFolder in ("%s")"""%""" "," """.join([str(i) for i in deletelist]) )
+        Request( """DELETE FROM folders WHERE idFolder in ("%s") """%""" "," """.join([str(i) for i in deletelist]) )
 
 
     return

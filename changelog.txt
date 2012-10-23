@@ -1,3 +1,7 @@
+2012/10/23 --> v 1.1.8.1
+Fix:    Deleting files fixed if they contain an apostrophe.
+Fix:    Debug prints deleted in scanpath.py
+
 2012/10/23 --> v 1.1.8
 Fix:    Path fixed when retrieving "EXIF DateTimeOriginal", "EXIF ExifImageWidth" and "EXIF ExifImageLength".
 Fix:    EXIF parser now handles JPEG marker APP14 (0xFFEE) with Segment Adobe correctly.
