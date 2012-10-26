@@ -406,8 +406,24 @@ def browse_folder(dirname,parentfolderID=None,recursive=True,updatepics=False,ad
                         picentry.update(get_metas(dirname,picfile))
                     # insert picture into table files
                     try:
+                        for index in picentry:
+                            if isinstance(picentry[index], str) == False        \
+                              and isinstance(picentry[index], unicode) == False \
+                              and isinstance(picentry[index], int) == False     \
+                              and isinstance(picentry[index], long) == False    \
+                              and isinstance(picentry[index], float) == False:
+                                    picentry[index] = ""
+                                #print index + "not a string but " + str(type(picentry[index]))
+                        #if isinstance(picentry['EXIF ExifVersion'], str) == False:
+                            #picentry['EXIF ExifVersion'] = ""
+
                         MPDB.DB_file_insert(dirname,picfile,picentry,update)
                     except MPDB.MyPictureDB:
+                        print "Error in " + smart_unicode(dirname).encode('utf-8') + smart_unicode(picfile).encode('utf-8')
+                        print type(picentry['EXIF ExifVersion'])
+                        print "Parameter set start"
+                        print picentry
+                        print "Parameter set end"
                         pass
                 except:
                     print_exc()

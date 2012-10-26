@@ -1,5 +1,10 @@
+2012/10/26 --> v 1.1.9
+Fix:    Missing EXIF version caused an SQL error.
+Fix:    Several fixes for filenames containing an apostrophe
+Update: Removing missing files and directories from database improved.
+
 2012/10/23 --> v 1.1.8.1
-Fix:    Deleting files fixed if they contain an apostrophe.
+Fix:    Deleting files containing an apostrophe.
 Fix:    Debug prints deleted in scanpath.py
 
 2012/10/23 --> v 1.1.8

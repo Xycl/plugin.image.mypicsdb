@@ -519,16 +519,19 @@ def DB_cleanup_keywords():
     for path in list_path():
         try:
             if not isdir(path):
-                DB_del_pic(path)
+                DB_del_pic(path.replace("'", "''"))
         except:
             if not isdir(path.encode('utf-8')):
-                DB_del_pic(path)
+                DB_del_pic(path.replace("'", "''"))
 
     try:
         # in old version something went wrong with deleteing old unused folders
         for i in range(1,10):
             cn.execute('delete from folders where ParentFolder not in (select idFolder from folders) and ParentFolder is not null')
 
+        cn.execute('delete from files where sha is null')
+        cn.execute('delete from folders where haspics = 0')
+        cn.execute('delete from folders where idFolder not in (select idFolder from Files)')
         cn.execute('delete from files where idFolder not in( select idFolder from folders)')
 
         cn.execute( "delete from keywordsInFiles where idFile not in(select idFile from Files )")
@@ -564,6 +567,8 @@ def DB_exists(picpath,picfile):
     """
     conn = sqlite.connect(pictureDB)
     cn=conn.cursor()
+    picpath.replace("'", "''")
+    picfile.replace("'", "''")
     try:
         cn.execute("""SELECT strPath, strFilename FROM "main"."files" WHERE strPath = (?) AND strFilename = (?);""",(picpath,picfile,) )
     except Exception,msg:
@@ -584,6 +589,7 @@ def DB_listdir(path):
     """
     List files from DB where path
     """
+    path.replace("'", "''")
     conn = sqlite.connect(pictureDB)
     cn=conn.cursor()
     conn.text_factory = unicode #sqlite.OptimizedUnicode
@@ -608,7 +614,10 @@ def DB_file_insert(path,filename,dictionnary,update=False):
     keys are DB fields ; values are DB values
     """
     global tagTypeDBKeys
-    
+
+    path.replace("'", "''")
+    filename.replace("'", "''")
+
     if update :#si update alors on doit updater et non pas insert
         if DB_exists(path,filename):
             #print "file exists in database and rescan is set to true..."
@@ -880,6 +889,10 @@ def DB_folder_insert(foldername,folderpath,parentfolderID,haspic):
     conn = sqlite.connect(pictureDB)
     cn=conn.cursor()
     conn.text_factory = sqlite.OptimizedUnicode
+    
+    foldername.replace("'", "''")
+    folderpath.replace("'", "''")    
+    
     #insert in the folders database
     try:
         cn.execute("""INSERT INTO folders(FolderName,ParentFolder,FullPath,HasPics) VALUES (?,?,?,?);""",(foldername,parentfolderID,folderpath,haspic))
@@ -915,22 +928,33 @@ def get_children(folderid):
 
 def DB_del_pic(picpath,picfile=None): #TODO : revoir la vérif du dossier inutile
     """Supprime le chemin/fichier de la base. Si aucun fichier n'est fourni, toutes les images du chemin sont supprimées de la base"""
+    picpath.replace("'", "''")
+    if picfile != None:
+        picfile.replace("'", "''")
     if picfile:
         #on supprime le fichier de la base
         #print """DELETE FROM files WHERE idFolder = (SELECT idFolder FROM folders WHERE FullPath="%s") AND strFilename="%s" """%(picpath,picfile)
         Request("""DELETE FROM files WHERE idFolder = (SELECT idFolder FROM folders WHERE FullPath="%s") AND strFilename="%s" """%(picpath,picfile))
 
     else:
-        idpath = Request("""SELECT idFolder FROM folders WHERE FullPath = "%s" """%picpath)[0][0]#le premier du tuple à un élément
-        log( idpath )
-        deletelist=[]#va lister les id des dossiers à supprimer
-        deletelist.append(idpath)#le dossier en paramètres est aussi à supprimer
-        deletelist.extend(get_children(str(idpath)))#on ajoute tous les enfants en sous enfants du dossier
-        #print """DELETE FROM files WHERE idFolder in ("%s")"""%""" "," """.join([str(i) for i in deletelist])
-        #print """DELETE FROM folders WHERE idFolder in ("%s") """%""" "," """.join([str(i) for i in deletelist])
-        Request( """DELETE FROM files WHERE idFolder in ("%s")"""%""" "," """.join([str(i) for i in deletelist]) )
-        Request( """DELETE FROM folders WHERE idFolder in ("%s") """%""" "," """.join([str(i) for i in deletelist]) )
-
+        #print """SELECT idFolder FROM folders WHERE FullPath = "%s" """%picpath
+        try:
+            if picpath:
+                idpath = Request("""SELECT idFolder FROM folders WHERE FullPath = "%s" """%picpath)[0][0]#le premier du tuple à un élément
+            else:
+                idpath = Request("""SELECT idFolder FROM folders WHERE FullPath is null""")[0][0]#le premier du tuple à un élément
+            print "1"
+            log( idpath )
+            print "2"
+            deletelist=[]#va lister les id des dossiers à supprimer
+            deletelist.append(idpath)#le dossier en paramètres est aussi à supprimer
+            deletelist.extend(get_children(str(idpath)))#on ajoute tous les enfants en sous enfants du dossier
+            #print """DELETE FROM files WHERE idFolder in ("%s")"""%""" "," """.join([str(i) for i in deletelist])
+            #print """DELETE FROM folders WHERE idFolder in ("%s") """%""" "," """.join([str(i) for i in deletelist])
+            Request( """DELETE FROM files WHERE idFolder in ("%s")"""%""" "," """.join([str(i) for i in deletelist]) )
+            Request( """DELETE FROM folders WHERE idFolder in ("%s") """%""" "," """.join([str(i) for i in deletelist]) )
+        except:
+            pass
 
     return
 
@@ -970,6 +994,9 @@ def fileSHA ( filepath ) :
         return digest.hexdigest()
 
 def getFileSha (path,filename):
+
+    path.replace("'", "''")    
+    filename.replace("'", "''")    
     #return the SHA in DB for the given picture
     try:
         return [row for row in Request( """select sha from files where strPath="%s" and strFilename="%s";"""%(path,filename))][0][0]
@@ -977,6 +1004,8 @@ def getFileSha (path,filename):
         return "0"
 
 def getFileMtime(path,filename):
+    path.replace("'", "''")    
+    filename.replace("'", "''")    
     #return the modification time 'mtime' in DB for the given picture
     return [row for row in Request( """select mtime from files where strPath="%s" and strFilename="%s";"""%(path,filename))][0][0]
 
@@ -984,6 +1013,8 @@ def DB_deltree(picpath):
     pass
 
 def getRating(path,filename):
+    path.replace("'", "''")    
+    filename.replace("'", "''")    
     try:
         return [row for row in Request( """SELECT files."Image Rating" FROM files WHERE strPath="%s" AND strFilename="%s";"""%(path,filename) )][0][0]
     except IndexError:
@@ -998,11 +1029,13 @@ def ListCollections():
 
 def NewCollection(Colname):
     """Add a new collection"""
+    Colname.replace("'", "''")        
     if Colname :
         Request( """INSERT INTO Collections(CollectionName) VALUES ("%s")"""%Colname )
     else:
         log( """NewCollection : User did not specify a name for the collection.""")
 def delCollection(Colname):
+    Colname.replace("'", "''")        
     """delete a collection"""
     if Colname:
         Request( """DELETE FROM FilesInCollections WHERE idCol=(SELECT idCol FROM Collections WHERE CollectionName="%s");"""%Colname )
@@ -1010,10 +1043,13 @@ def delCollection(Colname):
     else:
         log( """delCollection : User did not specify a name for the collection""" )
 def getCollectionPics(Colname):
+    Colname.replace("'", "''")        
     """List all pics associated to the Collection given as Colname"""
     return [row for row in Request( """SELECT strPath,strFilename FROM Files WHERE idFile IN (SELECT idFile FROM FilesInCollections WHERE idCol IN (SELECT idCol FROM Collections WHERE CollectionName='%s')) ORDER BY "EXIF DateTimeOriginal" ASC;"""%Colname)]
 
 def renCollection(Colname,newname):
+    Colname.replace("'", "''")        
+    newname.replace("'", "''")        
     """rename give collection"""
     if Colname:
         Request( """UPDATE Collections SET CollectionName = "%s" WHERE CollectionName="%s";"""%(newname,Colname) )
@@ -1021,6 +1057,10 @@ def renCollection(Colname,newname):
         log( """renCollection : User did not specify a name for the collection""")
 
 def addPicToCollection(Colname,filepath,filename):
+    Colname.replace("'", "''")        
+    filepath.replace("'", "''")        
+    filename.replace("'", "''")        
+
     #cette requête ne vérifie pas si :
     #   1- le nom de la collection existe dans la table Collections
     #   2- si l'image est bien une image en base de donnée Files
@@ -1030,6 +1070,10 @@ def addPicToCollection(Colname,filepath,filename):
     Request( """INSERT INTO FilesInCollections(idCol,idFile) VALUES ( (SELECT idCol FROM Collections WHERE CollectionName="%s") , (SELECT idFile FROM files WHERE strPath="%s" AND strFilename="%s") )"""%(Colname,filepath,filename) )
 
 def delPicFromCollection(Colname,filepath,filename):
+    Colname.replace("'", "''")        
+    filepath.replace("'", "''")        
+    filename.replace("'", "''")     
+    
     Request( """DELETE FROM FilesInCollections WHERE idCol=(SELECT idCol FROM Collections WHERE CollectionName="%s") AND idFile=(SELECT idFile FROM files WHERE strPath="%s" AND strFilename="%s")"""%(Colname,filepath,filename) )
 
 ####################
@@ -1040,30 +1084,43 @@ def ListPeriodes():
     return [row for row in Request( """SELECT PeriodeName,DateStart,DateEnd FROM Periodes""")]
 
 def addPeriode(periodname,datestart,dateend):
+    periodname.replace("'", "''")      
+    
     #datestart et dateend doivent être au format string ex.: "datetime('2009-07-12')" ou "strftime('%Y',now)"
     Request( """INSERT INTO Periodes(PeriodeName,DateStart,DateEnd) VALUES ('%s',%s,%s)"""%(periodname,datestart,dateend) )
     return
 
 def delPeriode(periodname):
+    periodname.replace("'", "''")      
+
     Request( """DELETE FROM Periodes WHERE PeriodeName="%s" """%periodname )
     return
 
 def renPeriode(periodname,newname,newdatestart,newdateend):
+    periodname.replace("'", "''")      
+    newname.replace("'", "''")      
+        
     Request( """UPDATE Periodes SET PeriodeName = "%s",DateStart = datetime("%s") , DateEnd = datetime("%s") WHERE PeriodeName="%s" """%(newname,newdatestart,newdateend,periodname) )
     return
 
 def PicsForPeriode(periodname):
+    periodname.replace("'", "''")      
     """Get pics for the given period name"""
     period = Request( """SELECT DateStart,DateEnd FROM Periodes WHERE PeriodeName='%s'"""%periodname )
     return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE datetime("EXIF DateTimeOriginal") BETWEEN %s AND %s ORDER BY "EXIF DateTimeOriginal" ASC"""%period )]
 
 def Searchfiles(column,searchterm,count=False):
+    searchterm.replace("'", "''")      
+
     if count:
         return [row for row in Request( """SELECT count(*) FROM files WHERE files.'%s' LIKE "%%%s%%";"""%(column,searchterm))][0][0]
     else:
         return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE files.'%s' LIKE "%%%s%%";"""%(column,searchterm))]
 ###
 def getGPS(filepath,filename):
+    filepath.replace("'", "''")
+    filename.replace("'", "''")
+
     coords = Request( """SELECT files.'GPS GPSLatitudeRef',files.'GPS GPSLatitude' as lat,files.'GPS GPSLongitudeRef',files.'GPS GPSLongitude' as lon FROM files WHERE lat NOT NULL AND lon NOT NULL AND strPath="%s" AND strFilename="%s";"""%(filepath,filename) )
     try:
         coords=coords[0]
@@ -1096,24 +1153,30 @@ def RootFolders():
     return [row for row in Request( """SELECT path,recursive,remove,exclude FROM Rootpaths ORDER BY path""")]
 
 def AddRoot(path,recursive,remove,exclude):
+    path.replace("'", "''")
+    
     "add the path root inside the database. Recursive is 0/1 for recursive scan, remove is 0/1 for removing files that are not physically in the place"
     DB_cleanup_keywords()
     Request( """INSERT INTO Rootpaths(path,recursive,remove,exclude) VALUES ("%s",%s,%s,%s)"""%(path,recursive,remove,exclude) )
 
 def getRoot(path):
-    return [row for row in Request( """SELECT path,recursive,remove,exclude FROM Rootpaths WHERE path='%s'"""%path )][0]
+    path.replace("'", "''")
+    return [row for row in Request( """SELECT path,recursive,remove,exclude FROM Rootpaths WHERE path="%s" """%path )][0]
 
 
 def RemoveRoot(path):
+    
     "remove the given rootpath, remove pics from this path, ..."
     #first remove the path with all its pictures / subfolders / keywords / pictures in collections...
     RemovePath(path)
+    path.replace("'", "''")
     #then remove the rootpath itself
     Request( """DELETE FROM Rootpaths WHERE path="%s" """%path )
 
 
 def RemovePath(path):
     "remove the given rootpath, remove pics from this path, ..."
+    path.replace("'", "''")
     cptremoved = 0
     #récupère l'id de ce chemin
     try:
