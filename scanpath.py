@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
-
+ 
 usagestr = """
 requires : MyPictures Database library
 requires : XBMC mediacenter (at least Dharma version)
@@ -419,8 +419,7 @@ def browse_folder(dirname,parentfolderID=None,recursive=True,updatepics=False,ad
 
                         MPDB.DB_file_insert(dirname,picfile,picentry,update)
                     except MPDB.MyPictureDB:
-                        print "Error in " + smart_unicode(dirname).encode('utf-8') + smart_unicode(picfile).encode('utf-8')
-                        print type(picentry['EXIF ExifVersion'])
+                        print "Error in " + smart_unicode(dirname).encode('utf-8') + "  File:" + smart_unicode(picfile).encode('utf-8')
                         print "Parameter set start"
                         print picentry
                         print "Parameter set end"
