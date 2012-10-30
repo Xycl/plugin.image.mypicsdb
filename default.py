@@ -35,7 +35,7 @@ except Exception, e:
 try:
    import StorageServer
 except:
-   import storageserverdummy as StorageServer
+   import resources.lib.storageserverdummy as StorageServer
    
 # set variables used by other modules   
 Addon = xbmcaddon.Addon(id='plugin.image.mypicsdb')
