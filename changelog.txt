@@ -1,5 +1,6 @@
 2012/10/30 --> v 1.1.9.1
 Update: Initialization of DB changed. See readme.txt chapter 2)
+Fix:    storageserverdummy path corrected
 
 2012/10/27 --> v 1.1.9
 Fix:    Missing EXIF version caused an SQL error.
