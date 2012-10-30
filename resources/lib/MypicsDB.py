@@ -112,6 +112,29 @@ def mount(mountpoint="z:",path="\\",login=None,password=""):
         log( "%s is already mounted !"%mountpoint )
     return exists(mountpoint)
 
+def VersionTable():
+    #table 'Version'
+    conn = sqlite.connect(pictureDB)
+    conn.text_factory = unicode #sqlite.OptimizedUnicode
+    cn=conn.cursor()
+  
+    try:
+        cn.execute("CREATE TABLE DBVersion ( strVersion text primary key  )")
+        cn.execute("insert into DBVersion (strVersion) values('1.1.9')")
+        conn.commit() 
+    except Exception,msg:
+        if msg.args[0].startswith("table DBVersion already exists"):
+            # Test Version of DB
+            strVersion = Request("Select strVersion from DBVersion")[0][0];
+            log( "MyPicsDB database version is %s"%str(strVersion), LOGDEBUG )
+            pass
+        else: #sinon on imprime l'exception levée pour la traiter
+            log( ">>> VersionTable - CREATE TABLE DBVersion ...", LOGDEBUG )
+            log( "%s - %s"%(Exception,msg), LOGDEBUG )
+            log( "~~~~", LOGDEBUG )
+            log( "", LOGDEBUG )
+    cn.close()
+            
 def Make_new_base(DBpath,ecrase=True):
 ##    if not(isfile(DBpath)):
 ##        f=open("DBpath","w")
@@ -121,7 +144,7 @@ def Make_new_base(DBpath,ecrase=True):
     cn=conn.cursor()
     if ecrase:
         #drop table
-        for table in ['tags', 'TagContent', 'TagContents', 'TagsInFiles', 'TagTypes',"files","keywords","folders","KeywordsInFiles","Collections","FilesInCollections","Periodes","Rootpaths","CategoriesInFiles","Categories","SupplementalCategoriesInFiles","SupplementalCategories","CitiesInFile","Cities","CountriesInFiles","Countries"]:
+        for table in ['tags', 'TagContent', 'TagContents', 'TagsInFiles', 'TagTypes',"files","keywords","folders","KeywordsInFiles","Collections","FilesInCollections","Periodes","CategoriesInFiles","Categories","SupplementalCategoriesInFiles","SupplementalCategories","CitiesInFiles","Cities","CountriesInFiles","Countries","DBVersion"]:
             try:
                 cn.execute("""DROP TABLE %s"""%table)
             except Exception,msg:

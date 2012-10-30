@@ -233,10 +233,12 @@ class Main:
         ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=fullfilepath,listitem=liz,isFolder=False)
 
     def show_home(self):
+
 ##        # last month
 ##        self.addDir("last month (betatest)",[("method","lastmonth"),("period",""),("value",""),("page","1"),("viewmode","view")],
 ##                    "showpics",join(PIC_PATH,"dates.png"),
 ##                    fanart=join(PIC_PATH,"fanart-date.png"))
+        MPDB.VersionTable()
         display_all = Addon.getSetting('m_all')=='true'
         # last scan picture added
         if Addon.getSetting('m_1')=='true' or display_all:
@@ -1631,8 +1633,7 @@ if __name__=="__main__":
         # initialisation de la base :
         MPDB.pictureDB = pictureDB
         #   - efface les tables et les recréés
-        MPDB.Make_new_base(pictureDB,
-                           ecrase= Addon.getSetting("initDB") == "true")
+        MPDB.Make_new_base(pictureDB, ecrase= Addon.getSetting("initDB") == "true")
         if Addon.getSetting("initDB") == "true":
             Addon.setSetting("initDB","false")
         #scan les répertoires lors du démarrage (selon setting)
