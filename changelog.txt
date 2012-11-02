@@ -1,3 +1,6 @@
+2012/11/02 --> v 1.2
+Fix:    Several fixes for Frodo
+
 2012/10/30 --> v 1.1.9.1
 Update: Initialization of DB changed. See readme.txt chapter 2)
 Fix:    storageserverdummy path corrected

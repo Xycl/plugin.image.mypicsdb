@@ -468,7 +468,8 @@ class Main:
     def show_wizard(self):
         global GlobalFilterTrue, GlobalFilterFalse, GlobalMatchAll
         picfanart = join(PIC_PATH,"fanart-keyword.png")
-        ui = FilterWizard.FilterWizard( "FilterWizard.xml" , Addon.getAddonInfo('path'), "Default", FilterWizardDelegate)
+        ui = FilterWizard.FilterWizard( "FilterWizard.xml" , Addon.getAddonInfo('path'), "Default")
+        ui.setDelegate(FilterWizardDelegate)
         ui.doModal()
         del ui
         
