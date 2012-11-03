@@ -3,7 +3,7 @@
   id="plugin.image.mypicsdb" version="1.2" name="My Pictures Database" provider-name="Alexsolex, Xycl, MikeBZH44">
   <requires>
     <import addon="xbmc.python" version="2.0"/>
-    <import addon="script.module.dialogaddonscan" version="1.1.0"/>
+    <import addon="script.module.dialogaddonscan" version="1.1.1"/>
     <import addon="script.module.simplejson"    version="2.0.10" optional="true"/>
     <import addon="script.common.plugin.cache"  version="0.9.1"/>
   </requires>
