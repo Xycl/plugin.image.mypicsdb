@@ -1,3 +1,6 @@
+2012/11/03 --> v 1.2.1
+Fix:    Needed version of script.module.dialogaddonscan set to 1.1.1 due to Frodo changes in add-on.
+
 2012/11/02 --> v 1.2
 Fix:    Several fixes for Frodo
 
