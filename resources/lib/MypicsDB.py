@@ -144,7 +144,7 @@ def Make_new_base(DBpath,ecrase=True):
     cn=conn.cursor()
     if ecrase:
         #drop table
-        for table in ['tags', 'TagContent', 'TagContents', 'TagsInFiles', 'TagTypes',"files","keywords","folders","KeywordsInFiles","Collections","FilesInCollections","Periodes","CategoriesInFiles","Categories","SupplementalCategoriesInFiles","SupplementalCategories","CitiesInFiles","Cities","CountriesInFiles","Countries","DBVersion"]:
+        for table in ['Persons', 'PersonsInFiles', 'tags', 'TagContent', 'TagContents', 'TagsInFiles', 'TagTypes',"files","keywords","folders","KeywordsInFiles","Collections","FilesInCollections","Periodes","CategoriesInFiles","Categories","SupplementalCategoriesInFiles","SupplementalCategories","CitiesInFiles","Cities","CountriesInFiles","Countries","DBVersion"]:
             try:
                 cn.execute("""DROP TABLE %s"""%table)
             except Exception,msg:
@@ -553,8 +553,8 @@ def DB_cleanup_keywords():
             cn.execute('delete from folders where ParentFolder not in (select idFolder from folders) and ParentFolder is not null')
 
         cn.execute('delete from files where sha is null')
-        cn.execute('delete from folders where haspics = 0')
-        cn.execute('delete from folders where idFolder not in (select idFolder from Files)')
+        #cn.execute('delete from folders where haspics = 0')
+        #cn.execute('delete from folders where idFolder not in (select idFolder from Files)')
         cn.execute('delete from files where idFolder not in( select idFolder from folders)')
 
         cn.execute( "delete from keywordsInFiles where idFile not in(select idFile from Files )")

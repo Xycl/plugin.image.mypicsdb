@@ -1,3 +1,6 @@
+2012/11/04 --> v 1.2.2
+Fix:    DB cleanup function had a bug which caused the "browse by folder" and "browse by date" menus to stop working.
+
 2012/11/03 --> v 1.2.1
 Fix:    Needed version of script.module.dialogaddonscan set to 1.1.1 due to Frodo changes in add-on.
 
