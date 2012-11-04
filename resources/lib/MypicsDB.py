@@ -590,8 +590,8 @@ def DB_exists(picpath,picfile):
     """
     conn = sqlite.connect(pictureDB)
     cn=conn.cursor()
-    picpath.replace("'", "''")
-    picfile.replace("'", "''")
+    picpath = picpath.replace("'", "''")
+    picpath = picfile.replace("'", "''")
     try:
         cn.execute("""SELECT strPath, strFilename FROM "main"."files" WHERE strPath = (?) AND strFilename = (?);""",(picpath,picfile,) )
     except Exception,msg:
@@ -612,7 +612,7 @@ def DB_listdir(path):
     """
     List files from DB where path
     """
-    path.replace("'", "''")
+    path = path.replace("'", "''")
     conn = sqlite.connect(pictureDB)
     cn=conn.cursor()
     conn.text_factory = unicode #sqlite.OptimizedUnicode
@@ -638,8 +638,8 @@ def DB_file_insert(path,filename,dictionnary,update=False):
     """
     global tagTypeDBKeys
 
-    path.replace("'", "''")
-    filename.replace("'", "''")
+    path = path.replace("'", "''")
+    filename = filename.replace("'", "''")
 
     if update :#si update alors on doit updater et non pas insert
         if DB_exists(path,filename):
@@ -694,13 +694,15 @@ def DB_file_insert(path,filename,dictionnary,update=False):
                     if tagType == 'EXIF DateTimeOriginal':
                         value = value[:10]
                         
+                    value = value.replace("'", "''")
+                        
                     # first make sure that the tag exists in table TagTypes
                     # is it already in our list?
                     if not tagType in tagTypeDBKeys:
                   
                         # not in list therefore insert into table TagTypes
                         try:
-                            cn.execute("INSERT INTO TagTypes(TagType, TagTranslation) VALUES('%s','%s')"%(tagType,tagType))
+                            cn.execute(""" INSERT INTO TagTypes(TagType, TagTranslation) VALUES('%s','%s') """%(tagType,tagType))
                         except Exception,msg:
                             if str(msg)=="column TagType is not unique":
                                 pass
@@ -718,7 +720,7 @@ def DB_file_insert(path,filename,dictionnary,update=False):
                         idTagType = tagTypeDBKeys[tagType]
                             
                     try:
-                        cn.execute("INSERT INTO TagContents(idTagType,TagContent) VALUES(%d,'%s')"%(idTagType,value))
+                        cn.execute(""" INSERT INTO TagContents(idTagType,TagContent) VALUES(%d,'%s') """%(idTagType,value))
                     except Exception,msg:
                         if str(msg)=="columns idTagType, TagContent are not unique":
                             pass
@@ -729,7 +731,7 @@ def DB_file_insert(path,filename,dictionnary,update=False):
                             log( "", LOGDEBUG )
                     #Then, add the corresponding id of file and id of tag inside the TagsInFiles database
                     try:
-                        cn.execute("INSERT INTO TagsInFiles(idTagContent,idFile) SELECT t.idTagContent, %d FROM TagContents t WHERE t.idTagType=%d AND t.TagContent = '%s' "%(idFile,idTagType,value))
+                        cn.execute(""" INSERT INTO TagsInFiles(idTagContent,idFile) SELECT t.idTagContent, %d FROM TagContents t WHERE t.idTagType=%d AND t.TagContent = '%s' """%(idFile,idTagType,value))
 
 
                     # At first column was named idTag then idTagContent
@@ -739,13 +741,15 @@ def DB_file_insert(path,filename,dictionnary,update=False):
                                 cn.execute("DROP TABLE TagsInFiles")
                                 cn.execute('CREATE TABLE "TagsInFiles" ("idTagContent" INTEGER NOT NULL, "idFile" INTEGER NOT NULL)')
 
-                                cn.execute("INSERT INTO TagsInFiles(idTagContent,idFile) SELECT t.idTagContent, %d FROM TagContents t WHERE t.idTagType=%d AND t.TagContent = '%s' "%(idFile,idTagType,value))
+                                cn.execute(""" INSERT INTO TagsInFiles(idTagContent,idFile) SELECT t.idTagContent, %d FROM TagContents t WHERE t.idTagType=%d AND t.TagContent = '%s' """%(idFile,idTagType,value))
                             except:
                                 log("Error while ALTER TABLE TagsInFiles ", LOGDEBUG)
                                 log("\t%s - %s"% (Exception,msg), LOGDEBUG )
                         else:
                             log("Error while adding TagsInFiles")
                             log("\t%s - %s"% (Exception,msg) )
+                            log("%s %s - %s"%(idFile,idTagType,value))
+                            print """ INSERT INTO TagsInFiles(idTagContent,idFile) SELECT t.idTagContent, %d FROM TagContents t WHERE t.idTagType=%d AND t.TagContent = '%s' """%(idFile,idTagType,value)
 
 
     # XMP Person tags
@@ -913,8 +917,8 @@ def DB_folder_insert(foldername,folderpath,parentfolderID,haspic):
     cn=conn.cursor()
     conn.text_factory = sqlite.OptimizedUnicode
     
-    foldername.replace("'", "''")
-    folderpath.replace("'", "''")    
+    #foldername = foldername.replace("'", "''")
+    #folderpath = folderpath.replace("'", "''")    
     
     #insert in the folders database
     try:
@@ -951,9 +955,9 @@ def get_children(folderid):
 
 def DB_del_pic(picpath,picfile=None): #TODO : revoir la vérif du dossier inutile
     """Supprime le chemin/fichier de la base. Si aucun fichier n'est fourni, toutes les images du chemin sont supprimées de la base"""
-    picpath.replace("'", "''")
+    picpath = picpath.replace("'", "''")
     if picfile != None:
-        picfile.replace("'", "''")
+        picfile = picfile.replace("'", "''")
     if picfile:
         #on supprime le fichier de la base
         #print """DELETE FROM files WHERE idFolder = (SELECT idFolder FROM folders WHERE FullPath="%s") AND strFilename="%s" """%(picpath,picfile)
@@ -1018,8 +1022,8 @@ def fileSHA ( filepath ) :
 
 def getFileSha (path,filename):
 
-    path.replace("'", "''")    
-    filename.replace("'", "''")    
+    path = path.replace("'", "''")    
+    filename = filename.replace("'", "''")    
     #return the SHA in DB for the given picture
     try:
         return [row for row in Request( """select sha from files where strPath="%s" and strFilename="%s";"""%(path,filename))][0][0]
@@ -1027,8 +1031,8 @@ def getFileSha (path,filename):
         return "0"
 
 def getFileMtime(path,filename):
-    path.replace("'", "''")    
-    filename.replace("'", "''")    
+    path = path.replace("'", "''")    
+    filename = filename.replace("'", "''")    
     #return the modification time 'mtime' in DB for the given picture
     return [row for row in Request( """select mtime from files where strPath="%s" and strFilename="%s";"""%(path,filename))][0][0]
 
@@ -1036,8 +1040,8 @@ def DB_deltree(picpath):
     pass
 
 def getRating(path,filename):
-    path.replace("'", "''")    
-    filename.replace("'", "''")    
+    path = path.replace("'", "''")    
+    filename = filename.replace("'", "''")    
     try:
         return [row for row in Request( """SELECT files."Image Rating" FROM files WHERE strPath="%s" AND strFilename="%s";"""%(path,filename) )][0][0]
     except IndexError:
@@ -1052,13 +1056,13 @@ def ListCollections():
 
 def NewCollection(Colname):
     """Add a new collection"""
-    Colname.replace("'", "''")        
+    Colname = Colname.replace("'", "''")        
     if Colname :
         Request( """INSERT INTO Collections(CollectionName) VALUES ("%s")"""%Colname )
     else:
         log( """NewCollection : User did not specify a name for the collection.""")
 def delCollection(Colname):
-    Colname.replace("'", "''")        
+    Colname = Colname.replace("'", "''")        
     """delete a collection"""
     if Colname:
         Request( """DELETE FROM FilesInCollections WHERE idCol=(SELECT idCol FROM Collections WHERE CollectionName="%s");"""%Colname )
@@ -1066,13 +1070,13 @@ def delCollection(Colname):
     else:
         log( """delCollection : User did not specify a name for the collection""" )
 def getCollectionPics(Colname):
-    Colname.replace("'", "''")        
+    Colname = Colname.replace("'", "''")        
     """List all pics associated to the Collection given as Colname"""
     return [row for row in Request( """SELECT strPath,strFilename FROM Files WHERE idFile IN (SELECT idFile FROM FilesInCollections WHERE idCol IN (SELECT idCol FROM Collections WHERE CollectionName='%s')) ORDER BY "EXIF DateTimeOriginal" ASC;"""%Colname)]
 
 def renCollection(Colname,newname):
-    Colname.replace("'", "''")        
-    newname.replace("'", "''")        
+    Colname = Colname.replace("'", "''")        
+    newname = newname.replace("'", "''")        
     """rename give collection"""
     if Colname:
         Request( """UPDATE Collections SET CollectionName = "%s" WHERE CollectionName="%s";"""%(newname,Colname) )
@@ -1080,9 +1084,9 @@ def renCollection(Colname,newname):
         log( """renCollection : User did not specify a name for the collection""")
 
 def addPicToCollection(Colname,filepath,filename):
-    Colname.replace("'", "''")        
-    filepath.replace("'", "''")        
-    filename.replace("'", "''")        
+    Colname = Colname.replace("'", "''")        
+    filepath = filepath.replace("'", "''")        
+    filename = filename.replace("'", "''")        
 
     #cette requête ne vérifie pas si :
     #   1- le nom de la collection existe dans la table Collections
@@ -1093,9 +1097,9 @@ def addPicToCollection(Colname,filepath,filename):
     Request( """INSERT INTO FilesInCollections(idCol,idFile) VALUES ( (SELECT idCol FROM Collections WHERE CollectionName="%s") , (SELECT idFile FROM files WHERE strPath="%s" AND strFilename="%s") )"""%(Colname,filepath,filename) )
 
 def delPicFromCollection(Colname,filepath,filename):
-    Colname.replace("'", "''")        
-    filepath.replace("'", "''")        
-    filename.replace("'", "''")     
+    Colname = Colname.replace("'", "''")        
+    filepath = filepath.replace("'", "''")        
+    filename = filename.replace("'", "''")      
     
     Request( """DELETE FROM FilesInCollections WHERE idCol=(SELECT idCol FROM Collections WHERE CollectionName="%s") AND idFile=(SELECT idFile FROM files WHERE strPath="%s" AND strFilename="%s")"""%(Colname,filepath,filename) )
 
@@ -1107,33 +1111,33 @@ def ListPeriodes():
     return [row for row in Request( """SELECT PeriodeName,DateStart,DateEnd FROM Periodes""")]
 
 def addPeriode(periodname,datestart,dateend):
-    periodname.replace("'", "''")      
+    periodname = periodname.replace("'", "''")      
     
     #datestart et dateend doivent être au format string ex.: "datetime('2009-07-12')" ou "strftime('%Y',now)"
     Request( """INSERT INTO Periodes(PeriodeName,DateStart,DateEnd) VALUES ('%s',%s,%s)"""%(periodname,datestart,dateend) )
     return
 
 def delPeriode(periodname):
-    periodname.replace("'", "''")      
+    periodname = periodname.replace("'", "''")      
 
     Request( """DELETE FROM Periodes WHERE PeriodeName="%s" """%periodname )
     return
 
 def renPeriode(periodname,newname,newdatestart,newdateend):
-    periodname.replace("'", "''")      
-    newname.replace("'", "''")      
+    periodname = periodname.replace("'", "''")      
+    newname = newname.replace("'", "''")      
         
     Request( """UPDATE Periodes SET PeriodeName = "%s",DateStart = datetime("%s") , DateEnd = datetime("%s") WHERE PeriodeName="%s" """%(newname,newdatestart,newdateend,periodname) )
     return
 
 def PicsForPeriode(periodname):
-    periodname.replace("'", "''")      
+    periodname = periodname.replace("'", "''")      
     """Get pics for the given period name"""
     period = Request( """SELECT DateStart,DateEnd FROM Periodes WHERE PeriodeName='%s'"""%periodname )
     return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE datetime("EXIF DateTimeOriginal") BETWEEN %s AND %s ORDER BY "EXIF DateTimeOriginal" ASC"""%period )]
 
 def Searchfiles(column,searchterm,count=False):
-    searchterm.replace("'", "''")      
+    searchterm = searchterm.replace("'", "''")      
 
     if count:
         return [row for row in Request( """SELECT count(*) FROM files WHERE files.'%s' LIKE "%%%s%%";"""%(column,searchterm))][0][0]
@@ -1141,8 +1145,8 @@ def Searchfiles(column,searchterm,count=False):
         return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE files.'%s' LIKE "%%%s%%";"""%(column,searchterm))]
 ###
 def getGPS(filepath,filename):
-    filepath.replace("'", "''")
-    filename.replace("'", "''")
+    filepath = filepath.replace("'", "''")
+    filename = filename.replace("'", "''")
 
     coords = Request( """SELECT files.'GPS GPSLatitudeRef',files.'GPS GPSLatitude' as lat,files.'GPS GPSLongitudeRef',files.'GPS GPSLongitude' as lon FROM files WHERE lat NOT NULL AND lon NOT NULL AND strPath="%s" AND strFilename="%s";"""%(filepath,filename) )
     try:
@@ -1176,14 +1180,14 @@ def RootFolders():
     return [row for row in Request( """SELECT path,recursive,remove,exclude FROM Rootpaths ORDER BY path""")]
 
 def AddRoot(path,recursive,remove,exclude):
-    path.replace("'", "''")
+    path = path.replace("'", "''")
     
     "add the path root inside the database. Recursive is 0/1 for recursive scan, remove is 0/1 for removing files that are not physically in the place"
     DB_cleanup_keywords()
     Request( """INSERT INTO Rootpaths(path,recursive,remove,exclude) VALUES ("%s",%s,%s,%s)"""%(path,recursive,remove,exclude) )
 
 def getRoot(path):
-    path.replace("'", "''")
+    path = path.replace("'", "''")
     return [row for row in Request( """SELECT path,recursive,remove,exclude FROM Rootpaths WHERE path="%s" """%path )][0]
 
 
@@ -1192,14 +1196,14 @@ def RemoveRoot(path):
     "remove the given rootpath, remove pics from this path, ..."
     #first remove the path with all its pictures / subfolders / keywords / pictures in collections...
     RemovePath(path)
-    path.replace("'", "''")
+    path = path.replace("'", "''")
     #then remove the rootpath itself
     Request( """DELETE FROM Rootpaths WHERE path="%s" """%path )
 
 
 def RemovePath(path):
     "remove the given rootpath, remove pics from this path, ..."
-    path.replace("'", "''")
+    path = path.replace("'", "''")
     cptremoved = 0
     #récupère l'id de ce chemin
     try:
@@ -1475,7 +1479,7 @@ def search_filter_tags(FilterInlineArrayTrue, FilterInlineArrayFalse, MatchAll):
 
                 KeyValue = Filter.split("||")
                 Key = KeyValue[0]
-                Value = KeyValue[1]
+                Value = KeyValue[1].replace("'", "''")
                 
                 Condition = "AND tt.TagTranslation = '"+Key+"' AND tc.TagContent = '"+Value+"' "
                 OuterSelect += " AND idFile in ( " + InnerSelect + Condition + " ) "
@@ -1485,7 +1489,7 @@ def search_filter_tags(FilterInlineArrayTrue, FilterInlineArrayFalse, MatchAll):
 
                 KeyValue = Filter.split("||")
                 Key = KeyValue[0]
-                Value = KeyValue[1]
+                Value = KeyValue[1].replace("'", "''")
                 
                 Condition = "AND tt.TagTranslation = '"+Key+"' AND tc.TagContent = '"+Value+"' "
                 OuterSelect += " AND idFile not in ( " + InnerSelect + Condition + " ) "            
@@ -1499,7 +1503,7 @@ def search_filter_tags(FilterInlineArrayTrue, FilterInlineArrayFalse, MatchAll):
 
                 KeyValue = Filter.split("||")
                 Key = KeyValue[0]
-                Value = KeyValue[1]
+                Value = KeyValue[1].replace("'", "''")
                 
                 if Key != OldKey:
                     if len(OldKey) > 0:
@@ -1518,7 +1522,7 @@ def search_filter_tags(FilterInlineArrayTrue, FilterInlineArrayFalse, MatchAll):
 
                 KeyValue = Filter.split("||")
                 Key = KeyValue[0]
-                Value = KeyValue[1]
+                Value = KeyValue[1].replace("'", "''")
                 
                 if Key != OldKey:
                     if len(OldKey) > 0:
@@ -1538,6 +1542,7 @@ def search_tag(tag=None,tagtype='a',limit=-1,offset=-1):
     """Look for given keyword and return the list of pictures.
 If tag is not given, pictures with no keywords are returned"""
     if tag is not None: #si le mot clé est fourni
+        tag = tag.replace("'", "''")
         return [row for row in Request( """SELECT distinct strPath,strFilename FROM files f, TagContents tc, TagsInFiles tif, TagTypes tt WHERE f.idFile = tif.idFile AND tif.idTagContent = tc.idTagContent AND tc.TagContent = '%s' and tc.idTagType = tt.idTagType  and length(trim(tt.TagTranslation))>0 and tt.TagTranslation = '%s' LIMIT %s OFFSET %s"""%(tag.encode("utf8"),tagtype.encode("utf8"),limit,offset))]
     else: #sinon, on retourne toutes les images qui ne sont pas associées à des mots clés
         return [row for row in Request( """SELECT distinct strPath,strFilename FROM files WHERE idFile NOT IN (SELECT DISTINCT idFile FROM TagsInFiles) LIMIT %s OFFSET %s"""%(limit,offset) )]
@@ -1625,11 +1630,13 @@ ORDER BY LOWER(TagTranslation) ASC""" )]
 
 def countTagTypes(kw,limit=-1,offset=-1):
     if kw is not None:
+        kw = kw.replace("'", "''")
         return Request("""SELECT count(distinct TagContent) FROM tagsInFiles tif, TagContents tc, TagTypes tt WHERE tif.idTagContent = tc.idTagContent AND tc.idTagType = tt.idTagType and length(trim(tt.TagTranslation))>0 and tt.TagTranslation ='%s' """%kw.encode("utf8"))[0][0]
     else:
         return Request("""SELECT count(*) FROM TagTypes where length(trim(TagTranslation))>0""" )[0][0]
         
 def setTranslatedTagType(TagType, TagTranslation):
+    TagTranslation = TagTranslation.replace("'", "''")
     Request("Update TagTypes set TagTranslation = '%s' where TagType = '%s'"%(TagTranslation.encode('utf-8'), TagType.encode('utf-8')))
     
 def getTagTypesForTranslation():
@@ -1641,6 +1648,7 @@ def list_Tags(tagType):
 
 def countTags(kw,tagType, limit=-1,offset=-1):
     if kw is not None:
+        kw = kw.replace("'", "''")
         return Request("""select count(distinct idFile) from  TagContents tc, TagsInFiles tif, TagTypes tt  where tc.idTagContent = tif.idTagContent and tc.TagContent = '%s' and tc.idTagType = tt.idTagType and tt.TagTranslation = '%s'"""%(kw.encode("utf8"), tagType.encode("utf8")))[0][0]
     else:
         return Request("""SELECT count(*) FROM files WHERE idFile not in (SELECT DISTINCT idFile FROM TagsInFiles)""" )[0][0]
@@ -1651,6 +1659,7 @@ def search_person(person=None,limit=-1,offset=-1):
     """Look for given person and return the list of pictures.
 If person is not given, pictures with no person are returned"""
     if person is not None: #si le mot clé est fourni
+        person = person.replace("'", "''")
         return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE idFile in (SELECT idFile FROM PersonsInFiles WHERE idPerson =(SELECT max(idPerson) FROM persons WHERE person="%s")) LIMIT %s OFFSET %s"""%(person.encode("utf8"),limit,offset))]
     else: #sinon, on retourne toutes les images qui ne sont pas associées à des mots clés
         return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE idFile NOT IN (SELECT DISTINCT idFile FROM PersonsInFiles) LIMIT %s OFFSET %s"""%(limit,offset) )]
@@ -1661,6 +1670,7 @@ def list_person():
 
 def count_person(person,limit=-1,offset=-1):
     if person is not None:
+        person = person.replace("'", "''")
         return Request("""SELECT count(*) FROM files WHERE idFile in (SELECT idFile FROM PersonsInFiles WHERE idPerson =(SELECT idPerson FROM persons WHERE person="%s"))"""%person.encode("utf8"))[0][0]
     else:
         return Request("""SELECT count(*) FROM files WHERE idFile not in (SELECT DISTINCT idFile FROM PersonsInFiles)""" )[0][0]
@@ -1671,6 +1681,7 @@ def search_keyword(kw=None,limit=-1,offset=-1):
     """Look for given keyword and return the list of pictures.
 If keyword is not given, pictures with no keywords are returned"""
     if kw is not None: #si le mot clé est fourni
+        kw = kw.replace("'", "''")
         return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE idFile in (SELECT idFile FROM KeywordsInFiles WHERE idKW =(SELECT idKW FROM keywords WHERE keyword="%s")) LIMIT %s OFFSET %s"""%(kw.encode("utf8"),limit,offset))]
     else: #sinon, on retourne toutes les images qui ne sont pas associées à des mots clés
         return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE idFile NOT IN (SELECT DISTINCT idFile FROM KeywordsInFiles) LIMIT %s OFFSET %s"""%(limit,offset) )]
@@ -1681,6 +1692,7 @@ def list_KW():
 
 def countKW(kw,limit=-1,offset=-1):
     if kw is not None:
+        kw = kw.replace("'", "''")
         return Request("""SELECT count(*) FROM files WHERE idFile in (SELECT idFile FROM KeywordsInFiles WHERE idKW =(SELECT idKW FROM keywords WHERE keyword="%s"))"""%kw.encode("utf8"))[0][0]
     else:
         return Request("""SELECT count(*) FROM files WHERE idFile not in (SELECT DISTINCT idFile FROM KeywordsInFiles)""" )[0][0]
@@ -1688,6 +1700,7 @@ def countKW(kw,limit=-1,offset=-1):
 ### MDB
 def search_category(p_category=None):
     if p_category is not None:
+        p_category = p_category.replace("'", "''")
         return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE idFile in (SELECT idFile FROM CategoriesInFiles WHERE idCategory =(SELECT idCategory FROM Categories WHERE Category="%s"))"""%p_category.encode("utf8"))]
     else:
         return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE idFile NOT IN (SELECT DISTINCT idFile FROM CategoriesInFiles)""" )]
@@ -1696,13 +1709,15 @@ def list_category():
     return [row for (row,) in Request( """SELECT Category FROM Categories ORDER BY LOWER(Category) ASC""" )]
 
 def count_category(p_category):
-    if p_category is not None:
+    if p_category is not None:  
+        p_category = p_category.replace("'", "''")
         return Request("""SELECT count(*) FROM CategoriesInFiles WHERE idCategory =(SELECT idCategory FROM Categories WHERE Category="%s")"""%p_category.encode("utf8"))[0][0]
     else:
         return Request("""SELECT count(*) FROM files WHERE idFile not in (SELECT DISTINCT idFile FROM CategoriesInFiles)""" )[0][0]
 
 def search_supplementalcategory(p_supplementalcategory=None):
     if p_supplementalcategory is not None:
+        p_supplementalcategory = p_supplementalcategory.replace("'", "''")
         return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE idFile in (SELECT idFile FROM SupplementalCategoriesInFiles WHERE idSupplementalCategory =(SELECT idSupplementalCategory FROM SupplementalCategories WHERE SupplementalCategory="%s"))"""%p_supplementalcategory.encode("utf8"))]
     else:
         return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE idFile NOT IN (SELECT DISTINCT idFile FROM SupplementalCategoriesInFiles)""" )]
@@ -1712,6 +1727,7 @@ def list_supplementalcategory():
 
 def count_supplementalcategory(p_supplementalcategory):
     if p_supplementalcategory is not None:
+        p_supplementalcategory = p_supplementalcategory.replace("'", "''")
         return Request("""SELECT count(*) FROM SupplementalCategoriesInFiles WHERE idSupplementalCategory =(SELECT idSupplementalCategory FROM SupplementalCategories WHERE SupplementalCategory="%s")"""%p_supplementalcategory.encode("utf8"))[0][0]
     else:
         return Request("""SELECT count(*) FROM files WHERE idFile not in (SELECT DISTINCT idFile FROM SupplementalCategoriesInFiles)""" )[0][0]
@@ -1724,12 +1740,14 @@ def list_country():
 
 def search_country(p_country=None):
     if p_country is None:
+        p_country = p_country.replace("'", "''")
         return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE idFile NOT IN (SELECT DISTINCT idFile FROM CountriesInFiles)""" )]
     else:
         return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE idFile in (SELECT idFile FROM CountriesInFiles WHERE idCountry =(SELECT idCountry FROM Countries WHERE Country="%s"))"""%p_country.encode("utf8"))]
 
 def count_country(p_country): #USELESS ?
     if p_country is None:
+        p_country = p_country.replace("'", "''")
         return Request("""SELECT count(*) FROM files WHERE idFile not in (SELECT DISTINCT idFile FROM CountriesInFiles)""" )[0][0]
     else:
         return Request("""SELECT count(*) FROM CountriesInFiles WHERE idCountry=(SELECT idCountry FROM Countries WHERE Country="%s")"""%p_country.encode("utf8"))[0][0]
@@ -1739,6 +1757,7 @@ def list_city_old(): #USELESS ?
 
 def list_city(country=None):
     if not country:
+        country = country.replace("'", "''")
         return [row for row in Request( """SELECT ifnull(City,""), count(*) from files  GROUP BY city""" )]
     else:
         return [row for row in Request( """SELECT ifnull(City,""), count(*) from files where "country/primary location name" = "%s" GROUP BY city"""%country.encode("utf8") )]
@@ -1748,18 +1767,24 @@ def search_city4country(country,city=""):
     #if not country and not city (shouldn't happen) : display all pics
     #if not country but city (shouldn't happen)
     #if not city but country : show all pics for this country
-    if city: citystmt = """ AND City = "%s" ORDER BY City ASC"""%city.encode("utf8")
-    else: citystmt = """ AND City is Null or City = "" """
+    country = country.replace("'", "''")
+    if city: 
+        city = city.replace("'", "''")
+        citystmt = """ AND City = "%s" ORDER BY City ASC"""%city.encode("utf8")
+    else: 
+        citystmt = """ AND City is Null or City = "" """
     return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE "country/primary location name" = "%s"%s"""%(country.encode("utf8"),citystmt))]
 
 def search_city(p_city=None):
     if p_city is None:
+        p_city = p_city.replace("'", "''")
         return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE idFile NOT IN (SELECT DISTINCT idFile FROM CitiesInFiles)""" )]
     else:
         return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE idFile in (SELECT idFile FROM CitiesInFiles WHERE idCity =(SELECT idCity FROM Cities WHERE City="%s"))"""%p_city.encode("utf8"))]
 
 def count_city(p_city):
     if p_city is None:
+        p_city = p_city.replace("'", "''")
         return Request("""SELECT count(*) FROM files WHERE idFile not in (SELECT DISTINCT idFile FROM CitiesInFiles)""" )[0][0]
     else:
         return Request("""SELECT count(*) FROM CitiesInFiles WHERE idCity=(SELECT idCity FROM Cities WHERE City="%s")"""%p_city.encode("utf8"))[0][0]
@@ -1902,6 +1927,8 @@ def get_pics_dates():
     return [t for (t,) in Request("""SELECT DISTINCT strftime("%Y-%m-%d","EXIF DateTimeOriginal") FROM files WHERE "EXIF DateTimeOriginal"  NOT NULL ORDER BY "EXIF DateTimeOriginal" ASC""")]
 
 def getDate(path,filename):
+    path     = path.replace("'", "''")
+    filename = filename.replace("'", "''")
     try:
         return [row for row in Request( """SELECT files."EXIF DateTimeOriginal" FROM files WHERE strPath="%s" AND strFilename="%s";"""%(path,filename) )][0][0]
     except IndexError:

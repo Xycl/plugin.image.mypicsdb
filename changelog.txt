@@ -1,3 +1,6 @@
+2012/11/04 --> v 1.2.3
+Fix:    Apostrophes in tags caused errors
+
 2012/11/04 --> v 1.2.2
 Fix:    DB cleanup function had a bug which caused the "browse by folder" and "browse by date" menus to stop working.
 
