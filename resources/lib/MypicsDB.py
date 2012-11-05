@@ -1409,9 +1409,8 @@ def RequestWithBinds(SQLrequest, bindVariablesOrg):
     cn=conn.cursor()
     bindVariables = []
     for value in bindVariablesOrg:
-        print smart_unicode(value).encode('utf-8') + "  " + str(type(value))
         if type(value) == type('str'):
-            bindVariables.append(smart_unicode(value) )
+            bindVariables.append(smart_unicode(value))
         else:
             bindVariables.append(value)
     try:
@@ -1602,6 +1601,15 @@ where length(trim(TagTranslation))>0
 and tt.idTagType = tc.idTagType
 and tc.idTagContent = tif.idTagContent
 ORDER BY LOWER(TagTranslation) ASC""" )]
+
+def list_TagTypesAndCount():
+    DefaultTagTypesTranslation()
+    return [row for row in Request( """
+SELECT tt.TagTranslation, count(*)
+  FROM TagTypes tt, TagContents tc
+ where length(trim(TagTranslation)) > 0 
+   and tt.idTagType                 = tc.idTagType
+group by tt.tagtranslation """   )]
 
 def countTagTypes(kw,limit=-1,offset=-1):
     if kw is not None:
