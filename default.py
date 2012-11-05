@@ -196,8 +196,8 @@ class Main:
             if coords: 
                 suffix = suffix + "[COLOR=C0C0C0C0][G][/COLOR]"
 
-            (exiftime,) = MPDB.Request( """select coalesce("EXIF DateTimeOriginal", '0') from files where strPath="%s" and strFilename="%s" """%(picpath,picname))
-            resolution = MPDB.Request( """select coalesce("EXIF ExifImageWidth", '0'),  coalesce("EXIF ExifImageLength", '0') from files where strPath="%s" and strFilename="%s" """%(picpath,picname))
+            (exiftime,) = MPDB.RequestWithBinds( """select coalesce("EXIF DateTimeOriginal", '0') from files where strPath=? and strFilename=? """,(picpath,picname))
+            resolution = MPDB.RequestWithBinds( """select coalesce("EXIF ExifImageWidth", '0'),  coalesce("EXIF ExifImageLength", '0') from files where strPath=? and strFilename=? """,(picpath,picname))
             infolabels = { "picturepath":picname+" "+suffix, "date": date  }
             if exiftime[0] != None and exiftime[0] != "0":
                 infolabels["exif:exiftime"] = exiftime[0]
@@ -423,11 +423,11 @@ class Main:
         if not self.args.folderid: #No Id given, get all the root folders
             childrenfolders=[row for row in MPDB.Request("SELECT idFolder,FolderName FROM folders WHERE ParentFolder is null")]
         else:#else, get subfolders for given folder Id
-            childrenfolders=[row for row in MPDB.Request("SELECT idFolder,FolderName FROM folders WHERE ParentFolder='%s'"%self.args.folderid)]
+            childrenfolders=[row for row in MPDB.RequestWithBinds("SELECT idFolder,FolderName FROM folders WHERE ParentFolder=?",(self.args.folderid,)) ]
 
         #show the folders
         for idchildren, childrenfolder in childrenfolders:
-            path = MPDB.Request( "SELECT FullPath FROM folders WHERE idFolder = %s"%idchildren )[0][0]
+            path = MPDB.RequestWithBinds( "SELECT FullPath FROM folders WHERE idFolder = ?",(idchildren,) )[0][0]
             self.addDir(name      = "%s (%s %s)"%(childrenfolder,MPDB.countPicsFolder(idchildren),__language__(30050)), #libellé
                         params    = [("method","folders"),("folderid",str(idchildren)),("onlypics","non"),("viewmode","view")],#paramètres
                         action    = "showfolder",#action
@@ -437,7 +437,7 @@ class Main:
                         total = len(childrenfolders))#nb total d'éléments
 
         #maintenant, on liste les photos si il y en a, du dossier en cours
-        picsfromfolder = [row for row in MPDB.Request("SELECT p.FullPath,f.strFilename FROM files f,folders p WHERE f.idFolder=p.idFolder AND f.idFolder='%s'"%self.args.folderid)]
+        picsfromfolder = [row for row in MPDB.RequestWithBinds("SELECT p.FullPath,f.strFilename FROM files f,folders p WHERE f.idFolder=p.idFolder AND f.idFolder=? ", (self.args.folderid, ) )]
 
         for path,filename in picsfromfolder:
             path     = decoder.smart_unicode(path)
@@ -1026,7 +1026,7 @@ class Main:
 
     def rename_period(self):
         #TODO : test if 'datestart' is before 'dateend'
-        datestart,dateend = MPDB.Request( """SELECT DateStart,DateEnd FROM Periodes WHERE PeriodeName='%s'"""%self.args.periodname )[0]
+        datestart,dateend = MPDB.RequestWithBinds( """SELECT DateStart,DateEnd FROM Periodes WHERE PeriodeName=? """, (self.args.periodname,) )[0]
 
         dialog = xbmcgui.Dialog()
         d = dialog.numeric(1, "Input start date for period" ,strftime("%d/%m/%Y",strptime(datestart,"%Y-%m-%d %H:%M:%S")) )

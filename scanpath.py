@@ -454,13 +454,13 @@ def browse_folder(dirname,parentfolderID=None,recursive=True,updatepics=False,ad
         MPDB.log( "" )
 
     if cpt:
-        MPDB.log( "%s new pictures found in %s"%(str(cpt),dirname) )
+        MPDB.log( "%s new pictures found in %s"%(str(cpt),dirname), MPDB.LOGNOTICE )
         #unicode(info.data[k].encode("utf8").__str__(),"utf8")
         compte=compte+cpt
         cpt=0
     if recursive: #gestion de la recursivité. On rappel cette même fonction pour chaque dossier rencontré
-        MPDB.log( "scan the subfolders of :")
-        MPDB.log( dirname )
+        MPDB.log( "scan the subfolders of :", MPDB.LOGNOTICE)
+        MPDB.log( dirname, MPDB.LOGNOTICE )
         for item in listdir:
             try:
                 joineddir = join(dirname,item)
@@ -543,7 +543,7 @@ def get_metas(dirname,picfile):
             #EXIF infos are added to a dictionnary
             picentry.update(exif)
         except:
-            print "Exception thrown from  MPDB.get_exif"
+            print "Exception thrown from MPDB.get_exif"
 
         ###############################
         #    getting  IPTC  infos     #
@@ -554,7 +554,7 @@ def get_metas(dirname,picfile):
             #IPTC infos are added to a dictionnary
             picentry.update(iptc)
         except:
-            print "Exception thrown from  MPDB.get_iptc"
+            print "Exception thrown from MPDB.get_iptc"
 
         ###############################
         #    getting  XMP infos       #
@@ -563,13 +563,13 @@ def get_metas(dirname,picfile):
             xmp = MPDB.get_xmp(dirname, picfile)
             picentry.update(xmp)
         except:
-            print "Exception thrown from  MPDB.get_xmp"
+            print "Exception thrown from MPDB.get_xmp"
 
         
     else:
         picentry={}
         #this should never happen
-        print "file was neither of video type, nor picture type... Check the extensions in settings"
+        MPDB.log( "file was neither of video type, nor picture type... Check the extensions in settings", LOGNOTICE )
 
     return picentry
 
