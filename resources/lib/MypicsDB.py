@@ -1409,7 +1409,10 @@ def RequestWithBinds(SQLrequest, bindVariablesOrg):
     cn=conn.cursor()
     bindVariables = []
     for value in bindVariablesOrg:
-        bindVariables.append(smart_unicode(value))
+        if type(value) == 'string' or type(value) == 'unicode':
+            bindVariables.append(smart_unicode(value))
+        else:
+            bindVariables.append(value)
     try:
         cn.execute( SQLrequest, bindVariables )
         conn.commit()
