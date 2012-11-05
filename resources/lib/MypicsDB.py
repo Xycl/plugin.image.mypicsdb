@@ -1409,8 +1409,9 @@ def RequestWithBinds(SQLrequest, bindVariablesOrg):
     cn=conn.cursor()
     bindVariables = []
     for value in bindVariablesOrg:
-        if type(value) == 'string' or type(value) == 'unicode':
-            bindVariables.append(smart_unicode(value))
+        print smart_unicode(value).encode('utf-8') + "  " + str(type(value))
+        if type(value) == type('str'):
+            bindVariables.append(smart_unicode(value) )
         else:
             bindVariables.append(value)
     try:
