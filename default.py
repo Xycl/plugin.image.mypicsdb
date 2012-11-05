@@ -500,10 +500,11 @@ class Main:
 
 
     def show_tagtypes(self):
-        listtags = [u"%s"%k  for k in MPDB.list_TagTypes()]
+        #listtags = [u"%s"%k  for k in MPDB.list_TagTypesAndCount()]
+        listtags =  MPDB.list_TagTypesAndCount()
         total = len(listtags)
-        for tag in listtags:
-            nb = MPDB.countTagTypes(tag)
+        for tag, nb in listtags:
+            #nb = MPDB.countTagTypes(tag)
             if nb:
                 self.addDir(name      = "%s (%s %s)"%(tag,nb,__language__(30052)), #libellé
                             params    = [("method","tagtype"),("tagtype",tag),("page","1"),("viewmode","view")],#paramètres

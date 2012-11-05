@@ -1541,8 +1541,8 @@ def DefaultTagTypesTranslation():
     
     Request("update TagTypes set TagTranslation = 'Date Added' where TagTranslation =  'DateAdded'")
     Request("update TagTypes set TagTranslation = 'Date Created' where TagTranslation =  'EXIF DateTimeOriginal'")
-    Request("update TagTypes set TagTranslation = 'Date Created' where TagTranslation =  'Photoshop:DateCreated'")
-    Request("update TagTypes set TagTranslation = 'Date Created' where TagTranslation =  'Image DateTime'")
+    Request("update TagTypes set TagTranslation = 'Date/Time Created' where TagTranslation =  'Photoshop:DateCreated'")
+    Request("update TagTypes set TagTranslation = 'Date/Time Created' where TagTranslation =  'Image DateTime'")
     
     Request("update TagTypes set TagTranslation = 'Description' where TagTranslation =  'Photoshop:Headline'")
     Request("update TagTypes set TagTranslation = 'Description' where TagTranslation = 'Caption/abstract'")
@@ -1604,7 +1604,7 @@ ORDER BY LOWER(TagTranslation) ASC""" )]
 
 def countTagTypes(kw,limit=-1,offset=-1):
     if kw is not None:
-        return RequestWithBinds("""SELECT count(distinct TagContent) FROM tagsInFiles tif, TagContents tc, TagTypes tt WHERE tif.idTagContent = tc.idTagContent AND tc.idTagType = tt.idTagType and length(trim(tt.TagTranslation))>0 and tt.TagTranslation =? """, (kw.encode("utf8"),) )[0][0]
+        return RequestWithBinds("""SELECT count(distinct TagContent) FROM tagsInFiles tif, TagContents tc, TagTypes tt WHERE tif.idTagContent = tc.idTagContent AND tc.idTagType = tt.idTagType and length(trim(tt.TagTranslation))>0 and tt.TagTranslation =? """, (kw,) )[0][0]
     else:
         return Request("""SELECT count(*) FROM TagTypes where length(trim(TagTranslation))>0""" )[0][0]
         
@@ -1620,7 +1620,7 @@ def list_Tags(tagType):
 
 def countTags(kw,tagType, limit=-1,offset=-1):
     if kw is not None:
-        return RequestWithBinds("""select count(distinct idFile) from  TagContents tc, TagsInFiles tif, TagTypes tt  where tc.idTagContent = tif.idTagContent and tc.TagContent = ? and tc.idTagType = tt.idTagType and tt.TagTranslation = ? """,(kw.encode("utf8"), tagType.encode("utf8")))[0][0]
+        return RequestWithBinds("""select count(distinct idFile) from  TagContents tc, TagsInFiles tif, TagTypes tt  where tc.idTagContent = tif.idTagContent and tc.TagContent = ? and tc.idTagType = tt.idTagType and tt.TagTranslation = ? """,(kw, tagType))[0][0]
     else:
         return Request("""SELECT count(*) FROM files WHERE idFile not in (SELECT DISTINCT idFile FROM TagsInFiles)""" )[0][0]
 
@@ -1630,7 +1630,7 @@ def search_person(person=None,limit=-1,offset=-1):
     """Look for given person and return the list of pictures.
 If person is not given, pictures with no person are returned"""
     if person is not None: #si le mot clé est fourni
-        return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM files WHERE idFile in (SELECT idFile FROM PersonsInFiles WHERE idPerson =(SELECT max(idPerson) FROM persons WHERE person=?)) LIMIT %s OFFSET %s"""%(limit,offset),(person.encode("utf8"), ))]
+        return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM files WHERE idFile in (SELECT idFile FROM PersonsInFiles WHERE idPerson =(SELECT max(idPerson) FROM persons WHERE person=?)) LIMIT %s OFFSET %s"""%(limit,offset),(person, ))]
     else: #sinon, on retourne toutes les images qui ne sont pas associées à des mots clés
         return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE idFile NOT IN (SELECT DISTINCT idFile FROM PersonsInFiles) LIMIT %s OFFSET %s"""%(limit,offset) )]
 
@@ -1640,7 +1640,7 @@ def list_person():
 
 def count_person(person,limit=-1,offset=-1):
     if person is not None:
-        return RequestWithBinds("""SELECT count(*) FROM files WHERE idFile in (SELECT idFile FROM PersonsInFiles WHERE idPerson =(SELECT idPerson FROM persons WHERE person=?))""",(person.encode("utf8"),))[0][0]
+        return RequestWithBinds("""SELECT count(*) FROM files WHERE idFile in (SELECT idFile FROM PersonsInFiles WHERE idPerson =(SELECT idPerson FROM persons WHERE person=?))""",(person,))[0][0]
     else:
         return Request("""SELECT count(*) FROM files WHERE idFile not in (SELECT DISTINCT idFile FROM PersonsInFiles)""" )[0][0]
 
@@ -1650,7 +1650,7 @@ def search_keyword(kw=None,limit=-1,offset=-1):
     """Look for given keyword and return the list of pictures.
 If keyword is not given, pictures with no keywords are returned"""
     if kw is not None: #si le mot clé est fourni
-        return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM files WHERE idFile in (SELECT idFile FROM KeywordsInFiles WHERE idKW =(SELECT idKW FROM keywords WHERE keyword=?)) LIMIT %s OFFSET %s"""%(limit,offset),(kw.encode("utf8"), ))]
+        return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM files WHERE idFile in (SELECT idFile FROM KeywordsInFiles WHERE idKW =(SELECT idKW FROM keywords WHERE keyword=?)) LIMIT %s OFFSET %s"""%(limit,offset),(kw, ))]
     else: #sinon, on retourne toutes les images qui ne sont pas associées à des mots clés
         return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE idFile NOT IN (SELECT DISTINCT idFile FROM KeywordsInFiles) LIMIT %s OFFSET %s"""%(limit,offset) )]
 
@@ -1660,14 +1660,14 @@ def list_KW():
 
 def countKW(kw,limit=-1,offset=-1):
     if kw is not None:
-        return RequestWithBinds("""SELECT count(*) FROM files WHERE idFile in (SELECT idFile FROM KeywordsInFiles WHERE idKW =(SELECT idKW FROM keywords WHERE keyword=?))""",(kw.encode("utf8"),))[0][0]
+        return RequestWithBinds("""SELECT count(*) FROM files WHERE idFile in (SELECT idFile FROM KeywordsInFiles WHERE idKW =(SELECT idKW FROM keywords WHERE keyword=?))""",(kw,))[0][0]
     else:
         return Request("""SELECT count(*) FROM files WHERE idFile not in (SELECT DISTINCT idFile FROM KeywordsInFiles)""" )[0][0]
 
 ### MDB
 def search_category(p_category=None):
     if p_category is not None:
-        return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM files WHERE idFile in (SELECT idFile FROM CategoriesInFiles WHERE idCategory =(SELECT idCategory FROM Categories WHERE Category=?))""", (p_category.encode("utf8"), ))]
+        return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM files WHERE idFile in (SELECT idFile FROM CategoriesInFiles WHERE idCategory =(SELECT idCategory FROM Categories WHERE Category=?))""", (p_category, ))]
     else:
         return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE idFile NOT IN (SELECT DISTINCT idFile FROM CategoriesInFiles)""" )]
 
@@ -1676,13 +1676,13 @@ def list_category():
 
 def count_category(p_category):
     if p_category is not None:  
-        return RequestWithBinds("""SELECT count(*) FROM CategoriesInFiles WHERE idCategory =(SELECT idCategory FROM Categories WHERE Category=?)""", (p_category.encode("utf8"),))[0][0]
+        return RequestWithBinds("""SELECT count(*) FROM CategoriesInFiles WHERE idCategory =(SELECT idCategory FROM Categories WHERE Category=?)""", (p_category,))[0][0]
     else:
         return Request("""SELECT count(*) FROM files WHERE idFile not in (SELECT DISTINCT idFile FROM CategoriesInFiles)""" )[0][0]
 
 def search_supplementalcategory(p_supplementalcategory=None):
     if p_supplementalcategory is not None:
-        return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM files WHERE idFile in (SELECT idFile FROM SupplementalCategoriesInFiles WHERE idSupplementalCategory =(SELECT idSupplementalCategory FROM SupplementalCategories WHERE SupplementalCategory=?))""", (p_supplementalcategory.encode("utf8"),))]
+        return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM files WHERE idFile in (SELECT idFile FROM SupplementalCategoriesInFiles WHERE idSupplementalCategory =(SELECT idSupplementalCategory FROM SupplementalCategories WHERE SupplementalCategory=?))""", (p_supplementalcategory,))]
     else:
         return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE idFile NOT IN (SELECT DISTINCT idFile FROM SupplementalCategoriesInFiles)""" )]
 
@@ -1691,7 +1691,7 @@ def list_supplementalcategory():
 
 def count_supplementalcategory(p_supplementalcategory):
     if p_supplementalcategory is not None:
-        return RequestWithBinds("""SELECT count(*) FROM SupplementalCategoriesInFiles WHERE idSupplementalCategory =(SELECT idSupplementalCategory FROM SupplementalCategories WHERE SupplementalCategory=?)""",(p_supplementalcategory.encode("utf8"),))[0][0]
+        return RequestWithBinds("""SELECT count(*) FROM SupplementalCategoriesInFiles WHERE idSupplementalCategory =(SELECT idSupplementalCategory FROM SupplementalCategories WHERE SupplementalCategory=?)""",(p_supplementalcategory,))[0][0]
     else:
         return Request("""SELECT count(*) FROM files WHERE idFile not in (SELECT DISTINCT idFile FROM SupplementalCategoriesInFiles)""" )[0][0]
 
@@ -1705,13 +1705,13 @@ def search_country(p_country=None):
     if p_country is None:
         return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE idFile NOT IN (SELECT DISTINCT idFile FROM CountriesInFiles)""" )]
     else:
-        return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM files WHERE idFile in (SELECT idFile FROM CountriesInFiles WHERE idCountry =(SELECT idCountry FROM Countries WHERE Country=?))""",(p_country.encode("utf8"),))]
+        return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM files WHERE idFile in (SELECT idFile FROM CountriesInFiles WHERE idCountry =(SELECT idCountry FROM Countries WHERE Country=?))""",(p_country,))]
 
 def count_country(p_country): #USELESS ?
     if p_country is None:
         return Request("""SELECT count(*) FROM files WHERE idFile not in (SELECT DISTINCT idFile FROM CountriesInFiles)""" )[0][0]
     else:
-        return RequestWithBinds("""SELECT count(*) FROM CountriesInFiles WHERE idCountry=(SELECT idCountry FROM Countries WHERE Country=?)""",(p_country.encode("utf8"),))[0][0]
+        return RequestWithBinds("""SELECT count(*) FROM CountriesInFiles WHERE idCountry=(SELECT idCountry FROM Countries WHERE Country=?)""",(p_country,))[0][0]
 
 def list_city_old(): #USELESS ?
     return [row for (row,) in Request( """SELECT City FROM Cities ORDER BY LOWER(City) ASC""" )]
@@ -1720,7 +1720,7 @@ def list_city(country=None):
     if not country:
         return [row for row in Request( """SELECT ifnull(City,""), count(*) from files  GROUP BY city""" )]
     else:
-        return [row for row in RequestWithBinds( """SELECT ifnull(City,""), count(*) from files where "country/primary location name" = ? GROUP BY city""", (country.encode("utf8"),) )]
+        return [row for row in RequestWithBinds( """SELECT ifnull(City,""), count(*) from files where "country/primary location name" = ? GROUP BY city""", (country,) )]
 
 
 def search_city4country(country,city=""):
@@ -1729,22 +1729,22 @@ def search_city4country(country,city=""):
     #if not city but country : show all pics for this country
     if city: 
         citystmt = """ AND City = "%s" ORDER BY City ASC"""%city.encode("utf8")
-        return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM files WHERE "country/primary location name" = ? AND City = ? ORDER BY City ASC""", (country.encode("utf8"), city.encode("utf8")))]
+        return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM files WHERE "country/primary location name" = ? AND City = ? ORDER BY City ASC""", (country, city))]
     else: 
         citystmt = """ AND City is Null or City = "" """
-        return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM files WHERE "country/primary location name" = ? AND City is Null or City = "" """,(country.encode("utf8"), ))]
+        return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM files WHERE "country/primary location name" = ? AND City is Null or City = "" """,(country, ))]
 
 def search_city(p_city=None):
     if p_city is None:
         return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE idFile NOT IN (SELECT DISTINCT idFile FROM CitiesInFiles)""" )]
     else:
-        return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM files WHERE idFile in (SELECT idFile FROM CitiesInFiles WHERE idCity =(SELECT idCity FROM Cities WHERE City=?))""", (p_city.encode("utf8"), ))]
+        return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM files WHERE idFile in (SELECT idFile FROM CitiesInFiles WHERE idCity =(SELECT idCity FROM Cities WHERE City=?))""", (p_city, ))]
 
 def count_city(p_city):
     if p_city is None:
         return Request("""SELECT count(*) FROM files WHERE idFile not in (SELECT DISTINCT idFile FROM CitiesInFiles)""" )[0][0]
     else:
-        return RequestWithBinds("""SELECT count(*) FROM CitiesInFiles WHERE idCity=(SELECT idCity FROM Cities WHERE City=?)""", (p_city.encode("utf8"), ))[0][0]
+        return RequestWithBinds("""SELECT count(*) FROM CitiesInFiles WHERE idCity=(SELECT idCity FROM Cities WHERE City=?)""", (p_city, ))[0][0]
 
 
 def countPicsFolder(folderid):
