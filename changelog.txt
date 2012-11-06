@@ -1,3 +1,6 @@
+2012/11/06 --> v 1.2.7.2
+Fix:    Periods now work even if there are NULL dates in the pictures
+
 2012/11/06 --> v 1.2.7.1
 Fix:    Browse by date now works even if there are NULL dates in the pictures
 

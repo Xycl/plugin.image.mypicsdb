@@ -1890,7 +1890,7 @@ def search_all_dates():# TODO check if it is really usefull (check 'get_pics_dat
     return [t for t in Request("""SELECT strPath,strFilename FROM files ORDER BY "EXIF DateTimeOriginal" ASC""")]
 def get_pics_dates():
     """return all different dates from 'EXIF DateTimeOriginal'"""
-    return [t for (t,) in Request("""SELECT DISTINCT strftime("%Y-%m-%d","EXIF DateTimeOriginal") FROM files WHERE "EXIF DateTimeOriginal"  NOT NULL ORDER BY "EXIF DateTimeOriginal" ASC""")]
+    return [t for (t,) in Request("""SELECT DISTINCT strftime("%Y-%m-%d","EXIF DateTimeOriginal") FROM files WHERE length(trim("EXIF DateTimeOriginal"))>0  ORDER BY "EXIF DateTimeOriginal" ASC""")]
 
 def getDate(path,filename):
     try:
