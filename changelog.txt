@@ -1,3 +1,6 @@
+2012/11/06 --> v 1.2.7.1
+Fix:    Browse by date now works even if there are NULL dates in the pictures
+
 2012/11/05 --> v 1.2.4 - 1.2.7
 Fix:    Changed string variables in SQL statements to bind variables.
 Fix:    Unicode issue in RequestWithBinds()

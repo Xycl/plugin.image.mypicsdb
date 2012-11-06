@@ -347,6 +347,8 @@ class Main:
     def show_date(self):
         #period = year|month|date
         #value  = "2009"|"12/2009"|"25/12/2009"
+        #print "show_date"
+        #print self.args.period
         action="showdate"
         weekdayname = __language__(30005).split("|")
         monthname = __language__(30006).split("|")
@@ -354,6 +356,7 @@ class Main:
         fullmonthname = __language__(30008).split("|")
         if self.args.period=="year":
             listperiod=MPDB.get_years()
+            #print listperiod
             nextperiod="month"
             allperiod =""
             action="showdate"
@@ -384,36 +387,36 @@ class Main:
             listperiod=[]
             nextperiod=None
 
-        if not None in listperiod:
-            dptd = displaythisdate
-            dptd = dptd.replace("%b",monthname[strptime(self.args.value,thisdateformat).tm_mon - 1])    #replace %b marker by short month name
-            dptd = dptd.replace("%B",fullmonthname[strptime(self.args.value,thisdateformat).tm_mon - 1])#replace %B marker by long month name
-            nameperiode = strftime(dptd.encode("utf8"),strptime(self.args.value,thisdateformat))
-            self.addDir(name      = __language__(30100)%(nameperiode.decode("utf8"),MPDB.countPeriod(allperiod,self.args.value)), #libellé#"All the period %s (%s pics)"%(self.args.value,MPDB.countPeriod(allperiod,self.args.value)), #libellé
-                        params    = [("method","date"),("period",allperiod),("value",self.args.value),("page",""),("viewmode","view")],#paramètres
-                        action    = "showpics",#action
-                        iconimage = join(PIC_PATH,"dates.png"),#icone
-                        fanart    = join(PIC_PATH,"fanart-date.png"),
-                        contextmenu   = [(__language__(30152),"XBMC.RunPlugin(\"%s?action='addfolder'&method='date'&period='%s'&value='%s'&viewmode='scan'\")"%(sys.argv[0],allperiod,self.args.value)),
-                                         ("diaporama"        ,"XBMC.RunPlugin(\"%s?action='diapo'&method='date'&period='%s'&value='%s'&viewmode='scan'\")"%(sys.argv[0],allperiod,self.args.value))
-                                         ]
-                        )
-            total=len(listperiod)
-            for period in listperiod:
-                if period:
-                    if action=="showpics":
-                        context = [(__language__(30152),"XBMC.RunPlugin(\"%s?action='addfolder'&method='date'&period='%s'&value='%s'&page=''&viewmode='scan'\")"%(sys.argv[0],nextperiod,period))]
-                    else:
-                        context = [(__language__(30152),"XBMC.RunPlugin(\"%s?action='addfolder'&method='date'&period='%s'&value='%s'&viewmode='scan'\")"%(sys.argv[0],self.args.period,period))]
-                    self.addDir(name      = "%s (%s %s)"%(strftime(self.prettydate(displaydate,strptime(period,periodformat)).encode("utf8"),strptime(period,periodformat)).decode("utf8"),
-                                                          MPDB.countPeriod(self.args.period,period),
-                                                          __language__(30050).encode("utf8")), #libellé
-                                params    = [("method","date"),("period",nextperiod),("value",period),("viewmode","view")],#paramètres
-                                action    = action,#action
-                                iconimage = join(PIC_PATH,"dates.png"),#icone
-                                fanart    = join(PIC_PATH,"fanart-date.png"),
-                                contextmenu   = context,#menucontextuel
-                                total = total)#nb total d'éléments
+        #if not None in listperiod:
+        dptd = displaythisdate
+        dptd = dptd.replace("%b",monthname[strptime(self.args.value,thisdateformat).tm_mon - 1])    #replace %b marker by short month name
+        dptd = dptd.replace("%B",fullmonthname[strptime(self.args.value,thisdateformat).tm_mon - 1])#replace %B marker by long month name
+        nameperiode = strftime(dptd.encode("utf8"),strptime(self.args.value,thisdateformat))
+        self.addDir(name      = __language__(30100)%(nameperiode.decode("utf8"),MPDB.countPeriod(allperiod,self.args.value)), #libellé#"All the period %s (%s pics)"%(self.args.value,MPDB.countPeriod(allperiod,self.args.value)), #libellé
+                    params    = [("method","date"),("period",allperiod),("value",self.args.value),("page",""),("viewmode","view")],#paramètres
+                    action    = "showpics",#action
+                    iconimage = join(PIC_PATH,"dates.png"),#icone
+                    fanart    = join(PIC_PATH,"fanart-date.png"),
+                    contextmenu   = [(__language__(30152),"XBMC.RunPlugin(\"%s?action='addfolder'&method='date'&period='%s'&value='%s'&viewmode='scan'\")"%(sys.argv[0],allperiod,self.args.value)),
+                                     ("diaporama"        ,"XBMC.RunPlugin(\"%s?action='diapo'&method='date'&period='%s'&value='%s'&viewmode='scan'\")"%(sys.argv[0],allperiod,self.args.value))
+                                     ]
+                    )
+        total=len(listperiod)
+        for period in listperiod:
+            if period:
+                if action=="showpics":
+                    context = [(__language__(30152),"XBMC.RunPlugin(\"%s?action='addfolder'&method='date'&period='%s'&value='%s'&page=''&viewmode='scan'\")"%(sys.argv[0],nextperiod,period))]
+                else:
+                    context = [(__language__(30152),"XBMC.RunPlugin(\"%s?action='addfolder'&method='date'&period='%s'&value='%s'&viewmode='scan'\")"%(sys.argv[0],self.args.period,period))]
+                self.addDir(name      = "%s (%s %s)"%(strftime(self.prettydate(displaydate,strptime(period,periodformat)).encode("utf8"),strptime(period,periodformat)).decode("utf8"),
+                                                      MPDB.countPeriod(self.args.period,period),
+                                                      __language__(30050).encode("utf8")), #libellé
+                            params    = [("method","date"),("period",nextperiod),("value",period),("viewmode","view")],#paramètres
+                            action    = action,#action
+                            iconimage = join(PIC_PATH,"dates.png"),#icone
+                            fanart    = join(PIC_PATH,"fanart-date.png"),
+                            contextmenu   = context,#menucontextuel
+                            total = total)#nb total d'éléments
 
         xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_UNSORTED)
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
