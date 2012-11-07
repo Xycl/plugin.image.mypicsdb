@@ -282,7 +282,7 @@ def browse_folder(dirname,parentfolderID=None,recursive=True,updatepics=False,ad
 
     except:
         print_exc()
-        MPDB.log( "Error while trying to get directory content" )
+        MPDB.log( "Error while trying to get directory content", MPDB.LOGERROR )
         listdir=[]
 
 

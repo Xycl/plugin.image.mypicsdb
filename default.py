@@ -173,7 +173,14 @@ class Main:
 
     def addPic(self,picname,picpath,info="*",fanart=None,contextmenu=None,replacemenu=True):
         ok=True
+        
+        
+        # revert smb:// to \\ replacement
+        fullfilepath = join(picpath,picname)
 
+        fullfilepath=fullfilepath.replace("\\\\", "smb://")
+        fullfilepath=fullfilepath.replace("\\", "/")
+        
         liz=xbmcgui.ListItem(picname,info)
         date = MPDB.getDate(picpath,picname)
         date = date and strftime("%d.%m.%Y",strptime(date,"%Y-%m-%d %H:%M:%S")) or ""
@@ -223,12 +230,6 @@ class Main:
             liz.addContextMenuItems(contextmenu,replacemenu)
         if fanart:
             liz.setProperty( "Fanart_Image", fanart )
-
-        # revert smb:// to \\ replacement
-        fullfilepath = join(picpath,picname)
-
-        fullfilepath=fullfilepath.replace("\\\\", "smb://")
-        fullfilepath=fullfilepath.replace("\\", "/")
         
         ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=fullfilepath,listitem=liz,isFolder=False)
 

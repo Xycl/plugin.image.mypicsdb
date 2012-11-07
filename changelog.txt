@@ -1,4 +1,7 @@
-2012/11/06 --> v 1.2.7.3
+2012/11/07 --> v 1.2.7.4
+Update: Counting pictures in subfolders changed due to performance.
+
+2012/11/07 --> v 1.2.7.3
 Fix:    Counting tags corrected.
 Update: 2 new indexes on table folders and one changed on table files
 

@@ -10,10 +10,23 @@ Todo :
 import os,sys,re
 from os.path import join, exists, isfile, isdir
 from urllib import unquote_plus
+from traceback import print_exc
 
 import  xbmcaddon, xbmc
 from XMP import XMP_Tags
- 
+import CharsetDecoder as decoder
+
+from time import strftime,strptime
+
+#base de donnée SQLITE
+try:
+    from sqlite3 import dbapi2 as sqlite
+except:
+    from pysqlite2 import dbapi2 as sqlite
+    pass
+
+
+
 Addon = xbmcaddon.Addon(id='plugin.image.mypicsdb')
 home = Addon.getAddonInfo('path')
 
@@ -28,28 +41,7 @@ env = ( os.environ.get( "OS", "win32" ), "win32", )[ os.environ.get( "OS", "win3
 sys.path.append( os.path.join( BASE_RESOURCE_PATH, "platform_libraries", env ) )
 
 DEBUGGING = True
-#import time
-#import fnmatch
-#import os.path
-from time import strftime,strptime
 
-#traitement EXIF
-##import EXIF
-#traitement IPTC
-##if sys.modules.has_key("iptcinfo"):
-##    del sys.modules['iptcinfo']
-##from iptcinfo import IPTCInfo
-##from iptcinfo import c_datasets as IPTC_FIELDS
-
-#base de donnée SQLITE
-try:
-    from sqlite3 import dbapi2 as sqlite
-except:
-    from pysqlite2 import dbapi2 as sqlite
-    pass
-
-
-from traceback import print_exc
 global pictureDB
 pictureDB = join(DB_PATH,"MyPictures.db")
 sys_enc = sys.getfilesystemencoding()
@@ -59,28 +51,7 @@ lists_separator = "||"
 class MyPictureDB(Exception):
     pass
 
-def smart_unicode(s):
-    """credit : sfaxman"""
-    if not s:
-        return ''
-    try:
-        if not isinstance(s, basestring):
-            if hasattr(s, '__unicode__'):
-                s = unicode(s)
-            else:
-                s = unicode(str(s), 'UTF-8')
-        elif not isinstance(s, unicode):
-            s = unicode(s, 'UTF-8')
-    except:
-        if not isinstance(s, basestring):
-            if hasattr(s, '__unicode__'):
-                s = unicode(s)
-            else:
-                s = unicode(str(s), 'ISO-8859-1')
-        elif not isinstance(s, unicode):
-            s = unicode(s, 'ISO-8859-1')
-    return s
-    
+
 LOGDEBUG = 0
 LOGINFO = 1
 LOGNOTICE = 2
@@ -95,7 +66,6 @@ def log(msg, level=LOGDEBUG):
     if type(msg).__name__=="unicode":
         msg = msg.encode("utf-8")
     if DEBUGGING:
-        #print str("MyPicsDB >> %s"%msg.__str__())
         xbmc.log(str("MyPicsDB >> %s"%msg.__str__()), level)
 
 #net use z: \\remote\share\ login /USER:password
@@ -160,10 +130,8 @@ def VersionTable():
             log( "MyPicsDB database version is %s"%str(strVersion), LOGDEBUG )
             
         else: #sinon on imprime l'exception levée pour la traiter
-            log( ">>> VersionTable - CREATE TABLE DBVersion ...", LOGDEBUG )
-            log( "%s - %s"%(Exception,msg), LOGDEBUG )
-            log( "~~~~", LOGDEBUG )
-            log( "", LOGDEBUG )
+            log( ">>> VersionTable - CREATE TABLE DBVersion ...", LOGERROR )
+            log( "%s - %s"%(Exception,msg), LOGERROR )
     cn.close()
             
 def Make_new_base(DBpath,ecrase=True):
@@ -179,10 +147,8 @@ def Make_new_base(DBpath,ecrase=True):
             try:
                 cn.execute("""DROP TABLE %s"""%table)
             except Exception,msg:
-                log( ">>> Make_new_base - DROP TABLE %s"%table, LOGDEBUG )
-                log( "%s - %s"%(Exception,msg), LOGDEBUG )
-                log( "~~~~", LOGDEBUG )
-                log( "", LOGDEBUG )
+                log( ">>> Make_new_base - DROP TABLE %s"%table, LOGERROR )
+                log( "%s - %s"%(Exception,msg), LOGERROR )
 
 
     #table 'files'
@@ -196,10 +162,8 @@ def Make_new_base(DBpath,ecrase=True):
             #   elle n'est pas une erreur, on la passe
             pass
         else: #sinon on imprime l'exception levée pour la traiter
-            log( ">>> Make_new_base - CREATE TABLE files ...", LOGDEBUG )
-            log( "%s - %s"%(Exception,msg), LOGDEBUG )
-            log( "~~~~", LOGDEBUG )
-            log( "", LOGDEBUG )
+            log( ">>> Make_new_base - CREATE TABLE files ...", LOGERROR )
+            log( "%s - %s"%(Exception,msg), LOGERROR )
     #table 'keywords'
     try:
         cn.execute("""CREATE TABLE "keywords" ("idKW" INTEGER primary key, "keyword" TEXT UNIQUE);""")
@@ -209,10 +173,8 @@ def Make_new_base(DBpath,ecrase=True):
             #   elle n'est pas une erreur, on la passe
             pass
         else: #sinon on imprime l'exception levée pour la traiter
-            log( ">>> Make_new_base - CREATE TABLE keywords ...", LOGDEBUG )
-            log( "%s - %s"%(Exception,msg), LOGDEBUG )
-            log( "~~~~", LOGDEBUG )
-            log( "", LOGDEBUG )
+            log( ">>> Make_new_base - CREATE TABLE keywords ...", LOGERROR )
+            log( "%s - %s"%(Exception,msg), LOGERROR )
     #table 'KeywordsInFiles'
     try:
         cn.execute("""CREATE TABLE "KeywordsInFiles" ("idKW" INTEGER NOT NULL, "idFile" INTEGER NOT NULL);""")
@@ -222,10 +184,8 @@ def Make_new_base(DBpath,ecrase=True):
             #   elle n'est pas une erreur, on la passe
             pass
         else: #sinon on imprime l'exception levée pour la traiter
-            log( ">>> Make_new_base - CREATE TABLE KeywordsInFiles ...", LOGDEBUG )
-            log( "%s - %s"%(Exception,msg), LOGDEBUG )
-            log( "~~~~", LOGDEBUG )
-            log( "", LOGDEBUG )
+            log( ">>> Make_new_base - CREATE TABLE KeywordsInFiles ...", LOGERROR )
+            log( "%s - %s"%(Exception,msg), LOGERROR )
 # MDB
     #table 'Categories'
     try:
@@ -235,9 +195,7 @@ def Make_new_base(DBpath,ecrase=True):
             pass
         else:
             log( ">>> Make_new_base - CREATE TABLE Categories ..." )
-            log( "%s - %s"%(Exception,msg), LOGDEBUG )
-            log( "~~~~", LOGDEBUG )
-            log( "", LOGDEBUG )
+            log( "%s - %s"%(Exception,msg), LOGERROR )
     #table 'CategoriesInFiles'
     try:
         cn.execute("""CREATE TABLE "CategoriesInFiles" ("idCategory" INTEGER NOT NULL, "idFile" INTEGER NOT NULL);""")
@@ -245,10 +203,8 @@ def Make_new_base(DBpath,ecrase=True):
         if msg.args[0].startswith("table 'CategoriesInFiles' already exists"):
             pass
         else:
-            log( ">>> Make_new_base - CREATE TABLE CategoriesInFiles ...", LOGDEBUG )
-            log( "%s - %s"%(Exception,msg), LOGDEBUG )
-            log( "~~~~", LOGDEBUG )
-            log( "", LOGDEBUG )
+            log( ">>> Make_new_base - CREATE TABLE CategoriesInFiles ...", LOGERROR )
+            log( "%s - %s"%(Exception,msg), LOGERROR )
     #table 'SupplementalCategories'
     try:
         cn.execute("""CREATE TABLE "SupplementalCategories" ("idSupplementalCategory" INTEGER NOT NULL primary key, "SupplementalCategory" TEXT UNIQUE);""")
@@ -256,10 +212,8 @@ def Make_new_base(DBpath,ecrase=True):
         if msg.args[0].startswith("table 'SupplementalCategories' already exists"):
             pass
         else:
-            log( ">>> Make_new_base - CREATE TABLE SupplementalCategories ...", LOGDEBUG )
-            log( "%s - %s"%(Exception,msg), LOGDEBUG )
-            log( "~~~~", LOGDEBUG )
-            log( "", LOGDEBUG )
+            log( ">>> Make_new_base - CREATE TABLE SupplementalCategories ...", LOGERROR )
+            log( "%s - %s"%(Exception,msg), LOGERROR )
     #table 'SupplementalCategoriesInFiles'
     try:
         cn.execute("""CREATE TABLE "SupplementalCategoriesInFiles" ("idSupplementalCategory" INTEGER NOT NULL, "idFile" INTEGER NOT NULL);""")
@@ -267,10 +221,8 @@ def Make_new_base(DBpath,ecrase=True):
         if msg.args[0].startswith("table 'SupplementalCategoriesInFiles' already exists"):
             pass
         else:
-            log( ">>> Make_new_base - CREATE TABLE SupplementalCategoriesInFiles ...", LOGDEBUG )
-            log( "%s - %s"%(Exception,msg), LOGDEBUG )
-            log( "~~~~", LOGDEBUG )
-            log( "", LOGDEBUG )
+            log( ">>> Make_new_base - CREATE TABLE SupplementalCategoriesInFiles ...", LOGERROR )
+            log( "%s - %s"%(Exception,msg), LOGERROR )
     #table 'Countries'
     try:
         cn.execute("""CREATE TABLE "Countries" ("idCountry" INTEGER NOT NULL primary key, "Country" TEXT UNIQUE);""")
@@ -278,10 +230,8 @@ def Make_new_base(DBpath,ecrase=True):
         if msg.args[0].startswith("table 'Countries' already exists"):
             pass
         else:
-            log( ">>> Make_new_base - CREATE TABLE Countries ...", LOGDEBUG )
-            log( "%s - %s"%(Exception,msg), LOGDEBUG )
-            log( "~~~~", LOGDEBUG )
-            log( "", LOGDEBUG )
+            log( ">>> Make_new_base - CREATE TABLE Countries ...", LOGERROR )
+            log( "%s - %s"%(Exception,msg), LOGERROR )
     #table 'CountriesInFiles'
     try:
         cn.execute("""CREATE TABLE "CountriesInFiles" ("idCountry" INTEGER NOT NULL, "idFile" INTEGER NOT NULL);""")
@@ -289,10 +239,8 @@ def Make_new_base(DBpath,ecrase=True):
         if msg.args[0].startswith("table 'CountriesInFiles' already exists"):
             pass
         else:
-            log( ">>> Make_new_base - CREATE TABLE CountriesInFiles ...", LOGDEBUG )
-            log( "%s - %s"%(Exception,msg), LOGDEBUG )
-            log( "~~~~", LOGDEBUG )
-            log( "", LOGDEBUG )
+            log( ">>> Make_new_base - CREATE TABLE CountriesInFiles ...", LOGERROR )
+            log( "%s - %s"%(Exception,msg), LOGERROR )
 
     #table 'Persons'
     try:
@@ -301,10 +249,8 @@ def Make_new_base(DBpath,ecrase=True):
         if msg.args[0].startswith("table 'Persons' already exists"):
             pass
         else:
-            log( ">>> Make_new_base - CREATE TABLE Persons ...", LOGDEBUG )
-            log( "%s - %s"%(Exception,msg), LOGDEBUG )
-            log( "~~~~", LOGDEBUG )
-            log( "", LOGDEBUG )
+            log( ">>> Make_new_base - CREATE TABLE Persons ...", LOGERROR )
+            log( "%s - %s"%(Exception,msg), LOGERROR )
     #table 'PersonsInFiles'
     try:
         cn.execute("""CREATE TABLE "PersonsInFiles" ("idPerson" INTEGER NOT NULL, "idFile" INTEGER NOT NULL);""")
@@ -312,11 +258,8 @@ def Make_new_base(DBpath,ecrase=True):
         if msg.args[0].startswith("table 'PersonsInFiles' already exists"):
             pass
         else:
-            log( ">>> Make_new_base - CREATE TABLE PersonsInFiles ...", LOGDEBUG )
-            log( "%s - %s"%(Exception,msg), LOGDEBUG )
-            log( "~~~~", LOGDEBUG )
-            log( "", LOGDEBUG )
-
+            log( ">>> Make_new_base - CREATE TABLE PersonsInFiles ...", LOGERROR )
+            log( "%s - %s"%(Exception,msg), LOGERROR )
 
     #table 'Cities'
     try:
@@ -325,10 +268,8 @@ def Make_new_base(DBpath,ecrase=True):
         if msg.args[0].startswith("table 'Cities' already exists"):
             pass
         else:
-            log( ">>> Make_new_base - CREATE TABLE Cities ...", LOGDEBUG )
-            log( "%s - %s"%(Exception,msg), LOGDEBUG )
-            log( "~~~~", LOGDEBUG )
-            log( "", LOGDEBUG )
+            log( ">>> Make_new_base - CREATE TABLE Cities ...", LOGERROR )
+            log( "%s - %s"%(Exception,msg), LOGERROR )
     #table 'CitiesInFiles'
     try:
         cn.execute("""CREATE TABLE "CitiesInFiles" ("idCity" INTEGER NOT NULL, "idFile" INTEGER NOT NULL);""")
@@ -336,10 +277,8 @@ def Make_new_base(DBpath,ecrase=True):
         if msg.args[0].startswith("table 'CitiesInFiles' already exists"):
             pass
         else:
-            log( ">>> Make_new_base - CREATE TABLE CitiesInFiles ...", LOGDEBUG )
-            log( "%s - %s"%(Exception,msg), LOGDEBUG )
-            log( "~~~~", LOGDEBUG )
-            log( "", LOGDEBUG )
+            log( ">>> Make_new_base - CREATE TABLE CitiesInFiles ...", LOGERROR )
+            log( "%s - %s"%(Exception,msg), LOGERROR )
     #table 'folders'
     try:
         cn.execute("""CREATE TABLE "folders" ("idFolder" INTEGER  primary key not null, "FolderName" TEXT, "ParentFolder" INTEGER, "FullPath" TEXT UNIQUE,"HasPics" INTEGER);""")
@@ -349,10 +288,8 @@ def Make_new_base(DBpath,ecrase=True):
             #   elle n'est pas une erreur, on la passe
             pass
         else: #sinon on imprime l'exception levée pour la traiter
-            log( ">>> Make_new_base - CREATE TABLE folders ...", LOGDEBUG )
-            log( "%s - %s"%(Exception,msg), LOGDEBUG )
-            log( "~~~~", LOGDEBUG )
-            log( "", LOGDEBUG )
+            log( ">>> Make_new_base - CREATE TABLE folders ...", LOGERROR )
+            log( "%s - %s"%(Exception,msg), LOGERROR )
     #table 'Collections'
     try:
         cn.execute("""CREATE TABLE "Collections" ("idCol" INTEGER PRIMARY KEY, "CollectionName" TEXT UNIQUE);""")
@@ -362,10 +299,8 @@ def Make_new_base(DBpath,ecrase=True):
             #   elle n'est pas une erreur, on la passe
             pass
         else: #sinon on imprime l'exception levée pour la traiter
-            log( ">>> Make_new_base - CREATE TABLE Collections ...", LOGDEBUG )
-            log( "%s - %s"%(Exception,msg), LOGDEBUG )
-            log( "~~~~", LOGDEBUG )
-            log( "", LOGDEBUG )
+            log( ">>> Make_new_base - CREATE TABLE Collections ...", LOGERROR )
+            log( "%s - %s"%(Exception,msg), LOGERROR )
     #table 'FilesInCollections'
     try:
         cn.execute("""CREATE TABLE "FilesInCollections" ("idCol" INTEGER NOT NULL,
@@ -378,10 +313,8 @@ def Make_new_base(DBpath,ecrase=True):
             #   elle n'est pas une erreur, on la passe
             pass
         else: #sinon on imprime l'exception levée pour la traiter
-            log( ">>> Make_new_base - CREATE TABLE FilesInCollections ...", LOGDEBUG )
-            log( "%s - %s"%(Exception,msg), LOGDEBUG )
-            log( "~~~~", LOGDEBUG )
-            log( "", LOGDEBUG )
+            log( ">>> Make_new_base - CREATE TABLE FilesInCollections ...", LOGERROR )
+            log( "%s - %s"%(Exception,msg), LOGERROR )
     #table 'periodes'
     try:
         cn.execute("""CREATE TABLE "periodes"
@@ -397,10 +330,8 @@ def Make_new_base(DBpath,ecrase=True):
             #   elle n'est pas une erreur, on la passe
             pass
         else: #sinon on imprime l'exception levée pour la traiter
-            log( ">>> Make_new_base - CREATE TABLE Periodes ...", LOGDEBUG )
-            log( "%s - %s"%(Exception,msg), LOGDEBUG )
-            log( "~~~~", LOGDEBUG )
-            log( "", LOGDEBUG )
+            log( ">>> Make_new_base - CREATE TABLE Periodes ...", LOGERROR )
+            log( "%s - %s"%(Exception,msg), LOGERROR )
     #table 'Rootpaths'
     try:
         cn.execute("""CREATE TABLE "Rootpaths"
@@ -415,10 +346,8 @@ def Make_new_base(DBpath,ecrase=True):
             #   elle n'est pas une erreur, on la passe
             pass
         else: #sinon on imprime l'exception levée pour la traiter
-            log( ">>> Make_new_base - CREATE TABLE Rootpaths ...", LOGDEBUG )
-            log( "%s - %s"%(Exception,msg), LOGDEBUG )
-            log( "~~~~", LOGDEBUG)
-            log( "" , LOGDEBUG)
+            log( ">>> Make_new_base - CREATE TABLE Rootpaths ...", LOGERROR )
+            log( "%s - %s"%(Exception,msg), LOGERROR )
 
 
     #table 'TagTypes'
@@ -428,10 +357,8 @@ def Make_new_base(DBpath,ecrase=True):
         if msg.args[0].startswith("table 'TagTypes' already exists"):
             pass
         else:
-            log( ">>> Make_new_base - CREATE TABLE Tags ...", LOGDEBUG )
-            log( "%s - %s"%(Exception,msg), LOGDEBUG )
-            log( "~~~~", LOGDEBUG )
-            log( "", LOGDEBUG )
+            log( ">>> Make_new_base - CREATE TABLE Tags ...", LOGERROR )
+            log( "%s - %s"%(Exception,msg), LOGERROR )
 
     #table 'TagContent'
     try:
@@ -440,10 +367,8 @@ def Make_new_base(DBpath,ecrase=True):
         if msg.args[0].startswith("table 'TagContents' already exists"):
             pass
         else:
-            log( ">>> Make_new_base - CREATE TABLE Tags ...", LOGDEBUG )
-            log( "%s - %s"%(Exception,msg), LOGDEBUG )
-            log( "~~~~", LOGDEBUG )
-            log( "", LOGDEBUG )
+            log( ">>> Make_new_base - CREATE TABLE Tags ...", LOGERROR )
+            log( "%s - %s"%(Exception,msg), LOGERROR )
 
     #table 'TagsInFiles'
     try:
@@ -452,10 +377,8 @@ def Make_new_base(DBpath,ecrase=True):
         if msg.args[0].startswith("table 'TagsInFiles' already exists"):
             pass
         else:
-            log( ">>> Make_new_base - CREATE TABLE TagsInFiles ...", LOGDEBUG )
-            log( "%s - %s"%(Exception,msg), LOGDEBUG )
-            log( "~~~~" , LOGDEBUG)
-            log( "" , LOGDEBUG)
+            log( ">>> Make_new_base - CREATE TABLE TagsInFiles ...", LOGERROR )
+            log( "%s - %s"%(Exception,msg), LOGERROR )
 
     # Index creation for old tag tables
     try:
@@ -551,24 +474,12 @@ def addColumn(table,colheader,format="text"):
             cn.execute("""ALTER TABLE %s ADD "%s" %s"""%(table,colheader,format))
         except Exception,msg:
             if not msg.args[0].startswith("duplicate column name"):
-                log( 'EXCEPTION >> addColums %s,%s,%s'%(table,colheader,format), LOGDEBUG )
-                log( "\t%s - %s"%(Exception,msg), LOGDEBUG )
-                log( "~~~~", LOGDEBUG )
-                log( "", LOGDEBUG )
+                log( 'EXCEPTION >> addColums %s,%s,%s'%(table,colheader,format), LOGERROR )
+                log( "\t%s - %s"%(Exception,msg), LOGERROR )
 
         conn.commit()
         cn.close()
         columnList.append(key)
-
-##def getColumns(table):
-##    conn = sqlite.connect(pictureDB)
-##    cn=conn.cursor()
-##    cn.execute("select * from files")
-##    retour= "\n".join([field[0] for field in cn.description])
-##    print retour
-##    conn.commit()
-##    cn.close()
-##    return retour
 
 def DB_cleanup_keywords():
     conn = sqlite.connect(pictureDB)
@@ -631,10 +542,8 @@ def DB_exists(picpath,picfile):
     try:
         cn.execute("""SELECT strPath, strFilename FROM "main"."files" WHERE strPath = (?) AND strFilename = (?);""",(picpath,picfile,) )
     except Exception,msg:
-        log( "EXCEPTION >> DB_exists %s,%s"%(picpath,picfile), LOGDEBUG )
-        log( "\t%s - %s"%(Exception,msg), LOGDEBUG )
-        log( "~~~~" )
-        log( "" )
+        log( "EXCEPTION >> DB_exists %s,%s"%(picpath,picfile), LOGERROR )
+        log( "\t%s - %s"%(Exception,msg), LOGERROR )
         raise Exception, msg
     if len(cn.fetchmany())==0:
 
@@ -652,12 +561,13 @@ def DB_listdir(path):
     conn = sqlite.connect(pictureDB)
     cn=conn.cursor()
     conn.text_factory = unicode #sqlite.OptimizedUnicode
-    log( path )
+    
     try:
         cn.execute( """SELECT f.strFilename FROM files f,folders p WHERE f.idFolder=p.idFolder AND p.FullPath=(?)""",(path,))
     except Exception,msg:
-        log( "ERROR : DB_listdir ...", LOGDEBUG )
-        log( "%s - %s"%(Exception,msg), LOGDEBUG )
+        log( "ERROR : DB_listdir ...", LOGERROR )
+        log( "DB_listdir(%s)"%path, LOGERROR )
+        log( "%s - %s"%(Exception,msg), LOGERROR )
         cn.close()
         raise
 
@@ -689,11 +599,11 @@ def DB_file_insert(path,filename,dictionnary,update=False):
                     )
         conn.commit()
     except Exception,msg:
-        log( ">>> DB_file_insert ...", LOGDEBUG )
-        log(filename)
-        log( "%s - %s"%(Exception,msg), LOGDEBUG )
-        log( """INSERT INTO files('%s') values (%s)""" % ( "','".join(dictionnary.keys()) , ",".join(["?"]*len(dictionnary.values())) ), LOGDEBUG )
-        log( "", LOGDEBUG )
+        log( ">>> DB_file_insert ...", LOGERROR )
+        log(decoder.smart_unicode(filename).encode('utf-8'), LOGERROR)
+        log( "%s - %s"%(Exception,msg), LOGERROR )
+        log( """INSERT INTO files('%s') values (%s)""" % ( "','".join(dictionnary.keys()) , ",".join(["?"]*len(dictionnary.values())) ), LOGERROR )
+        log( "", LOGERROR )
         conn.commit()
         cn.close()
         raise MyPictureDB
@@ -738,10 +648,9 @@ def DB_file_insert(path,filename,dictionnary,update=False):
                             if str(msg)=="column TagType is not unique":
                                 pass
                             else:
-                                log( 'EXCEPTION >> tags', LOGDEBUG )
-                                log( "\t%s - %s"%(Exception,msg), LOGDEBUG )
-                                log( "~~~~" , LOGDEBUG)
-                                log( "", LOGDEBUG )
+                                log( 'EXCEPTION >> tags', LOGERROR )
+                                log( 'tagType = %s'%tagType, LOGERROR )
+                                log( "\t%s - %s"%(Exception,msg), LOGERROR )
 
                          # select the key of the tag from table TagTypes
                         cn.execute("SELECT min(idTagType) FROM TagTypes WHERE TagType = ? ",(tagType,) )
@@ -756,10 +665,15 @@ def DB_file_insert(path,filename,dictionnary,update=False):
                         if str(msg)=="columns idTagType, TagContent are not unique":
                             pass
                         else:
-                            log( 'EXCEPTION >> tags', LOGDEBUG )
-                            log( "\t%s - %s"%(Exception,msg), LOGDEBUG )
-                            log( "~~~~", LOGDEBUG )
-                            log( "", LOGDEBUG )
+                            log( 'EXCEPTION >> tags', LOGERROR )
+                            log( 'tagType = %s'%tagType, LOGERROR )
+                            log( 'tagValue = %s'%decoder.smart_utf8(value), LOGERROR )
+                            log( "\t%s - %s"%(Exception,msg), LOGERROR )
+                            log( "~~~~", LOGERROR )
+                            log( "", LOGERROR )
+
+                    # this block should be obsolet now!!!
+
                     #Then, add the corresponding id of file and id of tag inside the TagsInFiles database
                     try:
                         cn.execute(""" INSERT INTO TagsInFiles(idTagContent,idFile) SELECT t.idTagContent, %d FROM TagContents t WHERE t.idTagType=%d AND t.TagContent = ? """%(idFile,idTagType), (value,))
@@ -774,12 +688,12 @@ def DB_file_insert(path,filename,dictionnary,update=False):
 
                                 cn.execute(""" INSERT INTO TagsInFiles(idTagContent,idFile) SELECT t.idTagContent, %d FROM TagContents t WHERE t.idTagType=%d AND t.TagContent = ? """%(idFile,idTagType), (value,))
                             except:
-                                log("Error while ALTER TABLE TagsInFiles ", LOGDEBUG)
-                                log("\t%s - %s"% (Exception,msg), LOGDEBUG )
+                                log("Error while ALTER TABLE TagsInFiles ", LOGERROR)
+                                log("\t%s - %s"% (Exception,msg), LOGERROR )
                         else:
                             log("Error while adding TagsInFiles")
                             log("\t%s - %s"% (Exception,msg) )
-                            log("%s %s - %s"%(idFile,idTagType,value))
+                            log("%s %s - %s"%(idFile,idTagType,decoder.smart_utf8(value)))
                             print """ INSERT INTO TagsInFiles(idTagContent,idFile) SELECT t.idTagContent, %d FROM TagContents t WHERE t.idTagType=%d AND t.TagContent = '%s' """%(idFile,idTagType,value)
 
 
@@ -795,16 +709,15 @@ def DB_file_insert(path,filename,dictionnary,update=False):
                     if str(msg)=="column Person is not unique":
                         pass
                     else:
-                        log( 'EXCEPTION >> persons', LOGDEBUG )
-                        log( "\t%s - %s"%(Exception,msg), LOGDEBUG )
-                        log( "~~~~", LOGDEBUG )
-                        log( "", LOGDEBUG )
+                        log( 'EXCEPTION >> persons', LOGERROR )
+                        log( "\t%s - %s"%(Exception,msg), LOGERROR )
+
                 #Then, add the corresponding id of file and id of keyword inside the KeywordsInFiles database
                 try:
                     cn.execute("""INSERT INTO personsInFiles(idPerson,idFile) SELECT k.idPerson,f.idFile FROM Persons k, files f WHERE k.person=? AND f.strPath=? AND f.strFilename=? """,(mot, path,filename))
                 except Exception,msg:
-                    log("Error while adding PersonsInFiles", LOGDEBUG)
-                    log("\t%s - %s"% (Exception,msg), LOGDEBUG )
+                    log("Error while adding PersonsInFiles", LOGERROR)
+                    log("\t%s - %s"% (Exception,msg), LOGERROR )
 
 
 
@@ -820,17 +733,16 @@ def DB_file_insert(path,filename,dictionnary,update=False):
                     if str(msg)=="column keyword is not unique":
                         pass
                     else:
-                        log( 'EXCEPTION >> keywords', LOGDEBUG )
-                        log( "\t%s - %s"%(Exception,msg), LOGDEBUG )
-                        log( "~~~~", LOGDEBUG )
-                        log( "", LOGDEBUG )
+                        log( 'EXCEPTION >> keywords', LOGERROR )
+                        log( "\t%s - %s"%(Exception,msg), LOGERROR )
+
                 #Then, add the corresponding id of file and id of keyword inside the KeywordsInFiles database
                 try:
                     cn.execute("""INSERT INTO KeywordsInFiles(idKW,idFile) SELECT k.idKW,f.idFile FROM keywords k, files f WHERE k.keyword=? AND f.strPath=? AND f.strFilename=? """, (mot, path, filename))
 
                 except Exception,msg:
-                    log("Error while adding KeywordsInFiles", LOGDEBUG)
-                    log("\t%s - %s"% (Exception,msg), LOGDEBUG )
+                    log("Error while adding KeywordsInFiles", LOGERROR)
+                    log("\t%s - %s"% (Exception,msg), LOGERROR )
     # TRAITEMENT DE SUPPLEMENTAL CATEGORY (base Categories)
     if dictionnary.has_key("supplemental category"):
         catl = dictionnary["supplemental category"].split(lists_separator)
@@ -843,16 +755,15 @@ def DB_file_insert(path,filename,dictionnary,update=False):
                     if str(msg)=="column SupplementalCategory is not unique":
                         pass
                     else:
-                        log( 'EXCEPTION >> SupplementalCategory', LOGDEBUG )
-                        log( "\t%s - %s"%(Exception,msg), LOGDEBUG )
-                        log( "~~~~" , LOGDEBUG)
-                        log( "", LOGDEBUG )
+                        log( 'EXCEPTION >> SupplementalCategory', LOGERROR )
+                        log( "\t%s - %s"%(Exception,msg), LOGERROR )
+
                 #then, add the corresponding id of file and id of category inside the CategoriesInFiles database
                 try:
                     cn.execute("""INSERT INTO SupplementalCategoriesInFiles(idSupplementalCategory,idFile) SELECT c.idSupplementalCategory,f.idFile FROM SupplementalCategories c, files f WHERE c.SupplementalCategory=? AND f.strPath=? AND f.strFilename=? """, (cat, path, filename))
                 except Exception,msg:
-                    log("Error while adding SupplementalCategoriesInFiles", LOGDEBUG)
-                    log("\t%s - %s"% (Exception,msg), LOGDEBUG )
+                    log("Error while adding SupplementalCategoriesInFiles", LOGERROR)
+                    log("\t%s - %s"% (Exception,msg), LOGERROR )
 
 
     # TRAITEMENT DE CATEGORY (base Categories)
@@ -866,16 +777,15 @@ def DB_file_insert(path,filename,dictionnary,update=False):
                 if str(msg)=="column Category is not unique":
                     pass
                 else:
-                    log( 'EXCEPTION >> Category', LOGDEBUG )
-                    log( "\t%s - %s"%(Exception,msg), LOGDEBUG )
-                    log( "~~~~", LOGDEBUG )
-                    log( "", LOGDEBUG )
+                    log( 'EXCEPTION >> Category', LOGERROR )
+                    log( "\t%s - %s"%(Exception,msg), LOGERROR )
+
             #then, add the corresponding id of file and id of category inside the CategoriesInFiles database
             try:
                 cn.execute("""INSERT INTO CategoriesInFiles(idCategory,idFile) SELECT c.idCategory,f.idFile FROM Categories c, files f WHERE c.Category=? AND f.strPath=? AND f.strFilename=? """, (dictionnary["category"], path, filename))
             except Exception,msg:
-                log("Error while adding CategoriesInFiles", LOGDEBUG)
-                log("\t%s - %s"% (Exception,msg), LOGDEBUG )
+                log("Error while adding CategoriesInFiles", LOGERROR)
+                log("\t%s - %s"% (Exception,msg), LOGERROR )
 
     # TRAITEMENT DES PAYS (base Country)
     if dictionnary.has_key("country/primary location name"):
@@ -886,15 +796,16 @@ def DB_file_insert(path,filename,dictionnary,update=False):
                 if str(msg)=="column Country is not unique":
                     pass
                 else:
-                    log( 'EXCEPTION >> Country', LOGDEBUG )
-                    log( "\t%s - %s"%(Exception,msg), LOGDEBUG )
-                    log( "~~~~", LOGDEBUG )
-                    log( "", LOGDEBUG )
+                    log( 'EXCEPTION >> Country', LOGERROR )
+                    log( 'Country = %s'%decoder.smart_utf8(dictionnary["country/primary location name"]))
+                    log( "\t%s - %s"%(Exception,msg), LOGERROR )
+
             try:
                 cn.execute("""INSERT INTO CountriesInFiles(idCountry,idFile) SELECT c.idCountry,f.idFile FROM Countries c, files f WHERE c.Country=? AND f.strPath=? AND f.strFilename=? """,(dictionnary["country/primary location name"], path, filename))
             except Exception,msg:
-                log("Error while adding CountriesInFiles", LOGDEBUG)
-                log("\t%s - %s"% (Exception,msg), LOGDEBUG )
+                log("Error while adding CountriesInFiles", LOGERROR)
+                log( 'Country = %s'%decoder.smart_utf8(dictionnary["country/primary location name"]))
+                log("\t%s - %s"% (Exception,msg), LOGERROR )
 
     # TRAITEMENT DES VILLES ( base City)
     if dictionnary.has_key("city"):
@@ -905,22 +816,17 @@ def DB_file_insert(path,filename,dictionnary,update=False):
                 if str(msg)=="column City is not unique":
                     pass
                 else:
-                    log( 'EXCEPTION >> Country', LOGDEBUG )
-                    log( "\%s - %s"%(Exception,msg), LOGDEBUG )
-                    log( "~~~~", LOGDEBUG )
-                    log( "", LOGDEBUG )
+                    log( 'EXCEPTION >> City', LOGERROR )
+                    log( 'City = %s'%decoder.smart_utf8(dictionnary["city"]))
+                    log( "\%s - %s"%(Exception,msg), LOGERROR )
+
             try:
                 cn.execute("""INSERT INTO CitiesInFiles(idCity,idFile) SELECT c.idCity,f.idFile FROM Cities c, files f WHERE c.City=? AND f.strPath=? AND f.strFilename=? """,(dictionnary["city"], path, filename))
             except Exception,msg:
-                log("Error while adding CountriesInFiles", LOGDEBUG)
-                log("\t%s - %s"% (Exception,msg), LOGDEBUG )
-##    # TRAITEMENT DES FOLDERS
-##    try:
-##        haspic = "1" if True else "0"
-##        cn.execute("""INSERT INTO folders(FolderName,ParentFolder,FullPath,HasPics) VALUES (?,?,?,?)""",('nom du dossier',999,path,haspic))
-##    except sqlite.IntegrityError:
-##        print "ERROR ERROR ERROR !!!"
-##        pass
+                log("Error while adding CitiesInFiles", LOGERROR)
+                log( 'city = %s'%decoder.smart_utf8(dictionnary["city"]))
+                log("\t%s - %s"% (Exception,msg), LOGERROR )
+
     conn.commit()
     cn.close()
     
@@ -951,14 +857,6 @@ def DB_folder_insert(foldername,folderpath,parentfolderID,haspic):
     cn.close()
     return retour
 
-
-##def DB_del_path(path):
-##    #recup l'id du path donné
-##    idpath = Request("SELECT idPath from folders where FullPath like '%?'",(path,))
-##    deletelist=[]# listera les id des dossiers à supprimer
-##    deletelist.append(idpath)#le dossier en paramètres est aussi à supprimer
-##    deletelist.extend(get_children(idpath))#on ajoute tous les enfants en sous enfants du dossier
-
 def get_children(folderid):
     """search all children folders ids for the given folder id"""
     childrens=[c[0] for c in RequestWithBinds("SELECT idFolder FROM folders WHERE ParentFolder=? ", (folderid,))]
@@ -978,20 +876,19 @@ def DB_del_pic(picpath,picfile=None): #TODO : revoir la vérif du dossier inutil
         RequestWithBinds("""DELETE FROM files WHERE idFolder = (SELECT idFolder FROM folders WHERE FullPath=?) AND strFilename="? """,(picpath,picfile))
 
     else:
-        #print """SELECT idFolder FROM folders WHERE FullPath = "%s" """%picpath
+
         try:
             if picpath:
                 idpath = RequestWithBinds("""SELECT idFolder FROM folders WHERE FullPath = ? """, (picpath,))[0][0]#le premier du tuple à un élément
             else:
                 idpath = Request("""SELECT idFolder FROM folders WHERE FullPath is null""")[0][0]#le premier du tuple à un élément
-            print "1"
-            log( idpath )
-            print "2"
+
+            log( "DB_del_pic(%s,%s)"%( decoder.smart_utf8(picpath),decoder.smart_utf8(picfile)), LOGDEBUG )
+
             deletelist=[]#va lister les id des dossiers à supprimer
             deletelist.append(idpath)#le dossier en paramètres est aussi à supprimer
             deletelist.extend(get_children(str(idpath)))#on ajoute tous les enfants en sous enfants du dossier
-            #print """DELETE FROM files WHERE idFolder in ("%s")"""%""" "," """.join([str(i) for i in deletelist])
-            #print """DELETE FROM folders WHERE idFolder in ("%s") """%""" "," """.join([str(i) for i in deletelist])
+
             Request( """DELETE FROM files WHERE idFolder in ("%s")"""%""" "," """.join([str(i) for i in deletelist]) )
             Request( """DELETE FROM folders WHERE idFolder in ("%s") """%""" "," """.join([str(i) for i in deletelist]) )
         except:
@@ -1016,7 +913,7 @@ def fileSHA ( filepath ) :
         import md5
         digest = md5.new()    
         
-    filepath = smart_unicode(filepath)
+    filepath = decoder.smart_unicode(filepath)
     try:
         try:
             file = open(filepath,'rb')
@@ -1168,10 +1065,10 @@ def RootFolders():
 def AddRoot(path,recursive,remove,exclude):
     "add the path root inside the database. Recursive is 0/1 for recursive scan, remove is 0/1 for removing files that are not physically in the place"
     DB_cleanup_keywords()
-    RequestWithBinds( """INSERT INTO Rootpaths(path,recursive,remove,exclude) VALUES (?,?,?,?)""",(smart_unicode(path),recursive,remove,exclude) )
+    RequestWithBinds( """INSERT INTO Rootpaths(path,recursive,remove,exclude) VALUES (?,?,?,?)""",(decoder.smart_unicode(path),recursive,remove,exclude) )
 
 def getRoot(path):
-    return [row for row in RequestWithBinds( """SELECT path,recursive,remove,exclude FROM Rootpaths WHERE path=? """, (smart_unicode(path),) )][0]
+    return [row for row in RequestWithBinds( """SELECT path,recursive,remove,exclude FROM Rootpaths WHERE path=? """, (decoder.smart_unicode(path),) )][0]
 
 
 def RemoveRoot(path):
@@ -1179,7 +1076,7 @@ def RemoveRoot(path):
     #first remove the path with all its pictures / subfolders / keywords / pictures in collections...
     RemovePath(path)
     #then remove the rootpath itself
-    RequestWithBinds( """DELETE FROM Rootpaths WHERE path=? """, (smart_unicode(path),) )
+    RequestWithBinds( """DELETE FROM Rootpaths WHERE path=? """, (decoder.smart_unicode(path),) )
 
 
 def RemovePath(path):
@@ -1187,7 +1084,7 @@ def RemovePath(path):
     cptremoved = 0
     #récupère l'id de ce chemin
     try:
-        idpath = RequestWithBinds( """SELECT idFolder FROM folders WHERE FullPath = ?""",(smart_unicode(path),) )[0][0]
+        idpath = RequestWithBinds( """SELECT idFolder FROM folders WHERE FullPath = ?""",(decoder.smart_unicode(path),) )[0][0]
     except:
         #le chemin n'est sans doute plus en base
         return 0
@@ -1446,7 +1343,7 @@ def RequestWithBinds(SQLrequest, bindVariablesOrg):
     bindVariables = []
     for value in bindVariablesOrg:
         if type(value) == type('str'):
-            bindVariables.append(smart_unicode(value))
+            bindVariables.append(decoder.smart_unicode(value))
         else:
             bindVariables.append(value)
     try:
@@ -1806,11 +1703,21 @@ def count_city(p_city):
 
 
 def countPicsFolder(folderid):
+    # new part
+    folderPath = RequestWithBinds("""Select FullPath from Folders where idFolder = ?""", (folderid,))[0][0]
+    # mask the apostrophe
+    folderPath = folderPath.replace("'", "''")
+    #print "countPicsFolder with " + decoder.smart_unicode(folderPath).encode('utf-8')
+    count = Request("""select count(*) from files f, folders p where f.idFolder=p.idFolder and p.FullPath like '%s%%' """%folderPath)[0][0]
+    return count
+
+    # old part
     log("TEST : all children of folderid %s"%folderid)
-    log(all_children(folderid))
+    children = all_children(folderid)
+    log(children)
 
     cpt = Request("SELECT count(*) FROM files f,folders p WHERE f.idFolder=p.idFolder AND f.idFolder='%s'"%folderid)[0][0]
-    for idchild in all_children(folderid):
+    for idchild in children:
         cpt = cpt+Request("SELECT count(*) FROM files f,folders p WHERE f.idFolder=p.idFolder AND f.idFolder='%s'"%idchild)[0][0]
     return cpt#Request("SELECT count(*) FROM files f,folders p WHERE f.idFolder=p.idFolder AND f.idFolder='%s'"%folderid)[0][0]
 
@@ -1847,26 +1754,6 @@ def list_path():
     #print Request( """SELECT DISTINCT strPath FROM files""" )
     return [row for (row,) in Request( """SELECT DISTINCT strPath FROM files""" )]
 
-
-##
-##def all_children(rootid):
-##    """liste les id des dossiers enfants"""
-##    #A REVOIR : Ne fonctionne pas correctement !
-##    enfants=[]
-##    childrens=[rootid]
-##    continu = False
-##    while True:
-##        for ch in childrens:#1
-##            print ch
-##            chlist = [row for (row,) in Request( """SELECT idFolder FROM folders WHERE ParentFolder='%s'"""%ch )]#2,10,17
-##            print chlist
-##            if chlist: continu = True
-##        print "*****"
-##        childrens = chlist#2,10,17
-##        enfants = enfants + chlist#2,10,17
-##        if not continu: break
-##        continu = False
-##    return enfants
 
 def all_children(rootid):
     """liste les id des dossiers enfants"""
