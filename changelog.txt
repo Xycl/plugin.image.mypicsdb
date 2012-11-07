@@ -1,3 +1,6 @@
+2012/11/07 --> v 1.2.7.5
+Fix:    Unicode error in collections fixed.
+
 2012/11/07 --> v 1.2.7.4
 Update: Counting pictures in subfolders changed due to performance.
 

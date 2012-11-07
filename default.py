@@ -792,10 +792,10 @@ class Main:
                         action    = "showpics",#action
                         iconimage = join(PIC_PATH,"collection.png"),#icone
                         fanart    = join(PIC_PATH,"fanart-collection.png"),
-                        contextmenu   = [(__language__(30158),"XBMC.RunPlugin(\"%s?action='removecollection'&viewmode='view'&collect='%s'\")"%(sys.argv[0],collection[0]) ),
-                                         (__language__(30159),"XBMC.RunPlugin(\"%s?action='renamecollection'&viewmode='view'&collect='%s'\")"%(sys.argv[0],collection[0]) ),
-                                         (__language__(30061),"XBMC.RunPlugin(\"%s?action='showpics'&method='collection'&page=''&viewmode='zip'&name='%s'&collect='%s'\")"%(sys.argv[0],collection[0],collection[0]) ),
-                                         (__language__(30062),"XBMC.RunPlugin(\"%s?action='showpics'&method='collection'&page=''&viewmode='export'&name='%s'&collect='%s'\")"%(sys.argv[0],collection[0],collection[0]) )
+                        contextmenu   = [(__language__(30158),"XBMC.RunPlugin(\"%s?action='removecollection'&viewmode='view'&collect='%s'\")"%(sys.argv[0],quote_plus(collection[0].encode('utf-8')) ) ),
+                                         (__language__(30159),"XBMC.RunPlugin(\"%s?action='renamecollection'&viewmode='view'&collect='%s'\")"%(sys.argv[0],quote_plus(collection[0].encode('utf-8'))) ),
+                                         (__language__(30061),"XBMC.RunPlugin(\"%s?action='showpics'&method='collection'&page=''&viewmode='zip'&name='%s'&collect='%s'\")"%(sys.argv[0],quote_plus(collection[0].encode('utf-8')),quote_plus(collection[0].encode('utf-8'))) ),
+                                         (__language__(30062),"XBMC.RunPlugin(\"%s?action='showpics'&method='collection'&page=''&viewmode='export'&name='%s'&collect='%s'\")"%(sys.argv[0],quote_plus(collection[0].encode('utf-8')),quote_plus(collection[0].encode('utf-8'))) )
                                          ] )#menucontextuel
 
         xbmcplugin.addSortMethod( int(sys.argv[1]), xbmcplugin.SORT_METHOD_NONE )
@@ -1117,17 +1117,17 @@ class Main:
                              )
 
     def remove_collection(self):
-        MPDB.delCollection(self.args.collect)
+        MPDB.delCollection(unquote_plus(self.args.collect))
         xbmc.executebuiltin( "Container.Update(\"%s?action='showcollection'&viewmode='view'&collect=''&method='show'\" , replace)"%sys.argv[0] , )
 
     def rename_collection(self):
-        kb = xbmc.Keyboard(self.args.collect, __language__(30153), False)
+        kb = xbmc.Keyboard(unquote_plus(self.args.collect), __language__(30153), False)
         kb.doModal()
         if (kb.isConfirmed()):
             newname = kb.getText()
         else:
-            newname = self.args.collect
-        MPDB.renCollection(self.args.collect,newname)
+            newname = unquote_plus(self.args.collect)
+        MPDB.renCollection(unquote_plus(self.args.collect),newname)
         xbmc.executebuiltin( "Container.Update(\"%s?action='showcollection'&viewmode='view'&collect=''&method='show'\" , replace)"%sys.argv[0] , )
 
     def del_pics_from_collection(self):
