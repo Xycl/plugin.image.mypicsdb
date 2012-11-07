@@ -1,3 +1,7 @@
+2012/11/06 --> v 1.2.7.3
+Fix:    Counting tags corrected.
+Update: 2 new indexes on table folders and one changed on table files
+
 2012/11/06 --> v 1.2.7.2
 Fix:    Periods now work even if there are NULL dates in the pictures
 

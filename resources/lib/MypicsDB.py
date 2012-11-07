@@ -113,22 +113,52 @@ def mount(mountpoint="z:",path="\\",login=None,password=""):
         log( "%s is already mounted !"%mountpoint )
     return exists(mountpoint)
 
+def CreateMissingIndexes(cn, strVersion):    
+    try:
+        cn.execute("drop index idxFiles")
+    except:
+        pass
+    try:
+        cn.execute("create index idxFiles1 on Files(idFile, idFolder)")
+    except:
+        pass
+    try:
+        cn.execute("CREATE INDEX idxFolders1 ON Folders(idFolder)")
+    except:
+        pass
+    try:
+        cn.execute("CREATE INDEX idxFolders2 ON Folders(ParentFolder)")
+    except:
+        pass
+                    
 def VersionTable():
     #table 'Version'
     conn = sqlite.connect(pictureDB)
     conn.text_factory = unicode #sqlite.OptimizedUnicode
     cn=conn.cursor()
   
-    try:
+    try:    
         cn.execute("CREATE TABLE DBVersion ( strVersion text primary key  )")
-        cn.execute("insert into DBVersion (strVersion) values('1.1.9')")
+        cn.execute("insert into DBVersion (strVersion) values('1.2.7')")
+        # Cause the table didn't exist the DB version is max 1.1.9
+        CreateMissingIndexes(cn, '1.1.9')
         conn.commit() 
     except Exception,msg:
         if msg.args[0].startswith("table DBVersion already exists"):
             # Test Version of DB
             strVersion = Request("Select strVersion from DBVersion")[0][0];
+            if strVersion == '1.1.9':
+            # create missing indexes:
+                try:
+                    CreateMissingIndexes(cn, '1.1.9')
+                    cn.execute("Update DBVersion set strVersion = '1.2.7'")
+                    strVersion = '1.2.7'
+                    conn.commit() 
+                except Exception,msg:
+                    log( "MyPicsDB database version could not be updated. ", LOGERROR )
+
             log( "MyPicsDB database version is %s"%str(strVersion), LOGDEBUG )
-            pass
+            
         else: #sinon on imprime l'exception levée pour la traiter
             log( ">>> VersionTable - CREATE TABLE DBVersion ...", LOGDEBUG )
             log( "%s - %s"%(Exception,msg), LOGDEBUG )
@@ -484,7 +514,13 @@ def Make_new_base(DBpath,ecrase=True):
         pass
 
     try:
-        cn.execute("CREATE INDEX idxFiles ON Files (idFile)")
+        cn.execute("CREATE INDEX idxFolders1 ON Folders(idFolder)")
+        cn.execute("CREATE INDEX idxFolders2 ON Folders(ParentFolder)")
+    except Exception,msg:
+        pass
+
+    try:
+        cn.execute("CREATE INDEX idxFiles1 ON Files(idFile, idFolder)")
         cn.execute("CREATE INDEX idxFilesInCollections ON FilesInCollections (idFile)")
     except Exception,msg:
         pass
@@ -1366,7 +1402,7 @@ def get_iptc(path,filename):
                 log( "" )
             #print type(iptc[IPTC_FIELDS[k]])
         else:
-            log("\nIPTC problem with file :", LOGERROR)
+            log("IPTC problem with file: %s"%join(path,filename), LOGERROR)
             try:
                 log( "WARNING : '%s' IPTC field is not handled (data for this field : \n%s)"%(k,info.data[k][:80]) , LOGERROR)
             except:
@@ -1421,14 +1457,17 @@ def RequestWithBinds(SQLrequest, bindVariablesOrg):
         if msg.args[0].startswith("no such column: files.GPS GPSLatitudeRef"):
             pass
         else:
-            log( "The request failed :", LOGERROR )
-            log( "%s - %s"%(Exception,msg), LOGERROR )
-            log( "SQL RequestWithBinds > %s"%SQLrequest, LOGERROR)
-            i = 1
-            for var in bindVariables:
-                log ("SQL RequestWithBinds %d> %s"%(i,var), LOGERROR)
-                i=i+1
-            log( "---", LOGERROR )
+            try:
+                log( "The request failed :", LOGERROR )
+                log( "%s - %s"%(Exception,msg), LOGERROR )
+                log( "SQL RequestWithBinds > %s"%SQLrequest, LOGERROR)
+                i = 1
+                for var in bindVariables:
+                    log ("SQL RequestWithBinds %d> %s"%(i,var), LOGERROR)
+                    i=i+1
+                log( "---", LOGERROR )
+            except:
+                pass
         retour= []
     cn.close()
     return retour
@@ -1605,7 +1644,7 @@ ORDER BY LOWER(TagTranslation) ASC""" )]
 def list_TagTypesAndCount():
     DefaultTagTypesTranslation()
     return [row for row in Request( """
-SELECT tt.TagTranslation, count(*)
+SELECT tt.TagTranslation, count(distinct tagcontent)
   FROM TagTypes tt, TagContents tc
  where length(trim(TagTranslation)) > 0 
    and tt.idTagType                 = tc.idTagType
@@ -1627,6 +1666,16 @@ def list_Tags(tagType):
     """Return a list of all keywords in database"""
     return [row for (row,) in Request( """select distinct TagContent from TagContents tc, TagsInFiles tif, TagTypes tt  where tc.idTagContent = tif.idTagContent and tc.idTagType = tt.idTagType and tt.TagTranslation='%s' ORDER BY LOWER(TagContent) ASC"""%tagType.encode("utf8") )]
 
+def list_TagsAndCount(tagType):
+    """Return a list of all keywords in database"""
+    return [row for row in RequestWithBinds( """
+    select TagContent, count(distinct idfile) 
+  from TagContents tc, TagsInFiles tif, TagTypes tt  
+ where tc.idTagContent = tif.idTagContent
+   and tc.idTagType = tt.idTagType 
+   and tt.TagTranslation=? 
+group BY LOWER(TagContent)""",(tagType.encode("utf8"),) )]
+    
 def countTags(kw,tagType, limit=-1,offset=-1):
     if kw is not None:
         return RequestWithBinds("""select count(distinct idFile) from  TagContents tc, TagsInFiles tif, TagTypes tt  where tc.idTagContent = tif.idTagContent and tc.TagContent = ? and tc.idTagType = tt.idTagType and tt.TagTranslation = ? """,(kw, tagType))[0][0]

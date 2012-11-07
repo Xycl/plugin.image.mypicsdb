@@ -238,7 +238,9 @@ class Main:
 ##        self.addDir("last month (betatest)",[("method","lastmonth"),("period",""),("value",""),("page","1"),("viewmode","view")],
 ##                    "showpics",join(PIC_PATH,"dates.png"),
 ##                    fanart=join(PIC_PATH,"fanart-date.png"))
+        print "Vor VersionTable"
         MPDB.VersionTable()
+        print "Nach VersionTable"
         display_all = Addon.getSetting('m_all')=='true'
         # last scan picture added
         if Addon.getSetting('m_1')=='true' or display_all:
@@ -521,10 +523,10 @@ class Main:
 
     def show_tags(self):
         tagtype = unquote_plus(self.args.tagtype).decode("utf8")
-        listtags = [u"%s"%k  for k in MPDB.list_Tags(tagtype)]
+        listtags = [k  for k in MPDB.list_TagsAndCount(tagtype)]
         total = len(listtags)
-        for tag in listtags:
-            nb = MPDB.countTags(tag, tagtype)
+        for tag, nb in listtags:
+            #nb = MPDB.countTags(tag, tagtype)
             if nb:
                 self.addDir(name      = "%s (%s %s)"%(tag,nb,__language__(30050)), #libellé
                             params    = [("method","tag"),("tag",tag),("tagtype",tagtype),("page","1"),("viewmode","view")],#paramètres
