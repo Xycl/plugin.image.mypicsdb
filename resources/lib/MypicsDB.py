@@ -704,7 +704,7 @@ def DB_file_insert(path,filename,dictionnary,update=False):
             if mot:
                 #First for persons, create an entry for this persons in persons table
                 try:
-                    cn.execute("""INSERT INTO persons(person) VALUES("%s")"""%mot)
+                    cn.execute("""INSERT INTO persons(person) VALUES(?)""",(mot,))
                 except Exception,msg:
                     if str(msg)=="column Person is not unique":
                         pass
@@ -728,7 +728,7 @@ def DB_file_insert(path,filename,dictionnary,update=False):
             if mot: #on ajoute que les mots clés non vides
                 #First for keywords, create an entry for this keyword in keywords table
                 try:
-                    cn.execute("""INSERT INTO keywords(keyword) VALUES("%s")"""%mot)
+                    cn.execute("""INSERT INTO keywords(keyword) VALUES(?)""",(mot,))
                 except Exception,msg:
                     if str(msg)=="column keyword is not unique":
                         pass
@@ -772,7 +772,7 @@ def DB_file_insert(path,filename,dictionnary,update=False):
         if dictionnary["category"]: #to add only category name that are not empty
             #create first an entry for this category in Categories table
             try:
-                cn.execute("""INSERT INTO Categories(Category) VALUES("%s")"""%dictionnary["category"])
+                cn.execute("""INSERT INTO Categories(Category) VALUES(?)""",(dictionnary["category"],))
             except Exception,msg:
                 if str(msg)=="column Category is not unique":
                     pass
@@ -873,7 +873,7 @@ def DB_del_pic(picpath,picfile=None): #TODO : revoir la vérif du dossier inutil
     if picfile:
         #on supprime le fichier de la base
         #print """DELETE FROM files WHERE idFolder = (SELECT idFolder FROM folders WHERE FullPath="%s") AND strFilename="%s" """%(picpath,picfile)
-        RequestWithBinds("""DELETE FROM files WHERE idFolder = (SELECT idFolder FROM folders WHERE FullPath=?) AND strFilename="? """,(picpath,picfile))
+        RequestWithBinds("""DELETE FROM files WHERE idFolder = (SELECT idFolder FROM folders WHERE FullPath=?) AND strFilename=? """,(picpath,picfile))
 
     else:
 
@@ -1264,18 +1264,24 @@ def get_iptc(path,filename):
             log( "", LOGDEBUG )
             return {}
     iptc = {}
+    
+    if len(info.data) < 4:
+        return iptc
 
     #il faudrait peut être gérer les infos suivantes de manière particulière:
     #   "supplemental category"
     #   "keywords"
     #   "contact"
     #en effet ces 3 infos contiennent des listes
+    #for k in info.data.keys():
+    #    print "Found iptc key = " + str(k)
+        
     for k in info.data.keys():
         if k in IPTC_FIELDS:
-            if IPTC_FIELDS[k] in ["supplemental category","keywords","contact"]:
-                pass
-            elif IPTC_FIELDS[k] in ["date created","time created"]:
-                pass
+            #if IPTC_FIELDS[k] in ["supplemental category","keywords","contact"]:
+            #    pass
+            #elif IPTC_FIELDS[k] in ["date created","time created"]:
+            #    pass
             addColumn("files",IPTC_FIELDS[k])
             #print IPTC_FIELDS[k]
             if isinstance(info.data[k],unicode):
@@ -1301,10 +1307,12 @@ def get_iptc(path,filename):
         else:
             log("IPTC problem with file: %s"%join(path,filename), LOGERROR)
             try:
-                log( "WARNING : '%s' IPTC field is not handled (data for this field : \n%s)"%(k,info.data[k][:80]) , LOGERROR)
+                log( " '%s' IPTC field is not handled. Data for this field : \n%s"%(k,info.data[k][:80]) , LOGERROR)
             except:
-                log( "WARNING : '%s' IPTC field is not handled (unreadable data for this field)"%k , LOGERROR)
-            log( "" , LOGERROR)
+                log( " '%s' IPTC field is not handled (unreadable data for this field)"%k , LOGERROR)
+            log( "IPTC data for picture %s will be ignored"%filename , LOGERROR)
+            ipt = {}
+            return ipt
 
     return iptc
 
@@ -1459,12 +1467,15 @@ If tag is not given, pictures with no keywords are returned"""
 
 
 def DefaultTagTypesTranslation():
+
     """Return a list of all keywords in database """
     Request("update TagTypes set TagTranslation = 'Country' where TagTranslation =  'Country/primary location name'")
     Request("update TagTypes set TagTranslation = 'Country' where TagTranslation =  'Photoshop:Country'")
     Request("update TagTypes set TagTranslation = 'Country' where TagTranslation =  'Iptc4xmpExt:CountryName'")
+    Request("update TagTypes set TagTranslation = 'Country' where TagTranslation =  'Iptc4xmpCore:Country'")
 
     Request("update TagTypes set TagTranslation = 'Country Code' where TagTranslation =  'Country/primary location code'")
+    Request("update TagTypes set TagTranslation = 'Country Code' where TagTranslation =  'Iptc4xmpCore:CountryCode'")
     
     Request("update TagTypes set TagTranslation = 'State' where TagTranslation =  'Province/state'")
     Request("update TagTypes set TagTranslation = 'State' where TagTranslation =  'Photoshop:State'")
@@ -1480,17 +1491,21 @@ def DefaultTagTypesTranslation():
     Request("update TagTypes set TagTranslation = 'Date/Time Created' where TagTranslation =  'Photoshop:DateCreated'")
     Request("update TagTypes set TagTranslation = 'Date/Time Created' where TagTranslation =  'Image DateTime'")
     
-    Request("update TagTypes set TagTranslation = 'Description' where TagTranslation =  'Photoshop:Headline'")
     Request("update TagTypes set TagTranslation = 'Description' where TagTranslation = 'Caption/abstract'")
     Request("update TagTypes set TagTranslation = 'Description' where TagTranslation = 'Dc:description'")
+    Request("update TagTypes set TagTranslation = 'Description' where TagTranslation = 'Iptc4xmpCore:Description'")
 
+    Request("update TagTypes set TagTranslation = 'Headline' where TagTranslation = 'Iptc4xmpCore:Headline'")
+    Request("update TagTypes set TagTranslation = 'Headline' where TagTranslation =  'Photoshop:Headline'")
+    
+    Request("update TagTypes set TagTranslation = 'Title' where TagTranslation = 'Object name'")
+    Request("update TagTypes set TagTranslation = 'Title' where TagTranslation = 'Dc:title'")
+    Request("update TagTypes set TagTranslation = 'Title' where TagTranslation = 'Iptc4xmpCore:Title'")
+    
     Request("update TagTypes set TagTranslation = 'Creator' where TagTranslation = 'Writer/editor'")
     Request("update TagTypes set TagTranslation = 'Creator' where TagTranslation = 'By-line'")
     Request("update TagTypes set TagTranslation = 'Creator' where TagTranslation = 'Dc:creator'")
     Request("update TagTypes set TagTranslation = 'Creator Title' where TagTranslation = 'By-line title'")
-
-    Request("update TagTypes set TagTranslation = 'Title' where TagTranslation = 'Object name'")
-    Request("update TagTypes set TagTranslation = 'Title' where TagTranslation = 'Dc:title'")
 
     Request("update TagTypes set TagTranslation = 'Copyright' where TagTranslation = 'Dc:rights'")
     Request("update TagTypes set TagTranslation = 'Copyright' where TagTranslation = 'Copyright notice'")
@@ -1501,6 +1516,7 @@ def DefaultTagTypesTranslation():
     Request("update TagTypes set TagTranslation = 'Keywords' where TagTranslation =  'MicrosoftPhoto:LastKeywordIPTC'")
     Request("update TagTypes set TagTranslation = 'Keywords' where TagTranslation =  'MicrosoftPhoto:LastKeywordXMP'")
     Request("update TagTypes set TagTranslation = 'Keywords' where TagTranslation =  'Dc:subject'")
+    Request("update TagTypes set TagTranslation = 'Keywords' where TagTranslation =  'Iptc4xmpCore:Keywords'")    
 
     Request("update TagTypes set TagTranslation = 'Category' where TagTranslation =  'Photoshop:Category'")
     Request("update TagTypes set TagTranslation = 'Supplemental Category' where TagTranslation =  'Photoshop:SupplementalCategories'")

@@ -239,9 +239,7 @@ class Main:
 ##        self.addDir("last month (betatest)",[("method","lastmonth"),("period",""),("value",""),("page","1"),("viewmode","view")],
 ##                    "showpics",join(PIC_PATH,"dates.png"),
 ##                    fanart=join(PIC_PATH,"fanart-date.png"))
-        print "Vor VersionTable"
         MPDB.VersionTable()
-        print "Nach VersionTable"
         display_all = Addon.getSetting('m_all')=='true'
         # last scan picture added
         if Addon.getSetting('m_1')=='true' or display_all:
