@@ -279,38 +279,6 @@ class Main:
                         join(PIC_PATH,"keywords.png"),
                         fanart=join(PIC_PATH,"fanart-keyword.png"))
 
-        # par mots clés
-        if Addon.getSetting('m_6')=='true' or display_all:
-            self.addDir(unescape(__language__(30103)),[("kw",""),("viewmode","view")],"showkeywords",
-                    join(PIC_PATH,"keywords.png"),
-                    fanart=join(PIC_PATH,"fanart-keyword.png"))
-
-        # browse by persons
-        if Addon.getSetting('m_13')=='true' or display_all:
-            self.addDir(unescape(__language__(30120)),[("person",""),("viewmode","view")],"showperson",
-                    join(PIC_PATH,"keywords.png"),
-                    fanart=join(PIC_PATH,"fanart-keyword.png"))
-
-        # browse by category
-        if Addon.getSetting('m_7')=='true' or display_all:
-            self.addDir(unescape(__language__(30097)),[("category",""),("viewmode","view")],"showcategory",
-                    join(PIC_PATH,"keywords.png"),
-                    fanart=join(PIC_PATH,"fanart-keyword.png"))
-       # browse by supplementalcategory
-        if Addon.getSetting('m_8')=='true' or display_all:
-            self.addDir(unescape(__language__(30095)),[("supplementalcategory",""),("viewmode","view")],"showsupplementalcategory",
-                    join(PIC_PATH,"keywords.png"),
-                    fanart=join(PIC_PATH,"fanart-keyword.png"))
-       # browse by country/city
-        if Addon.getSetting('m_9')=='true' or display_all:
-            self.addDir(unescape(__language__(30093)),[("country",""),("viewmode","view")],"showcountry",
-                 join(PIC_PATH,"keywords.png"),
-                 fanart=join(PIC_PATH,"fanart-keyword.png"))
-##       # browse by city
-##        if Addon.getSetting('m_10')=='true' or display_all:
-##            self.addDir(unescape(__language__(30092)),[("city",""),("viewmode","view")],"showcity",
-##                 join(PIC_PATH,"keywords.png"),
-##                 fanart=join(PIC_PATH,"fanart-keyword.png"))
         # période
         if Addon.getSetting('m_10')=='true' or display_all:
             self.addDir(unescape(__language__(30105)),[("period",""),("viewmode","view"),],"showperiod",
@@ -743,7 +711,9 @@ class Main:
             periodname = decoder.smart_unicode(periodname)
             dbdatestart = decoder.smart_unicode(dbdatestart)
             dbdateend = decoder.smart_unicode(dbdateend)
-            datestart,dateend = MPDB.Request("SELECT strftime('%%Y-%%m-%%d',datetime('%s')),strftime('%%Y-%%m-%%d',datetime('%s','+1 days','-1.0 seconds'))"%(dbdatestart,dbdateend))[0]
+            print dbdatestart
+            print dbdateend
+            datestart,dateend = MPDB.Request("SELECT strftime('%%Y-%%m-%%d',('%s')),strftime('%%Y-%%m-%%d',datetime('%s','+1 days','-1.0 seconds'))"%(dbdatestart,dbdateend))[0]
             datestart = decoder.smart_unicode(datestart)
             dateend   = decoder.smart_unicode(dateend)
             self.addDir(name      = "%s [COLOR=C0C0C0C0](%s)[/COLOR]"%(periodname,
@@ -862,6 +832,8 @@ class Main:
                 #ajoute le rootfolder dans la base
                 try:
                     MPDB.AddRoot(newroot,recursive,update,0)#TODO : traiter le exclude (=0 pour le moment) pour gérer les chemins à exclure
+                    xbmc.executebuiltin( "Container.Refresh(\"%s?action='rootfolders'&do='showroots'&exclude='0'&viewmode='view'\",)"%(sys.argv[0],))
+
                 except:
                     print "MPDB.AddRoot failed"
                 xbmc.executebuiltin( "Notification(%s,%s,%s,%s)"%(__language__(30000).encode("utf8"),__language__(30204).encode("utf8"),3000,join(home,"icon.png").encode("utf8") ) )
@@ -872,8 +844,6 @@ class Main:
                                                                                quote_plus(newroot)
                                                                               )
                                            )
-
-                        xbmc.executebuiltin( "Container.Refresh(\"%s?action='rootfolders'&do='showroots'&exclude='0'&viewmode='view'\",)"%(sys.argv[0],))
 
                 else:
                     #dialogaddonscan était en cours d'utilisation, on return
@@ -1026,6 +996,7 @@ class Main:
     #traitement des menus contextuels
     ##################################
     def remove_period(self):
+        print self.args.periodname
         MPDB.delPeriode(self.args.periodname)
         xbmc.executebuiltin( "Container.Update(\"%s?action='showperiod'&viewmode='view'&period=''\" , replace)"%sys.argv[0]  )
 

@@ -164,121 +164,7 @@ def Make_new_base(DBpath,ecrase=True):
         else: #sinon on imprime l'exception levée pour la traiter
             log( ">>> Make_new_base - CREATE TABLE files ...", LOGERROR )
             log( "%s - %s"%(Exception,msg), LOGERROR )
-    #table 'keywords'
-    try:
-        cn.execute("""CREATE TABLE "keywords" ("idKW" INTEGER primary key, "keyword" TEXT UNIQUE);""")
-    except Exception,msg:
-        if msg.args[0].startswith("table 'keywords' already exists"):
-            #cette exception survient lorsque la table existe déjà.
-            #   elle n'est pas une erreur, on la passe
-            pass
-        else: #sinon on imprime l'exception levée pour la traiter
-            log( ">>> Make_new_base - CREATE TABLE keywords ...", LOGERROR )
-            log( "%s - %s"%(Exception,msg), LOGERROR )
-    #table 'KeywordsInFiles'
-    try:
-        cn.execute("""CREATE TABLE "KeywordsInFiles" ("idKW" INTEGER NOT NULL, "idFile" INTEGER NOT NULL);""")
-    except Exception,msg:
-        if msg.args[0].startswith("table 'KeywordsInFiles' already exists"):
-            #cette exception survient lorsque la table existe déjà.
-            #   elle n'est pas une erreur, on la passe
-            pass
-        else: #sinon on imprime l'exception levée pour la traiter
-            log( ">>> Make_new_base - CREATE TABLE KeywordsInFiles ...", LOGERROR )
-            log( "%s - %s"%(Exception,msg), LOGERROR )
-# MDB
-    #table 'Categories'
-    try:
-        cn.execute("""CREATE TABLE "Categories" ("idCategory" INTEGER NOT NULL primary key, "Category" TEXT UNIQUE);""")
-    except Exception,msg:
-        if msg.args[0].startswith("table 'Categories' already exists"):
-            pass
-        else:
-            log( ">>> Make_new_base - CREATE TABLE Categories ..." )
-            log( "%s - %s"%(Exception,msg), LOGERROR )
-    #table 'CategoriesInFiles'
-    try:
-        cn.execute("""CREATE TABLE "CategoriesInFiles" ("idCategory" INTEGER NOT NULL, "idFile" INTEGER NOT NULL);""")
-    except Exception,msg:
-        if msg.args[0].startswith("table 'CategoriesInFiles' already exists"):
-            pass
-        else:
-            log( ">>> Make_new_base - CREATE TABLE CategoriesInFiles ...", LOGERROR )
-            log( "%s - %s"%(Exception,msg), LOGERROR )
-    #table 'SupplementalCategories'
-    try:
-        cn.execute("""CREATE TABLE "SupplementalCategories" ("idSupplementalCategory" INTEGER NOT NULL primary key, "SupplementalCategory" TEXT UNIQUE);""")
-    except Exception,msg:
-        if msg.args[0].startswith("table 'SupplementalCategories' already exists"):
-            pass
-        else:
-            log( ">>> Make_new_base - CREATE TABLE SupplementalCategories ...", LOGERROR )
-            log( "%s - %s"%(Exception,msg), LOGERROR )
-    #table 'SupplementalCategoriesInFiles'
-    try:
-        cn.execute("""CREATE TABLE "SupplementalCategoriesInFiles" ("idSupplementalCategory" INTEGER NOT NULL, "idFile" INTEGER NOT NULL);""")
-    except Exception,msg:
-        if msg.args[0].startswith("table 'SupplementalCategoriesInFiles' already exists"):
-            pass
-        else:
-            log( ">>> Make_new_base - CREATE TABLE SupplementalCategoriesInFiles ...", LOGERROR )
-            log( "%s - %s"%(Exception,msg), LOGERROR )
-    #table 'Countries'
-    try:
-        cn.execute("""CREATE TABLE "Countries" ("idCountry" INTEGER NOT NULL primary key, "Country" TEXT UNIQUE);""")
-    except Exception,msg:
-        if msg.args[0].startswith("table 'Countries' already exists"):
-            pass
-        else:
-            log( ">>> Make_new_base - CREATE TABLE Countries ...", LOGERROR )
-            log( "%s - %s"%(Exception,msg), LOGERROR )
-    #table 'CountriesInFiles'
-    try:
-        cn.execute("""CREATE TABLE "CountriesInFiles" ("idCountry" INTEGER NOT NULL, "idFile" INTEGER NOT NULL);""")
-    except Exception,msg:
-        if msg.args[0].startswith("table 'CountriesInFiles' already exists"):
-            pass
-        else:
-            log( ">>> Make_new_base - CREATE TABLE CountriesInFiles ...", LOGERROR )
-            log( "%s - %s"%(Exception,msg), LOGERROR )
 
-    #table 'Persons'
-    try:
-        cn.execute("""CREATE TABLE "Persons" ("idPerson" INTEGER NOT NULL primary key, "Person" TEXT UNIQUE);""")
-    except Exception,msg:
-        if msg.args[0].startswith("table 'Persons' already exists"):
-            pass
-        else:
-            log( ">>> Make_new_base - CREATE TABLE Persons ...", LOGERROR )
-            log( "%s - %s"%(Exception,msg), LOGERROR )
-    #table 'PersonsInFiles'
-    try:
-        cn.execute("""CREATE TABLE "PersonsInFiles" ("idPerson" INTEGER NOT NULL, "idFile" INTEGER NOT NULL);""")
-    except Exception,msg:
-        if msg.args[0].startswith("table 'PersonsInFiles' already exists"):
-            pass
-        else:
-            log( ">>> Make_new_base - CREATE TABLE PersonsInFiles ...", LOGERROR )
-            log( "%s - %s"%(Exception,msg), LOGERROR )
-
-    #table 'Cities'
-    try:
-        cn.execute("""CREATE TABLE "Cities" ("idCity" INTEGER NOT NULL primary key, "City" TEXT UNIQUE);""")
-    except Exception,msg:
-        if msg.args[0].startswith("table 'Cities' already exists"):
-            pass
-        else:
-            log( ">>> Make_new_base - CREATE TABLE Cities ...", LOGERROR )
-            log( "%s - %s"%(Exception,msg), LOGERROR )
-    #table 'CitiesInFiles'
-    try:
-        cn.execute("""CREATE TABLE "CitiesInFiles" ("idCity" INTEGER NOT NULL, "idFile" INTEGER NOT NULL);""")
-    except Exception,msg:
-        if msg.args[0].startswith("table 'CitiesInFiles' already exists"):
-            pass
-        else:
-            log( ">>> Make_new_base - CREATE TABLE CitiesInFiles ...", LOGERROR )
-            log( "%s - %s"%(Exception,msg), LOGERROR )
     #table 'folders'
     try:
         cn.execute("""CREATE TABLE "folders" ("idFolder" INTEGER  primary key not null, "FolderName" TEXT, "ParentFolder" INTEGER, "FullPath" TEXT UNIQUE,"HasPics" INTEGER);""")
@@ -401,12 +287,11 @@ def Make_new_base(DBpath,ecrase=True):
     except Exception,msg:
         pass
 
-
+    """
     try:
         cn.execute("CREATE INDEX idxKeywordsInFiles1 ON KeywordsInFiles(idKW)")
     except Exception,msg:
         pass
-
 
     try:
         cn.execute("CREATE INDEX idxPersonsInFiles1 ON PersonsInFiles(idPerson)")
@@ -417,7 +302,7 @@ def Make_new_base(DBpath,ecrase=True):
         cn.execute("CREATE INDEX idxSupplementalCategoriesInFiles1 ON SupplementalCategoriesInFiles(idSupplementalCategory)")
     except Exception,msg:
         pass
-
+    """
 
     # Index creation for new tag tables
     try:
@@ -505,18 +390,18 @@ def DB_cleanup_keywords():
         #cn.execute('delete from folders where idFolder not in (select idFolder from Files)')
         cn.execute('delete from files where idFolder not in( select idFolder from folders)')
 
-        cn.execute( "delete from keywordsInFiles where idFile not in(select idFile from Files )")
-        cn.execute( "delete from keywords where idKW not in (select idKW from keywordsInFiles)")
-        cn.execute( "delete from categoriesInFiles where idFile not in(select idFile from Files )")
-        cn.execute( "delete from Categories where idCategory not in (select idCategory from categoriesInFiles)")
-        cn.execute( "delete from supplementalCategoriesInFiles where idFile not in(select idFile from Files )")
-        cn.execute( "delete from SupplementalCategories where idSupplementalCategory not in (select idSupplementalCategory from supplementalCategoriesInFiles)")
-        cn.execute( "delete from countriesInFiles where idFile not in(select idFile from Files )")
-        cn.execute( "delete from Countries where idCountry not in (select idCountry from countriesInFiles)")
-        cn.execute( "delete from citiesInFiles where idFile not in(select idFile from Files )")
-        cn.execute( "delete from Cities where idCity not in (select idCity from citiesInFiles)")
-        cn.execute( "delete from personsInFiles where idFile not in(select idFile from Files )")
-        cn.execute( "delete from Persons where idPerson not in (select idPerson from personsInFiles)")
+        #cn.execute( "delete from keywordsInFiles where idFile not in(select idFile from Files )")
+        #cn.execute( "delete from keywords where idKW not in (select idKW from keywordsInFiles)")
+        #cn.execute( "delete from categoriesInFiles where idFile not in(select idFile from Files )")
+        #cn.execute( "delete from Categories where idCategory not in (select idCategory from categoriesInFiles)")
+        #cn.execute( "delete from supplementalCategoriesInFiles where idFile not in(select idFile from Files )")
+        #cn.execute( "delete from SupplementalCategories where idSupplementalCategory not in (select idSupplementalCategory from supplementalCategoriesInFiles)")
+        #cn.execute( "delete from countriesInFiles where idFile not in(select idFile from Files )")
+        #cn.execute( "delete from Countries where idCountry not in (select idCountry from countriesInFiles)")
+        #cn.execute( "delete from citiesInFiles where idFile not in(select idFile from Files )")
+        #cn.execute( "delete from Cities where idCity not in (select idCity from citiesInFiles)")
+        #cn.execute( "delete from personsInFiles where idFile not in(select idFile from Files )")
+        #cn.execute( "delete from Persons where idPerson not in (select idPerson from personsInFiles)")
 
         cn.execute( "delete from TagsInFiles where idFile not in(select idFile from Files )")
         cn.execute( "delete from TagContents where idTagContent not in (select idTagContent from TagsInFiles)")
@@ -697,135 +582,7 @@ def DB_file_insert(path,filename,dictionnary,update=False):
                             print """ INSERT INTO TagsInFiles(idTagContent,idFile) SELECT t.idTagContent, %d FROM TagContents t WHERE t.idTagType=%d AND t.TagContent = '%s' """%(idFile,idTagType,value)
 
 
-    # XMP Person tags
-    if dictionnary.has_key("persons"):
-        kwl = dictionnary["persons"].split(lists_separator)
-        for mot in kwl:
-            if mot:
-                #First for persons, create an entry for this persons in persons table
-                try:
-                    cn.execute("""INSERT INTO persons(person) VALUES(?)""",(mot,))
-                except Exception,msg:
-                    if str(msg)=="column Person is not unique":
-                        pass
-                    else:
-                        log( 'EXCEPTION >> persons', LOGERROR )
-                        log( "\t%s - %s"%(Exception,msg), LOGERROR )
 
-                #Then, add the corresponding id of file and id of keyword inside the KeywordsInFiles database
-                try:
-                    cn.execute("""INSERT INTO personsInFiles(idPerson,idFile) SELECT k.idPerson,f.idFile FROM Persons k, files f WHERE k.person=? AND f.strPath=? AND f.strFilename=? """,(mot, path,filename))
-                except Exception,msg:
-                    log("Error while adding PersonsInFiles", LOGERROR)
-                    log("\t%s - %s"% (Exception,msg), LOGERROR )
-
-
-
-    # TRAITEMENT DES MOTS CLES (base keywords)
-    if dictionnary.has_key("keywords"):
-        kwl = dictionnary["keywords"].split(lists_separator)
-        for mot in kwl:
-            if mot: #on ajoute que les mots clés non vides
-                #First for keywords, create an entry for this keyword in keywords table
-                try:
-                    cn.execute("""INSERT INTO keywords(keyword) VALUES(?)""",(mot,))
-                except Exception,msg:
-                    if str(msg)=="column keyword is not unique":
-                        pass
-                    else:
-                        log( 'EXCEPTION >> keywords', LOGERROR )
-                        log( "\t%s - %s"%(Exception,msg), LOGERROR )
-
-                #Then, add the corresponding id of file and id of keyword inside the KeywordsInFiles database
-                try:
-                    cn.execute("""INSERT INTO KeywordsInFiles(idKW,idFile) SELECT k.idKW,f.idFile FROM keywords k, files f WHERE k.keyword=? AND f.strPath=? AND f.strFilename=? """, (mot, path, filename))
-
-                except Exception,msg:
-                    log("Error while adding KeywordsInFiles", LOGERROR)
-                    log("\t%s - %s"% (Exception,msg), LOGERROR )
-    # TRAITEMENT DE SUPPLEMENTAL CATEGORY (base Categories)
-    if dictionnary.has_key("supplemental category"):
-        catl = dictionnary["supplemental category"].split(lists_separator)
-        for cat in catl:
-            if cat: #to add only category name that are not empty
-                #create first an entry for this category in Categories table
-                try:
-                    cn.execute("""INSERT INTO SupplementalCategories(SupplementalCategory) VALUES(?)""",(cat,))
-                except Exception,msg:
-                    if str(msg)=="column SupplementalCategory is not unique":
-                        pass
-                    else:
-                        log( 'EXCEPTION >> SupplementalCategory', LOGERROR )
-                        log( "\t%s - %s"%(Exception,msg), LOGERROR )
-
-                #then, add the corresponding id of file and id of category inside the CategoriesInFiles database
-                try:
-                    cn.execute("""INSERT INTO SupplementalCategoriesInFiles(idSupplementalCategory,idFile) SELECT c.idSupplementalCategory,f.idFile FROM SupplementalCategories c, files f WHERE c.SupplementalCategory=? AND f.strPath=? AND f.strFilename=? """, (cat, path, filename))
-                except Exception,msg:
-                    log("Error while adding SupplementalCategoriesInFiles", LOGERROR)
-                    log("\t%s - %s"% (Exception,msg), LOGERROR )
-
-
-    # TRAITEMENT DE CATEGORY (base Categories)
-
-    if dictionnary.has_key("category"):
-        if dictionnary["category"]: #to add only category name that are not empty
-            #create first an entry for this category in Categories table
-            try:
-                cn.execute("""INSERT INTO Categories(Category) VALUES(?)""",(dictionnary["category"],))
-            except Exception,msg:
-                if str(msg)=="column Category is not unique":
-                    pass
-                else:
-                    log( 'EXCEPTION >> Category', LOGERROR )
-                    log( "\t%s - %s"%(Exception,msg), LOGERROR )
-
-            #then, add the corresponding id of file and id of category inside the CategoriesInFiles database
-            try:
-                cn.execute("""INSERT INTO CategoriesInFiles(idCategory,idFile) SELECT c.idCategory,f.idFile FROM Categories c, files f WHERE c.Category=? AND f.strPath=? AND f.strFilename=? """, (dictionnary["category"], path, filename))
-            except Exception,msg:
-                log("Error while adding CategoriesInFiles", LOGERROR)
-                log("\t%s - %s"% (Exception,msg), LOGERROR )
-
-    # TRAITEMENT DES PAYS (base Country)
-    if dictionnary.has_key("country/primary location name"):
-        if dictionnary["country/primary location name"]:
-            try:
-                cn.execute("""INSERT INTO Countries(Country) VALUES(?)""", (dictionnary["country/primary location name"],) )
-            except Exception,msg:
-                if str(msg)=="column Country is not unique":
-                    pass
-                else:
-                    log( 'EXCEPTION >> Country', LOGERROR )
-                    log( 'Country = %s'%decoder.smart_utf8(dictionnary["country/primary location name"]))
-                    log( "\t%s - %s"%(Exception,msg), LOGERROR )
-
-            try:
-                cn.execute("""INSERT INTO CountriesInFiles(idCountry,idFile) SELECT c.idCountry,f.idFile FROM Countries c, files f WHERE c.Country=? AND f.strPath=? AND f.strFilename=? """,(dictionnary["country/primary location name"], path, filename))
-            except Exception,msg:
-                log("Error while adding CountriesInFiles", LOGERROR)
-                log( 'Country = %s'%decoder.smart_utf8(dictionnary["country/primary location name"]))
-                log("\t%s - %s"% (Exception,msg), LOGERROR )
-
-    # TRAITEMENT DES VILLES ( base City)
-    if dictionnary.has_key("city"):
-        if dictionnary["city"]:
-            try:
-                cn.execute("""INSERT INTO Cities(City) VALUES(?)""",(dictionnary["city"], ) )
-            except Exception,msg:
-                if str(msg)=="column City is not unique":
-                    pass
-                else:
-                    log( 'EXCEPTION >> City', LOGERROR )
-                    log( 'City = %s'%decoder.smart_utf8(dictionnary["city"]))
-                    log( "\%s - %s"%(Exception,msg), LOGERROR )
-
-            try:
-                cn.execute("""INSERT INTO CitiesInFiles(idCity,idFile) SELECT c.idCity,f.idFile FROM Cities c, files f WHERE c.City=? AND f.strPath=? AND f.strFilename=? """,(dictionnary["city"], path, filename))
-            except Exception,msg:
-                log("Error while adding CitiesInFiles", LOGERROR)
-                log( 'city = %s'%decoder.smart_utf8(dictionnary["city"]))
-                log("\t%s - %s"% (Exception,msg), LOGERROR )
 
     conn.commit()
     cn.close()
@@ -1005,11 +762,11 @@ def ListPeriodes():
 
 def addPeriode(periodname,datestart,dateend):
     #datestart et dateend doivent être au format string ex.: "datetime('2009-07-12')" ou "strftime('%Y',now)"
-    Request( """INSERT INTO Periodes(PeriodeName,DateStart,DateEnd) VALUES (?,?,?)""", (periodname,datestart,dateend) )
+    RequestWithBinds( """INSERT INTO Periodes(PeriodeName,DateStart,DateEnd) VALUES (?,%s,%s)"""%(datestart,dateend), (periodname,) )
     return
 
 def delPeriode(periodname):
-    RequestWithBinds( """DELETE FROM Periodes WHERE PeriodeName=? """(periodname,) )
+    RequestWithBinds( """DELETE FROM Periodes WHERE PeriodeName=? """,(periodname,) )
     return
 
 def renPeriode(periodname,newname,newdatestart,newdateend):
@@ -1094,9 +851,9 @@ def RemovePath(path):
     #parcours tous les sous dossiers
     for idchild in all_children(idpath):
         #supprime les keywordsinfiles
-        Request( """DELETE FROM KeywordsInFiles WHERE idKW in (SELECT idKW FROM KeywordsInFiles WHERE idFile in (SELECT idFile FROM files WHERE idFolder='%s'))"""%idchild )
+        #Request( """DELETE FROM KeywordsInFiles WHERE idKW in (SELECT idKW FROM KeywordsInFiles WHERE idFile in (SELECT idFile FROM files WHERE idFolder='%s'))"""%idchild )
         #supprime les Categoriesinfiles
-        Request( """DELETE FROM CategoriesInFiles WHERE idCategory in (SELECT idCategory FROM CategoriesInFiles WHERE idFile in (SELECT idFile FROM files WHERE idFolder='%s'))"""%idchild )
+        #Request( """DELETE FROM CategoriesInFiles WHERE idCategory in (SELECT idCategory FROM CategoriesInFiles WHERE idFile in (SELECT idFile FROM files WHERE idFolder='%s'))"""%idchild )
         #supprime les photos de files in collection
         Request( """DELETE FROM FilesInCollections WHERE idFile in (SELECT idFile FROM files WHERE idFolder='%s')"""%idchild )
         #2- supprime toutes les images
@@ -1105,7 +862,7 @@ def RemovePath(path):
         #3 - supprime ce sous dossier
         Request( """DELETE FROM folders WHERE idFolder='%s'"""%idchild)
         #supprime les SupplementalCategoriesInFiles
-        Request( """DELETE FROM SupplementalCategoriesInFiles WHERE idSupplementalCategory in (SELECT idSupplementalCategory FROM SupplementalCategoriesInFiles WHERE idFile in (SELECT idFile FROM files WHERE idFolder='%s'))"""%idchild )
+        #Request( """DELETE FROM SupplementalCategoriesInFiles WHERE idSupplementalCategory in (SELECT idSupplementalCategory FROM SupplementalCategoriesInFiles WHERE idFile in (SELECT idFile FROM files WHERE idFolder='%s'))"""%idchild )
     #4- supprime le dossier
     Request( """DELETE FROM folders WHERE idFolder='%s'"""%idpath)
     #5- supprime les 'périodes' si elles ne contiennent plus de photos (TODO : voir si on supprime les périodes vides ou pas)
@@ -1594,128 +1351,6 @@ def countTags(kw,tagType, limit=-1,offset=-1):
         return RequestWithBinds("""select count(distinct idFile) from  TagContents tc, TagsInFiles tif, TagTypes tt  where tc.idTagContent = tif.idTagContent and tc.TagContent = ? and tc.idTagType = tt.idTagType and tt.TagTranslation = ? """,(kw, tagType))[0][0]
     else:
         return Request("""SELECT count(*) FROM files WHERE idFile not in (SELECT DISTINCT idFile FROM TagsInFiles)""" )[0][0]
-
-
-####
-def search_person(person=None,limit=-1,offset=-1):
-    """Look for given person and return the list of pictures.
-If person is not given, pictures with no person are returned"""
-    if person is not None: #si le mot clé est fourni
-        return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM files WHERE idFile in (SELECT idFile FROM PersonsInFiles WHERE idPerson =(SELECT max(idPerson) FROM persons WHERE person=?)) LIMIT %s OFFSET %s"""%(limit,offset),(person, ))]
-    else: #sinon, on retourne toutes les images qui ne sont pas associées à des mots clés
-        return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE idFile NOT IN (SELECT DISTINCT idFile FROM PersonsInFiles) LIMIT %s OFFSET %s"""%(limit,offset) )]
-
-def list_person():
-    """Return a list of all persons in database"""
-    return [row for (row,) in Request( """SELECT person FROM persons ORDER BY LOWER(person) ASC""" )]
-
-def count_person(person,limit=-1,offset=-1):
-    if person is not None:
-        return RequestWithBinds("""SELECT count(*) FROM files WHERE idFile in (SELECT idFile FROM PersonsInFiles WHERE idPerson =(SELECT idPerson FROM persons WHERE person=?))""",(person,))[0][0]
-    else:
-        return Request("""SELECT count(*) FROM files WHERE idFile not in (SELECT DISTINCT idFile FROM PersonsInFiles)""" )[0][0]
-
-####
-
-def search_keyword(kw=None,limit=-1,offset=-1):
-    """Look for given keyword and return the list of pictures.
-If keyword is not given, pictures with no keywords are returned"""
-    if kw is not None: #si le mot clé est fourni
-        return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM files WHERE idFile in (SELECT idFile FROM KeywordsInFiles WHERE idKW =(SELECT idKW FROM keywords WHERE keyword=?)) LIMIT %s OFFSET %s"""%(limit,offset),(kw, ))]
-    else: #sinon, on retourne toutes les images qui ne sont pas associées à des mots clés
-        return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE idFile NOT IN (SELECT DISTINCT idFile FROM KeywordsInFiles) LIMIT %s OFFSET %s"""%(limit,offset) )]
-
-def list_KW():
-    """Return a list of all keywords in database"""
-    return [row for (row,) in Request( """SELECT keyword FROM keywords ORDER BY LOWER(keyword) ASC""" )]
-
-def countKW(kw,limit=-1,offset=-1):
-    if kw is not None:
-        return RequestWithBinds("""SELECT count(*) FROM files WHERE idFile in (SELECT idFile FROM KeywordsInFiles WHERE idKW =(SELECT idKW FROM keywords WHERE keyword=?))""",(kw,))[0][0]
-    else:
-        return Request("""SELECT count(*) FROM files WHERE idFile not in (SELECT DISTINCT idFile FROM KeywordsInFiles)""" )[0][0]
-
-### MDB
-def search_category(p_category=None):
-    if p_category is not None:
-        return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM files WHERE idFile in (SELECT idFile FROM CategoriesInFiles WHERE idCategory =(SELECT idCategory FROM Categories WHERE Category=?))""", (p_category, ))]
-    else:
-        return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE idFile NOT IN (SELECT DISTINCT idFile FROM CategoriesInFiles)""" )]
-
-def list_category():
-    return [row for (row,) in Request( """SELECT Category FROM Categories ORDER BY LOWER(Category) ASC""" )]
-
-def count_category(p_category):
-    if p_category is not None:  
-        return RequestWithBinds("""SELECT count(*) FROM CategoriesInFiles WHERE idCategory =(SELECT idCategory FROM Categories WHERE Category=?)""", (p_category,))[0][0]
-    else:
-        return Request("""SELECT count(*) FROM files WHERE idFile not in (SELECT DISTINCT idFile FROM CategoriesInFiles)""" )[0][0]
-
-def search_supplementalcategory(p_supplementalcategory=None):
-    if p_supplementalcategory is not None:
-        return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM files WHERE idFile in (SELECT idFile FROM SupplementalCategoriesInFiles WHERE idSupplementalCategory =(SELECT idSupplementalCategory FROM SupplementalCategories WHERE SupplementalCategory=?))""", (p_supplementalcategory,))]
-    else:
-        return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE idFile NOT IN (SELECT DISTINCT idFile FROM SupplementalCategoriesInFiles)""" )]
-
-def list_supplementalcategory():
-    return [row for (row,) in Request( """SELECT SupplementalCategory FROM SupplementalCategories ORDER BY LOWER(SupplementalCategory) ASC""" )]
-
-def count_supplementalcategory(p_supplementalcategory):
-    if p_supplementalcategory is not None:
-        return RequestWithBinds("""SELECT count(*) FROM SupplementalCategoriesInFiles WHERE idSupplementalCategory =(SELECT idSupplementalCategory FROM SupplementalCategories WHERE SupplementalCategory=?)""",(p_supplementalcategory,))[0][0]
-    else:
-        return Request("""SELECT count(*) FROM files WHERE idFile not in (SELECT DISTINCT idFile FROM SupplementalCategoriesInFiles)""" )[0][0]
-
-def list_country_old(): #USELESS ?
-    return [row for (row,) in Request( """SELECT Country FROM Countries ORDER BY LOWER(Country) ASC""" )]
-
-def list_country():
-    return [row for row in Request( """SELECT ifnull("country/primary location name",""), count(*) FROM files  GROUP BY "country/primary location name"  ;""" )]
-
-def search_country(p_country=None):
-    if p_country is None:
-        return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE idFile NOT IN (SELECT DISTINCT idFile FROM CountriesInFiles)""" )]
-    else:
-        return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM files WHERE idFile in (SELECT idFile FROM CountriesInFiles WHERE idCountry =(SELECT idCountry FROM Countries WHERE Country=?))""",(p_country,))]
-
-def count_country(p_country): #USELESS ?
-    if p_country is None:
-        return Request("""SELECT count(*) FROM files WHERE idFile not in (SELECT DISTINCT idFile FROM CountriesInFiles)""" )[0][0]
-    else:
-        return RequestWithBinds("""SELECT count(*) FROM CountriesInFiles WHERE idCountry=(SELECT idCountry FROM Countries WHERE Country=?)""",(p_country,))[0][0]
-
-def list_city_old(): #USELESS ?
-    return [row for (row,) in Request( """SELECT City FROM Cities ORDER BY LOWER(City) ASC""" )]
-
-def list_city(country=None):
-    if not country:
-        return [row for row in Request( """SELECT ifnull(City,""), count(*) from files  GROUP BY city""" )]
-    else:
-        return [row for row in RequestWithBinds( """SELECT ifnull(City,""), count(*) from files where "country/primary location name" = ? GROUP BY city""", (country,) )]
-
-
-def search_city4country(country,city=""):
-    #if not country and not city (shouldn't happen) : display all pics
-    #if not country but city (shouldn't happen)
-    #if not city but country : show all pics for this country
-    if city: 
-        citystmt = """ AND City = "%s" ORDER BY City ASC"""%city.encode("utf8")
-        return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM files WHERE "country/primary location name" = ? AND City = ? ORDER BY City ASC""", (country, city))]
-    else: 
-        citystmt = """ AND City is Null or City = "" """
-        return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM files WHERE "country/primary location name" = ? AND City is Null or City = "" """,(country, ))]
-
-def search_city(p_city=None):
-    if p_city is None:
-        return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE idFile NOT IN (SELECT DISTINCT idFile FROM CitiesInFiles)""" )]
-    else:
-        return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM files WHERE idFile in (SELECT idFile FROM CitiesInFiles WHERE idCity =(SELECT idCity FROM Cities WHERE City=?))""", (p_city, ))]
-
-def count_city(p_city):
-    if p_city is None:
-        return Request("""SELECT count(*) FROM files WHERE idFile not in (SELECT DISTINCT idFile FROM CitiesInFiles)""" )[0][0]
-    else:
-        return RequestWithBinds("""SELECT count(*) FROM CitiesInFiles WHERE idCity=(SELECT idCity FROM Cities WHERE City=?)""", (p_city, ))[0][0]
 
 
 def countPicsFolder(folderid):
