@@ -1,3 +1,6 @@
+2012/11/19 --> v 1.2.8
+Update: Changed for first Frodo beta release
+
 2012/11/14 --> v 1.2.7.6
 Fix:    In any case of an IPTC parser error the complete IPTC tags for the picture will be ignored.
 Update: Several new imported XMP Iptc4xmpCore and Iptc4xmpExt tags which replace IPTC IIM tags.

@@ -266,11 +266,6 @@ def Make_new_base(DBpath,ecrase=True):
             log( ">>> Make_new_base - CREATE TABLE TagsInFiles ...", LOGERROR )
             log( "%s - %s"%(Exception,msg), LOGERROR )
 
-    # Index creation for old tag tables
-    try:
-        cn.execute("CREATE INDEX idxCategoriesInFiles1 ON CategoriesInFiles(idCategory)")
-    except Exception,msg:
-        pass
 
     try:
         cn.execute("CREATE INDEX idxCitiesInFiles1 ON CitiesInFiles(idCity)")
@@ -287,22 +282,6 @@ def Make_new_base(DBpath,ecrase=True):
     except Exception,msg:
         pass
 
-    """
-    try:
-        cn.execute("CREATE INDEX idxKeywordsInFiles1 ON KeywordsInFiles(idKW)")
-    except Exception,msg:
-        pass
-
-    try:
-        cn.execute("CREATE INDEX idxPersonsInFiles1 ON PersonsInFiles(idPerson)")
-    except Exception,msg:
-        pass
-
-    try:
-        cn.execute("CREATE INDEX idxSupplementalCategoriesInFiles1 ON SupplementalCategoriesInFiles(idSupplementalCategory)")
-    except Exception,msg:
-        pass
-    """
 
     # Index creation for new tag tables
     try:
@@ -507,10 +486,6 @@ def DB_file_insert(path,filename,dictionnary,update=False):
             if tagType not in ['sha', 'strFilename', 'strPath',
                                'mtime', 'ftype',
                                'source', 'urgency', 'time created', 'date created']:
-
-                #['EXIF DateTimeDigitized', 'DateAdded', #, 'EXIF DateTimeOriginal'
-                #'EXIF ExifImageLength', 'EXIF SceneCaptureType','EXIF ExifImageWidth',
-                #'Image DateTime', 'Image Model', 'Image Orientation',
                 
                 tagValues = dictionnary[tagType].split(lists_separator)
 
@@ -825,6 +800,7 @@ def AddRoot(path,recursive,remove,exclude):
     RequestWithBinds( """INSERT INTO Rootpaths(path,recursive,remove,exclude) VALUES (?,?,?,?)""",(decoder.smart_unicode(path),recursive,remove,exclude) )
 
 def getRoot(path):
+    print decoder.smart_utf8(path)
     return [row for row in RequestWithBinds( """SELECT path,recursive,remove,exclude FROM Rootpaths WHERE path=? """, (decoder.smart_unicode(path),) )][0]
 
 
@@ -1320,9 +1296,9 @@ SELECT tt.TagTranslation, count(distinct tagcontent)
    and tt.idTagType                 = tc.idTagType
 group by tt.tagtranslation """   )]
 
-def countTagTypes(kw,limit=-1,offset=-1):
-    if kw is not None:
-        return RequestWithBinds("""SELECT count(distinct TagContent) FROM tagsInFiles tif, TagContents tc, TagTypes tt WHERE tif.idTagContent = tc.idTagContent AND tc.idTagType = tt.idTagType and length(trim(tt.TagTranslation))>0 and tt.TagTranslation =? """, (kw,) )[0][0]
+def countTagTypes(tagType,limit=-1,offset=-1):
+    if tagType is not None:
+        return RequestWithBinds("""SELECT count(distinct TagContent) FROM tagsInFiles tif, TagContents tc, TagTypes tt WHERE tif.idTagContent = tc.idTagContent AND tc.idTagType = tt.idTagType and length(trim(tt.TagTranslation))>0 and tt.idTagType =? """, (tagType,) )[0][0]
     else:
         return Request("""SELECT count(*) FROM TagTypes where length(trim(TagTranslation))>0""" )[0][0]
         

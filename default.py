@@ -14,6 +14,7 @@ TODO :
 import os, sys, time
 from os.path import join,isfile,basename,dirname,splitext
 from urllib import quote_plus,unquote_plus
+from resources.lib.CharsetDecoder import quote_param
 from time import strftime,strptime,gmtime
 from traceback import print_exc
 
@@ -115,13 +116,22 @@ class Main:
         self.get_args()
 
     def get_args(self):
+        
         print "MyPicturesDB plugin called :"
-        print "%s%s"%(sys.argv[0],sys.argv[2])
+        print "sys.argv[0] = %s ---  sys.argv[2] = %s"%(sys.argv[0],sys.argv[2])
         print "-"*20
         print
-
-        exec "self.args = _Info(%s)" % ( sys.argv[ 2 ][ 1 : ].replace( "&", ", " ), )
-
+        
+        self.args = _Info(do='rootclic', rootpath='D:\\Afbeeldingen\\', viewmode='view', exclude='0', action='rootfolders', name='[COLOR=FF66CC00][B][ + ][/B][/COLOR] D:\\Afbeeldingen\\ [COLOR=FFC0C0C0][recursive=ON , update=ON][/COLOR]')
+        
+        self.parm = decoder.smart_utf8(unquote_plus(sys.argv[2])).replace("\\\\", "\\")
+        #print self.parm.encode('utf-8')
+        #print self.parm
+        sys.argv[2] = self.parm
+        #exec "self.args = _Info(%s)" % ( sys.argv[ 2 ][ 1 : ].replace( "&", ", " ), )
+        args= "self.args = _Info(%s)" % ( self.parm[ 1 : ].replace( "&", ", " ), )
+        print args
+        exec args
         if not hasattr(self.args, 'page'):
            self.args.page=''
 
@@ -133,11 +143,17 @@ class Main:
         #params est une liste de tuples [(nomparametre,valeurparametre),]
         #contitution des paramètres
         try:
-            parameter="&".join([param+"="+repr(quote_plus(valeur.encode("utf-8"))) for param,valeur in params])
+            parameter="&".join([param+"="+repr(quote_param(valeur.encode("utf-8"))) for param,valeur in params])
         except:
             parameter=""
+        #print "Parameter = "
+        #print decoder.smart_utf8(parameter)
         #création de l'url
-        u=sys.argv[0]+"?"+parameter+"&action="+repr(str(action))+"&name="+repr(quote_plus(name.encode("utf8")))
+        u=sys.argv[0]+"?"+parameter+"&action="+repr(str(action))+"&name="+repr(quote_param(name.encode("utf8")))
+        
+        #print "addDir"
+        #print decoder.smart_utf8(u)
+        
         ok=True
         #création de l'item de liste
         liz=xbmcgui.ListItem(name, thumbnailImage=iconimage)
@@ -153,11 +169,11 @@ class Main:
         #params est une liste de tuples [(nomparametre,valeurparametre),]
         #contitution des paramètres
         try:
-            parameter="&".join([param+"="+repr(quote_plus(valeur.encode("utf-8"))) for param,valeur in params])
+            parameter="&".join([param+"="+repr(quote_param(valeur.encode("utf-8"))) for param,valeur in params])
         except:
             parameter=""
         #création de l'url
-        u=sys.argv[0]+"?"+parameter+"&action="+repr(str(action))+"&name="+repr(quote_plus(name.encode("utf8")))
+        u=sys.argv[0]+"?"+parameter+"&action="+repr(str(action))+"&name="+repr(quote_param(name.encode("utf8")))
         ok=True
         #création de l'item de liste
         liz=xbmcgui.ListItem(name, thumbnailImage=iconimage)
@@ -221,9 +237,10 @@ class Main:
         if contextmenu:
             if coords:
                 #géolocalisation
+
                 contextmenu.append( (__language__(30220),"XBMC.RunPlugin(\"%s?action='geolocate'&place='%s'&path='%s'&filename='%s'&viewmode='view'\" ,)"%(sys.argv[0],"%0.6f,%0.6f"%(coords),
-                                                                                                                                                           quote_plus(picpath.encode('utf-8')),
-                                                                                                                                                           quote_plus(picname.encode('utf-8'))
+                                                                                                                                                           quote_param(picpath.encode('utf-8')),
+                                                                                                                                                           quote_param(picname.encode('utf-8'))
                                                                                                                                                            )))
                 #TODO : add to favourite
                 #TODO : ...
@@ -405,7 +422,7 @@ class Main:
                         action    = "showfolder",#action
                         iconimage = join(PIC_PATH,"folders.png"),#icone
                         fanart    = join(PIC_PATH,"fanart-folder.png"),
-                        contextmenu   = [(__language__(30212),"Container.Update(\"%s?action='rootfolders'&do='addrootfolder'&addpath='%s'&exclude='1'&viewmode='view'\",)"%(sys.argv[0],quote_plus(path.encode('utf-8'))) ),],
+                        contextmenu   = [(__language__(30212),"Container.Update(\"%s?action='rootfolders'&do='addrootfolder'&addpath='%s'&exclude='1'&viewmode='view'\",)"%(sys.argv[0],quote_param(path.encode('utf-8'))) ),],
                         total = len(childrenfolders))#nb total d'éléments
 
         #maintenant, on liste les photos si il y en a, du dossier en cours
@@ -416,10 +433,11 @@ class Main:
             filename = decoder.smart_unicode(filename)
 
             context = []
-            context.append( (__language__(30303),"SlideShow(%s%s,recursive,notrandom)"%(sys.argv[0],sys.argv[2]) ) )
+            #print quote_param(path.encode('utf-8'))
+            #context.append( (__language__(30303),"SlideShow(%s%s,recursive,notrandom)"%(sys.argv[0],sys.argv[2]) ) )
             context.append( ( __language__(30152),"XBMC.RunPlugin(\"%s?action='addtocollection'&viewmode='view'&path='%s'&filename='%s'\")"%(sys.argv[0],
-                                                                                                                         quote_plus(path.encode('utf-8')),
-                                                                                                                         quote_plus(filename.encode('utf-8')))  )
+                                                                                                                         quote_param(path.encode('utf-8')),
+                                                                                                                         quote_param(filename.encode('utf-8')))  )
                             )
             self.addPic(filename,path,contextmenu=context,
                         fanart = xbmcplugin.getSetting(int(sys.argv[1]),'usepicasfanart')=='true' and join(path,filename) or join(PIC_PATH,"fanart-folder.png")
@@ -468,7 +486,7 @@ class Main:
             newtagfalse = decoder.smart_unicode(newtagfalse)
 
         if len(GlobalFilterTrue) > 0 or len(GlobalFilterFalse) > 0:
-            xbmc.executebuiltin("XBMC.Container.Update(%s?action='showpics'&viewmode='view'&method='wizard'&matchall='%s'&kw='%s'&nkw='%s')" % ( sys.argv[0], matchall, quote_plus(newtagtrue.encode('utf-8')), quote_plus(newtagfalse.encode('utf-8'))))
+            xbmc.executebuiltin("XBMC.Container.Update(%s?action='showpics'&viewmode='view'&method='wizard'&matchall='%s'&kw='%s'&nkw='%s')" % ( sys.argv[0], matchall, quote_param(newtagtrue.encode('utf-8')), quote_param(newtagfalse.encode('utf-8'))))
 
 
     def show_tagtypes(self):
@@ -500,123 +518,14 @@ class Main:
                             action    = "showpics",#action
                             iconimage = join(PIC_PATH,"keywords.png"),#icone
                             fanart    = join(PIC_PATH,"fanart-keyword.png"),
-                            contextmenu   = [( __language__(30152),"XBMC.RunPlugin(\"%s?action='addfolder'&method='tag'&tag='%s'&tagtype='%s'&viewmode='scan'\")"%(sys.argv[0],tag,tagtype)),
-                                             ( __language__(30061),"XBMC.RunPlugin(\"%s?action='showpics'&method='tag'&page=''&viewmode='zip'&name='%s'&tag='%s'&tagtype='%s'\")"%(sys.argv[0],tag,tag,tagtype) ),
-                                             ( __language__(30062),"XBMC.RunPlugin(\"%s?action='showpics'&method='tag'&page=''&viewmode='export'&name='%s'&tag='%s'&tagtype='%s'\")"%(sys.argv[0],tag,tag,tagtype) )
+                            contextmenu   = [( __language__(30152),"XBMC.RunPlugin(\"%s?action='addfolder'&method='tag'&tag='%s'&tagtype='%s'&viewmode='scan'\")"%(sys.argv[0],quote_param(tag),tagtype)),
+                                             ( __language__(30061),"XBMC.RunPlugin(\"%s?action='showpics'&method='tag'&page=''&viewmode='zip'&name='%s'&tag='%s'&tagtype='%s'\")"%(sys.argv[0],quote_param(tag),quote_param(tag),tagtype) ),
+                                             ( __language__(30062),"XBMC.RunPlugin(\"%s?action='showpics'&method='tag'&page=''&viewmode='export'&name='%s'&tag='%s'&tagtype='%s'\")"%(sys.argv[0],quote_param(tag),quote_param(tag),tagtype) )
                                              ],#menucontextuel
                             total = total)#nb total d'éléments
         xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_LABEL)
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
-
-    def show_keywords(self):
-        # affiche les mots clés
-        listkw = [u"%s"%k  for k in MPDB.list_KW()]
-        if MPDB.search_keyword(None): #si il y a des photos sans mots clés
-            self.addDir(name      = "%s (%s %s)"%(__language__(30104),MPDB.countKW(None),__language__(30050)), #libellé
-                        params    = [("method","keyword"),("kw",""),("page","1"),("viewmode","view")],#paramètres
-                        action    = "showpics",#action
-                        iconimage = join(PIC_PATH,"keywords.png"),#icone
-                        fanart    = join(PIC_PATH,"fanart-keyword.png"),
-                        contextmenu   = None)#menucontextuel
-        total = len(listkw)
-        for kw in listkw:
-
-            if kw.find('PersonDisplayName: ') == 0:
-                displayName = kw.replace('PersonDisplayName: ', __language__(30320) )
-            else:
-                displayName = __language__(30321) + kw
-            #on alimente le plugin en mots clés
-            nb = MPDB.countKW(kw)
-            if nb:
-                self.addDir(name      = "%s (%s %s)"%(displayName,nb,__language__(30050)), #libellé
-                            params    = [("method","keyword"),("kw",kw),("page","1"),("viewmode","view")],#paramètres
-                            action    = "showpics",#action
-                            iconimage = join(PIC_PATH,"keywords.png"),#icone
-                            fanart    = join(PIC_PATH,"fanart-keyword.png"),
-                            contextmenu   = [( __language__(30152),"XBMC.RunPlugin(\"%s?action='addfolder'&method='keyword'&kw='%s'&viewmode='scan'\")"%(sys.argv[0],kw)),
-                                             ( __language__(30061),"XBMC.RunPlugin(\"%s?action='showpics'&method='keyword'&page=''&viewmode='zip'&name='%s'&kw='%s'\")"%(sys.argv[0],kw,kw) ),
-                                             ( __language__(30062),"XBMC.RunPlugin(\"%s?action='showpics'&method='keyword'&page=''&viewmode='export'&name='%s'&kw='%s'\")"%(sys.argv[0],kw,kw) )
-                                             ],#menucontextuel
-                            total = total)#nb total d'éléments
-        xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_LABEL)
-        xbmcplugin.endOfDirectory(int(sys.argv[1]))
-
-    def show_category(self):
-        listkw = [u"%s"%c_category for c_category in MPDB.list_category()]
-        if MPDB.search_category(None):
-            self.addDir(name      = "%s (%s %s)"%(__language__(30096),MPDB.count_category(None),__language__(30050)),
-                        params    = [("method","categories"),("cat",""),("page","1"),("viewmode","view")],
-                        action    = "showpics",
-                        iconimage = join(PIC_PATH,"keywords.png"),
-                        fanart    = join(PIC_PATH,"fanart-keyword.png"),
-                        contextmenu   = None)
-        total = len(listkw)
-        for p_category in listkw:
-            l_count = MPDB.count_category(p_category)
-            if l_count:
-                self.addDir(name      = "%s (%s %s)"%(p_category,l_count,__language__(30050)),
-                            params    = [("method","categories"),("cat",p_category),("page","1"),("viewmode","view")],
-                            action    = "showpics",
-                            iconimage = join(PIC_PATH,"keywords.png"),
-                            fanart    = join(PIC_PATH,"fanart-keyword.png"),
-                            contextmenu   = None,
-                            total = total)
-        xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_NONE)
-        xbmcplugin.endOfDirectory(int(sys.argv[1]))
-
-    def show_person(self):
-        listPerson = [u"%s"%c_person for c_person in MPDB.list_person()]
-        if MPDB.search_person(None):
-            self.addDir(name      = "%s (%s %s)"%(__language__(30121),MPDB.count_person(None),__language__(30050)),
-                        params    = [("method","persons"),("person",""),("page","1"),("viewmode","view")],
-                        action    = "showpics",
-                        iconimage = join(PIC_PATH,"keywords.png"),
-                        fanart    = join(PIC_PATH,"fanart-keyword.png"),
-                        contextmenu   = None)
-        total = len(listPerson)
-        for p_person in listPerson:
-            l_count = MPDB.count_person(p_person)
-            if l_count:
-                self.addDir(name      = "%s (%s %s)"%(p_person,l_count,__language__(30050)),
-                            params    = [("method","persons"),("person",p_person),("page","1"),("viewmode","view")],
-                            action    = "showpics",
-                            iconimage = join(PIC_PATH,"keywords.png"),
-                            fanart    = join(PIC_PATH,"fanart-keyword.png"),
-
-                            contextmenu   = [( __language__(30152),"XBMC.RunPlugin(\"%s?action='addfolder'&method='persons'&person='%s'&viewmode='scan'\")"%(sys.argv[0],p_person)),
-                                             ( __language__(30061),"XBMC.RunPlugin(\"%s?action='showpics'&method='persons'&page=''&viewmode='zip'&name='%s'&person='%s'\")"%(sys.argv[0],p_person,p_person) ),
-                                             ( __language__(30062),"XBMC.RunPlugin(\"%s?action='showpics'&method='persons'&page=''&viewmode='export'&name='%s'&person='%s'\")"%(sys.argv[0],p_person,p_person) )
-                                             ],#menucontextuel
-
-                            total = total)
-        xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_NONE)
-        xbmcplugin.endOfDirectory(int(sys.argv[1]))
-
-
-
-    def show_supplementalcategory(self):
-        listkw = [u"%s"%c_supplementalcategory for c_supplementalcategory in MPDB.list_supplementalcategory()]
-        if MPDB.search_supplementalcategory(None):
-            self.addDir(name      = "%s (%s %s)"%(__language__(30094),MPDB.count_supplementalcategory(None),__language__(30050)),
-                        params    = [("method","supplementalcategories"),("cat",""),("page","1"),("viewmode","view")],
-                        action    = "showpics",
-                        iconimage = join(PIC_PATH,"keywords.png"),
-                        fanart    = join(PIC_PATH,"fanart-keyword.png"),
-                        contextmenu   = None)
-        total = len(listkw)
-        for p_supplementalcategory in listkw:
-            l_count = MPDB.count_supplementalcategory(p_supplementalcategory)
-            if l_count:
-                self.addDir(name      = "%s (%s %s)"%(p_supplementalcategory,l_count,__language__(30050)),
-                            params    = [("method","supplementalcategories"),("cat",p_supplementalcategory),("page","1"),("viewmode","view")],
-                            action    = "showpics",
-                            iconimage = join(PIC_PATH,"keywords.png"),
-                            fanart    = join(PIC_PATH,"fanart-keyword.png"),
-                            contextmenu   = None,
-                            total = total)
-        xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_NONE)
-        xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
     def show_country(self):
         countries = [(c_country,count) for c_country,count in MPDB.list_country()]
@@ -693,7 +602,8 @@ class Main:
                     else:
                         dateend = dateofpics[deb+retf-1]
                     #now input the title for the period
-                    kb = xbmc.Keyboard(__language__(30109)%(datestart,dateend), __language__(30110), False)
+                    #
+                    kb = xbmc.Keyboard(decoder.smart_utf8(__language__(30109)%(datestart,dateend)), __language__(30110), False)
                     kb.doModal()
                     if (kb.isConfirmed()):
                         titreperiode = kb.getText()
@@ -711,8 +621,8 @@ class Main:
             periodname = decoder.smart_unicode(periodname)
             dbdatestart = decoder.smart_unicode(dbdatestart)
             dbdateend = decoder.smart_unicode(dbdateend)
-            print dbdatestart
-            print dbdateend
+            #print dbdatestart
+            #print dbdateend
             datestart,dateend = MPDB.Request("SELECT strftime('%%Y-%%m-%%d',('%s')),strftime('%%Y-%%m-%%d',datetime('%s','+1 days','-1.0 seconds'))"%(dbdatestart,dbdateend))[0]
             datestart = decoder.smart_unicode(datestart)
             dateend   = decoder.smart_unicode(dateend)
@@ -724,8 +634,8 @@ class Main:
                         action    = "showpics",#action
                         iconimage = join(PIC_PATH,"period.png"),#icone
                         fanart    = join(PIC_PATH,"fanart-period.png"),
-                        contextmenu   = [ ( __language__(30111),"XBMC.RunPlugin(\"%s?action='removeperiod'&viewmode='view'&periodname='%s'&period='period'\")"%(sys.argv[0],periodname.encode("utf8")) ),
-                                          ( __language__(30112),"XBMC.RunPlugin(\"%s?action='renameperiod'&viewmode='view'&periodname='%s'&period='period'\")"%(sys.argv[0],periodname.encode("utf8")) ),
+                        contextmenu   = [ ( __language__(30111),"XBMC.RunPlugin(\"%s?action='removeperiod'&viewmode='view'&periodname='%s'&period='period'\")"%(sys.argv[0],quote_param(periodname.encode("utf8"))) ),
+                                          ( __language__(30112),"XBMC.RunPlugin(\"%s?action='renameperiod'&viewmode='view'&periodname='%s'&period='period'\")"%(sys.argv[0],quote_param(periodname.encode("utf8"))) ),
                                           ( __language__(30152),"XBMC.RunPlugin(\"%s?action='addfolder'&method='date'&period='period'&datestart='%s'&dateend='%s'&viewmode='scan'\")"%(sys.argv[0],datestart,dateend))
                                         ] )#menucontextuel
 
@@ -760,10 +670,10 @@ class Main:
                         action    = "showpics",#action
                         iconimage = join(PIC_PATH,"collection.png"),#icone
                         fanart    = join(PIC_PATH,"fanart-collection.png"),
-                        contextmenu   = [(__language__(30158),"XBMC.RunPlugin(\"%s?action='removecollection'&viewmode='view'&collect='%s'\")"%(sys.argv[0],quote_plus(collection[0].encode('utf-8')) ) ),
-                                         (__language__(30159),"XBMC.RunPlugin(\"%s?action='renamecollection'&viewmode='view'&collect='%s'\")"%(sys.argv[0],quote_plus(collection[0].encode('utf-8'))) ),
-                                         (__language__(30061),"XBMC.RunPlugin(\"%s?action='showpics'&method='collection'&page=''&viewmode='zip'&name='%s'&collect='%s'\")"%(sys.argv[0],quote_plus(collection[0].encode('utf-8')),quote_plus(collection[0].encode('utf-8'))) ),
-                                         (__language__(30062),"XBMC.RunPlugin(\"%s?action='showpics'&method='collection'&page=''&viewmode='export'&name='%s'&collect='%s'\")"%(sys.argv[0],quote_plus(collection[0].encode('utf-8')),quote_plus(collection[0].encode('utf-8'))) )
+                        contextmenu   = [(__language__(30158),"XBMC.RunPlugin(\"%s?action='removecollection'&viewmode='view'&collect='%s'\")"%(sys.argv[0],quote_param(collection[0].encode('utf-8')) ) ),
+                                         (__language__(30159),"XBMC.RunPlugin(\"%s?action='renamecollection'&viewmode='view'&collect='%s'\")"%(sys.argv[0],quote_param(collection[0].encode('utf-8'))) ),
+                                         (__language__(30061),"XBMC.RunPlugin(\"%s?action='showpics'&method='collection'&page=''&viewmode='zip'&name='%s'&collect='%s'\")"%(sys.argv[0],quote_param(collection[0].encode('utf-8')),quote_param(collection[0].encode('utf-8'))) ),
+                                         (__language__(30062),"XBMC.RunPlugin(\"%s?action='showpics'&method='collection'&page=''&viewmode='export'&name='%s'&collect='%s'\")"%(sys.argv[0],quote_param(collection[0].encode('utf-8')),quote_param(collection[0].encode('utf-8'))) )
                                          ] )#menucontextuel
 
         xbmcplugin.addSortMethod( int(sys.argv[1]), xbmcplugin.SORT_METHOD_NONE )
@@ -819,6 +729,9 @@ class Main:
                 newroot=newroot.replace("smb://","\\\\")
                 newroot=newroot.replace("/","\\")
 
+                
+            #newroot = newroot[:len(newroot)-1]
+
             if str(self.args.exclude)=="1":
                 MPDB.AddRoot(newroot,0,0,1)
                 xbmc.executebuiltin( "Container.Refresh(\"%s?action='rootfolders'&do='showroots'&exclude='1'&viewmode='view'\",)"%(sys.argv[0],))
@@ -841,7 +754,7 @@ class Main:
                     if dialog.yesno(__language__(30000),__language__(30206)):#do a scan now ?
                         xbmc.executebuiltin( "RunScript(%s,%s--rootpath=%s)"%( join( home, "scanpath.py"),
                                                                                recursive and "-r, " or "",
-                                                                               quote_plus(newroot)
+                                                                               quote_param(newroot)
                                                                               )
                                            )
 
@@ -852,7 +765,7 @@ class Main:
 
         elif self.args.do=="addrootfolder":
             if str(self.args.exclude)=="1":
-                MPDB.AddRoot(unquote_plus(self.args.addpath),0,0,1)
+                MPDB.AddRoot(quote_param(self.args.addpath),0,0,1)
 
         elif self.args.do=="delroot":
             try:
@@ -868,7 +781,7 @@ class Main:
                     path,recursive,update,exclude = MPDB.getRoot(unquote_plus(self.args.rootpath))
                     xbmc.executebuiltin( "RunScript(%s,%s--rootpath=%s)"%( join( home, "scanpath.py"),
                                                                            recursive and "-r, " or "",
-                                                                           quote_plus(path.encode('utf-8'))
+                                                                           (path.encode('utf-8'))
                                                                           )
                                          )
                 else:#clic sur un chemin à exclure...
@@ -933,7 +846,7 @@ class Main:
                             fanart    = join(PIC_PATH,"fanart-setting.png"),
                             #menucontextuel
                             contextmenu   = [( __language__(30206),"Notification(TODO : scan folder,scan this folder now !,3000,%s)"%join(home,"icon.png") ),
-                                             ( __language__(30207),"Container.Update(\"%s?action='rootfolders'&do='delroot'&delpath='%s'&exclude='1'&viewmode='view'\",)"%(sys.argv[0],quote_plus(path.encode('utf-8'))))
+                                             ( __language__(30207),"Container.Update(\"%s?action='rootfolders'&do='delroot'&delpath='%s'&exclude='1'&viewmode='view'\",)"%(sys.argv[0],quote_param(path.encode('utf-8'))))
                                              ]
                             )
             #Add a folder to exclude
@@ -953,7 +866,7 @@ class Main:
                             iconimage = join(PIC_PATH,"settings.png"),#icone
                             fanart    = join(PIC_PATH,"fanart-setting.png"),
                             #menucontextuel
-                            contextmenu   = [( __language__(30210),"Container.Update(\"%s?action='rootfolders'&do='delroot'&delpath='%s'&exclude='0'&viewmode='view'\",)"%(sys.argv[0],quote_plus(path.encode('utf-8'))))
+                            contextmenu   = [( __language__(30210),"Container.Update(\"%s?action='rootfolders'&do='delroot'&delpath='%s'&exclude='0'&viewmode='view'\",)"%(sys.argv[0],quote_param(path.encode('utf-8'))))
                                              ]
                             )
 
@@ -996,13 +909,14 @@ class Main:
     #traitement des menus contextuels
     ##################################
     def remove_period(self):
-        print self.args.periodname
+        #print self.args.periodname
         MPDB.delPeriode(self.args.periodname)
         xbmc.executebuiltin( "Container.Update(\"%s?action='showperiod'&viewmode='view'&period=''\" , replace)"%sys.argv[0]  )
 
     def rename_period(self):
         #TODO : test if 'datestart' is before 'dateend'
-        datestart,dateend = MPDB.RequestWithBinds( """SELECT DateStart,DateEnd FROM Periodes WHERE PeriodeName=? """, (self.args.periodname,) )[0]
+        periodname = unquote_plus(self.args.periodname)
+        datestart,dateend = MPDB.RequestWithBinds( """SELECT DateStart,DateEnd FROM Periodes WHERE PeriodeName=? """, (periodname,) )[0]
 
         dialog = xbmcgui.Dialog()
         d = dialog.numeric(1, "Input start date for period" ,strftime("%d/%m/%Y",strptime(datestart,"%Y-%m-%d %H:%M:%S")) )
@@ -1011,13 +925,15 @@ class Main:
         d = dialog.numeric(1, "Input end date for period" ,strftime("%d/%m/%Y",strptime(dateend,"%Y-%m-%d %H:%M:%S")) )
         dateend = strftime("%Y-%m-%d",strptime(d.replace(" ","0"),"%d/%m/%Y"))
 
-        #change the dateend
-        kb = xbmc.Keyboard(self.args.periodname, __language__(30110), False)
+        kb = xbmc.Keyboard(decoder.smart_unicode(periodname), __language__(30110), False)
+        #kb = xbmc.Keyboard(u"öäü", "Unicode Test", False)
         kb.doModal()
         if (kb.isConfirmed()):
             titreperiode = kb.getText()
+            #print "confirmed =" + titreperiode
         else:
-            titreperiode = self.args.periodname
+            titreperiode = periodname
+            #print "not confirmed =" + titreperiode
         MPDB.renPeriode(self.args.periodname,titreperiode,datestart,dateend)
         xbmc.executebuiltin( "Container.Update(\"%s?action='showperiod'&viewmode='view'&period=''\" , replace)"%sys.argv[0]  )
 
@@ -1397,7 +1313,7 @@ class Main:
                 c=c+1
                 pDialog.update(int(100*(float(c)/len(filelist))) , "Adding pictures to the slideshow",filename)
                 if pDialog.iscanceled():break
-                html = urlopen(HTTP_API_url + "AddToSlideshow(%s)" % quote_plus(join(path,filename)))
+                html = urlopen(HTTP_API_url + "AddToSlideshow(%s)" % quote_param(join(path,filename)))
             if not pDialog.iscanceled(): xbmc.executebuiltin( "SlideShow(,,notrandom)" )
             pDialog.close()
             return
@@ -1532,7 +1448,7 @@ class Main:
 ##                            iconimage = join(PIC_PATH,"settings.png"),#icone
 ##                            fanart    = join(PIC_PATH,"fanart-setting.png"),
 ##                            #menucontextuel
-##                            contextmenu   = [( __language__(30210),"Container.Update(\"%s?action='rootfolders'&do='delroot'&delpath='%s'&exclude='0'&viewmode='view'\",)"%(sys.argv[0],quote_plus(path)))
+##                            contextmenu   = [( __language__(30210),"Container.Update(\"%s?action='rootfolders'&do='delroot'&delpath='%s'&exclude='0'&viewmode='view'\",)"%(sys.argv[0],quote_param(path)))
 ##                                             ]
 ##                            )
                 print "self.args"
@@ -1543,29 +1459,31 @@ class Main:
                 print "TODO : display a next page item"
                 #on affiche un bouton page suivante
 
-        #alimentation de la liste
+        # fill the pictures list
         for path,filename in filelist:
+            path     = decoder.smart_unicode(path)
+            filename = decoder.smart_unicode(filename)        
             #création du menu contextuel selon les situasions
             context=[]
             # - diaporama
-            context.append( (__language__(30303),"SlideShow(%s%s,recursive,notrandom)"%(sys.argv[0],sys.argv[2]) ) )
+            #context.append( (__language__(30303),"SlideShow(%s%s,recursive,notrandom)"%(sys.argv[0],quote_param(self.parm)) ) )
             # - add to collection
             context.append( ( __language__(30152),"XBMC.RunPlugin(\"%s?action='addtocollection'&viewmode='view'&path='%s'&filename='%s'\")"%(sys.argv[0],
-                                                                                                                         quote_plus(path.encode('utf-8')),
-                                                                                                                         quote_plus(filename.encode('utf-8')))
+                                                                                                                         quote_param(path.encode('utf-8')),
+                                                                                                                         quote_param(filename.encode('utf-8')))
                               )
                             )
             # - del pic from collection : seulement les images des collections
             if self.args.method=="collection":
                 context.append( ( __language__(30151),"XBMC.RunPlugin(\"%s?action='delfromcollection'&viewmode='view'&collect='%s'&path='%s'&filename='%s'\")"%(sys.argv[0],
                                                                                                                                              self.args.collect,
-                                                                                                                                             quote_plus(path.encode('utf-8')),
-                                                                                                                                             quote_plus(filename.encode('utf-8')))
+                                                                                                                                             quote_param(path.encode('utf-8')),
+                                                                                                                                             quote_param(filename.encode('utf-8')))
                                   )
                                 )
 
             #3 - montrer où est localisé physiquement la photo
-            context.append( (__language__(30060),"XBMC.RunPlugin(\"%s?action='locate'&filepath='%s'&viewmode='view'\" ,)"%(sys.argv[0],quote_plus(join(path,filename).encode('utf-8')) ) ) )
+            context.append( (__language__(30060),"XBMC.RunPlugin(\"%s?action='locate'&filepath='%s'&viewmode='view'\" ,)"%(sys.argv[0],quote_param(join(path,filename).encode('utf-8')) ) ) )
 
 
             #5 - les infos de la photo

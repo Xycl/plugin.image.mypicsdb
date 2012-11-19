@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.image.mypicsdb" version="1.2.7.6" name="My Pictures Database" provider-name="Alexsolex, Xycl, MikeBZH44">
+<addon id="plugin.image.mypicsdb" version="1.2.8" name="My Pictures Database" provider-name="Alexsolex, Xycl, MikeBZH44">
 	<requires>
 		<import addon="xbmc.python" version="2.0"/>
 		<import addon="script.module.dialogaddonscan" version="1.1.0"/>
@@ -18,6 +18,6 @@
 		<description lang="en">Manage your pictures as you do for musics and videos[CR]Then you'll be able to sort your pictures by day/month/year, keywords and much more</description>
 		<description lang="fr">Gérez vos photos sous forme d'une base de donnée de la même manière que les médiathèques musique ou vidéos[CR]A vous le tri de vos photos par dates, par mots clés, et bien plus encore !!</description>
 		<description lang="de">Verwalte deine Bilder, genau wie deine Musik oder Videos in einer Datenbank[CR]Dadurch lassen sich Bilder nach Tag/Monat/Jahr, Schlüsselwörtern und mehr sortieren</description>
-		<description lang="nl">Toon uw afbeeldingen zoals voor muziek en video’s. [CR]Op basis van meta-gegevens in de afbeeldingen kunt een slideshow starten, zoals op datums, categorieën, trefwoorden of andere EXIF/IPTCXMP tags.</description>
+        <description lang="nl">Toon uw afbeeldingen zoals voor muziek en video’s. [CR]Op basis van meta-gegevens in de afbeeldingen kunt een slideshow starten, zoals op datums, categorieën, trefwoorden of andere EXIF/IPTC/XMP tags.</description>
 	</extension>
 </addon>

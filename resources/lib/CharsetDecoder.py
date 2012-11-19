@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
 
+from urllib import quote_plus,unquote_plus
 
 def smart_unicode(s):
     """credit : sfaxman"""
@@ -27,9 +28,9 @@ def smart_unicode(s):
 def smart_utf8(s):
     return smart_unicode(s).encode('utf-8')
     
-def get_crc32( string ):
-    string = string.lower()        
-    bytes = bytearray(string.encode())
+def get_crc32( parm ):
+    parm = parm.lower()        
+    bytes = bytearray(parm.encode())
     crc = 0xffffffff;
     for b in bytes:
         crc = crc ^ (b << 24)          
@@ -41,3 +42,11 @@ def get_crc32( string ):
         crc = crc & 0xFFFFFFFF
         
     return '%08x' % crc    
+    
+def quote_param(parm):
+    #parm = smart_utf8( parm.replace ("'", "\\'").replace ('"', '\\"') )
+    parm = smart_utf8( parm.replace("\\", "\\\\\\\\").replace ("'", "\\'").replace ('"', '\\"') )
+    #parm = smart_utf8( parm.replace ("'", "\\'") )
+    parm = quote_plus(parm)
+    
+    return parm

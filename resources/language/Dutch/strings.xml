@@ -139,7 +139,7 @@
 	<string id="30212">Directory uitsluiten</string>
 	<string id="30213">Alle directories scannen</string>	
 	<string id="30214">Ja = alle afbeeldingen scannen</string>
-	<string id="30215">Nee = alleen gewijzigde/nieuwe afbeelinegn scannen</string>
+	<string id="30215">Nee = alleen gewijzigde/nieuwe afbeelingen scannen</string>
 	<string id="30216"></string> <!-- placeholder for third line of above questions -->
     <string id="30217">De folders dienen opnieuw gescand te worden</string>
     <string id="30218">uitsluiten afbeeldingen</string>
@@ -155,12 +155,12 @@
 	<string id="30228"></string>
 
 	<string id="30240"></string>
-	<string id="30241">Aan het voorbereiden</string>
-	<string id="30242">Aan het verversen</string>
+	<string id="30241">Voorbereiden</string>
+	<string id="30242">Verversen</string>
 	<string id="30243">passing</string>
-	<string id="30244">Aan het toevoegen</string>
+	<string id="30244">Toevoegen</string>
 	<string id="30245">Herscannen</string>
-	<string id="30246">Aan het verwijderen</string>
+	<string id="30246">Verwijderen</string>
 	<string id="30247">Momentje...</string>
 	<string id="30248">%s gescanned / %s toegevoegd / %s verwijderd / %s gewijzigd</string>
 	<string id="30249"></string>
