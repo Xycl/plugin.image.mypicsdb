@@ -122,7 +122,7 @@ class Main:
         print "-"*20
         print
         
-        self.args = _Info(do='rootclic', rootpath='D:\\Afbeeldingen\\', viewmode='view', exclude='0', action='rootfolders', name='[COLOR=FF66CC00][B][ + ][/B][/COLOR] D:\\Afbeeldingen\\ [COLOR=FFC0C0C0][recursive=ON , update=ON][/COLOR]')
+        #self.args = _Info(do='rootclic', rootpath='D:\\Afbeeldingen\\', viewmode='view', exclude='0', action='rootfolders', name='[COLOR=FF66CC00][B][ + ][/B][/COLOR] D:\\Afbeeldingen\\ [COLOR=FFC0C0C0][recursive=ON , update=ON][/COLOR]')
         
         self.parm = decoder.smart_utf8(unquote_plus(sys.argv[2])).replace("\\\\", "\\")
         #print self.parm.encode('utf-8')
