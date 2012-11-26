@@ -1,3 +1,6 @@
+2012/11/26 --> v 1.2.8.1
+Update: Settings dialog changed
+
 2012/11/19 --> v 1.2.8
 Update: Changed for first Frodo beta release
 
