@@ -781,7 +781,7 @@ class Main:
                     path,recursive,update,exclude = MPDB.getRoot(unquote_plus(self.args.rootpath))
                     xbmc.executebuiltin( "RunScript(%s,%s--rootpath=%s)"%( join( home, "scanpath.py"),
                                                                            recursive and "-r, " or "",
-                                                                           (path.encode('utf-8'))
+                                                                           quote_param(path)
                                                                           )
                                          )
                 else:#clic sur un chemin à exclure...

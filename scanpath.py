@@ -77,6 +77,7 @@ from traceback import print_exc,format_tb
 if sysmodules.has_key("MypicsDB"):
     del sysmodules["MypicsDB"]
 import MypicsDB as MPDB
+import CharsetDecoder as decoder
 
 global pictureDB
 pictureDB = join(DB_PATH,"MyPictures.db")
@@ -138,6 +139,7 @@ def main2():
 
     #dateadded = strftime("%Y-%m-%d %H:%M:%S")#pour inscrire la date de scan des images dans la base
     if options.rootpath:
+        options.rootpath = decoder.smart_utf8(unquote_plus( options.rootpath)).replace("\\\\", "\\").replace("\\\\", "\\")
         #print "options.rootpath = " + smart_unicode(options.rootpath).encode('utf-8')
         scan = AddonScan()
         scan.create( __language__(30000) )
