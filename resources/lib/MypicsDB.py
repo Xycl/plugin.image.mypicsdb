@@ -554,7 +554,7 @@ def DB_file_insert(path,filename,dictionnary,update=False):
                             log("Error while adding TagsInFiles")
                             log("\t%s - %s"% (Exception,msg) )
                             log("%s %s - %s"%(idFile,idTagType,decoder.smart_utf8(value)))
-                            print """ INSERT INTO TagsInFiles(idTagContent,idFile) SELECT t.idTagContent, %d FROM TagContents t WHERE t.idTagType=%d AND t.TagContent = '%s' """%(idFile,idTagType,value)
+                            #print """ INSERT INTO TagsInFiles(idTagContent,idFile) SELECT t.idTagContent, %d FROM TagContents t WHERE t.idTagType=%d AND t.TagContent = '%s' """%(idFile,idTagType,value)
 
 
 
@@ -800,7 +800,7 @@ def AddRoot(path,recursive,remove,exclude):
     RequestWithBinds( """INSERT INTO Rootpaths(path,recursive,remove,exclude) VALUES (?,?,?,?)""",(decoder.smart_unicode(path),recursive,remove,exclude) )
 
 def getRoot(path):
-    print decoder.smart_utf8(path)
+    #print decoder.smart_utf8(path)
     return [row for row in RequestWithBinds( """SELECT path,recursive,remove,exclude FROM Rootpaths WHERE path=? """, (decoder.smart_unicode(path),) )][0]
 
 
@@ -1001,13 +1001,6 @@ def get_iptc(path,filename):
     if len(info.data) < 4:
         return iptc
 
-    #il faudrait peut être gérer les infos suivantes de manière particulière:
-    #   "supplemental category"
-    #   "keywords"
-    #   "contact"
-    #en effet ces 3 infos contiennent des listes
-    #for k in info.data.keys():
-    #    print "Found iptc key = " + str(k)
         
     for k in info.data.keys():
         if k in IPTC_FIELDS:
@@ -1016,27 +1009,27 @@ def get_iptc(path,filename):
             #elif IPTC_FIELDS[k] in ["date created","time created"]:
             #    pass
             addColumn("files",IPTC_FIELDS[k])
-            #print IPTC_FIELDS[k]
+
             if isinstance(info.data[k],unicode):
-                #print "unicode"
+
                 try:
                     #iptc[IPTC_FIELDS[k]] = unicode(info.data[k].encode(sys_enc).__str__(),"utf8")
                     iptc[IPTC_FIELDS[k]] = info.data[k]#unicode(info.data[k].encode(sys_enc).__str__(),sys_enc)
                 except UnicodeDecodeError:
                     iptc[IPTC_FIELDS[k]] = unicode(info.data[k].encode("utf8").__str__(),"utf8")
             elif isinstance(info.data[k],list):
-                #print "list"
+
                 iptc[IPTC_FIELDS[k]] = lists_separator.join([i for i in info.data[k]])
             elif isinstance(info.data[k],str):
-                #print "str"
+
                 iptc[IPTC_FIELDS[k]] = info.data[k].decode("utf8")
             else:
-                #print "other"
+
                 log( "%s,%s"%(path,filename) )
                 log( "WARNING : type returned by iptc field is not handled :" )
                 log( repr(type(info.data[k])) )
                 log( "" )
-            #print type(iptc[IPTC_FIELDS[k]])
+
         else:
             log("IPTC problem with file: %s"%join(path,filename), LOGERROR)
             try:
@@ -1334,7 +1327,6 @@ def countPicsFolder(folderid):
     folderPath = RequestWithBinds("""Select FullPath from Folders where idFolder = ?""", (folderid,))[0][0]
     # mask the apostrophe
     folderPath = folderPath.replace("'", "''")
-    #print "countPicsFolder with " + decoder.smart_unicode(folderPath).encode('utf-8')
     count = Request("""select count(*) from files f, folders p where f.idFolder=p.idFolder and p.FullPath like '%s%%' """%folderPath)[0][0]
     return count
 
@@ -1378,7 +1370,6 @@ def list_cam_models():
 
 def list_path():
     """retourne la liste des chemins en base de données"""
-    #print Request( """SELECT DISTINCT strPath FROM files""" )
     return [row for (row,) in Request( """SELECT DISTINCT strPath FROM files""" )]
 
 
@@ -1427,7 +1418,7 @@ def search_between_dates(DateStart=("2007","%Y"),DateEnd=("2008","%Y")):
     return [row for row in Request(request)]
 
 def pics_for_period(periodtype,date):
-    #print periodtype,date
+
     try:
         sdate,modif1,modif2 = {'year' :['%s-01-01'%date,'start of year','+1 years'],
                                'month':['%s-01'%date,'start of month','+1 months'],
@@ -1440,17 +1431,18 @@ def pics_for_period(periodtype,date):
     return [row for row in Request(request)]
 
 def get_years():
-    #print "\n".join(get_years())
     return [t for (t,) in Request("""SELECT DISTINCT strftime("%Y","EXIF DateTimeOriginal") FROM files where "EXIF DateTimeOriginal" NOT NULL ORDER BY "EXIF DateTimeOriginal" ASC""")]
+    
 def get_months(year):
-    #print "\n".join(get_months("2006"))
     return [t for (t,) in Request("""SELECT distinct strftime("%%Y-%%m","EXIF DateTimeOriginal") FROM files where strftime("%%Y","EXIF DateTimeOriginal") = '%s' ORDER BY "EXIF DateTimeOriginal" ASC"""%year)]
+
 def get_dates(year_month):
-    #print "\n".join(get_dates("2006-07"))
     return [t for (t,) in Request("""SELECT distinct strftime("%%Y-%%m-%%d","EXIF DateTimeOriginal") FROM files where strftime("%%Y-%%m","EXIF DateTimeOriginal") = '%s' ORDER BY "EXIF DateTimeOriginal" ASC"""%year_month)]
+    
 def search_all_dates():# TODO check if it is really usefull (check 'get_pics_dates' to see if it is not the same)
     """return all files from database sorted by 'EXIF DateTimeOriginal' """
     return [t for t in Request("""SELECT strPath,strFilename FROM files ORDER BY "EXIF DateTimeOriginal" ASC""")]
+    
 def get_pics_dates():
     """return all different dates from 'EXIF DateTimeOriginal'"""
     return [t for (t,) in Request("""SELECT DISTINCT strftime("%Y-%m-%d","EXIF DateTimeOriginal") FROM files WHERE length(trim("EXIF DateTimeOriginal"))>0  ORDER BY "EXIF DateTimeOriginal" ASC""")]

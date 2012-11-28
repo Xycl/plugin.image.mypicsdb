@@ -1,3 +1,6 @@
+2012/11/28 --> v 1.2.8.2
+Fix:    Debug prints removed
+
 2012/11/27 --> v 1.2.8.2
 Fix:    Scanning fixed for Frodo Beta 1
 

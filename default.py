@@ -120,24 +120,16 @@ class Main:
         print "MyPicturesDB plugin called :"
         print "sys.argv[0] = %s ---  sys.argv[2] = %s"%(sys.argv[0],sys.argv[2])
         print "-"*20
-        print
-        
-        #self.args = _Info(do='rootclic', rootpath='D:\\Afbeeldingen\\', viewmode='view', exclude='0', action='rootfolders', name='[COLOR=FF66CC00][B][ + ][/B][/COLOR] D:\\Afbeeldingen\\ [COLOR=FFC0C0C0][recursive=ON , update=ON][/COLOR]')
         
         self.parm = decoder.smart_utf8(unquote_plus(sys.argv[2])).replace("\\\\", "\\")
-        #print self.parm.encode('utf-8')
-        #print self.parm
         sys.argv[2] = self.parm
-        #exec "self.args = _Info(%s)" % ( sys.argv[ 2 ][ 1 : ].replace( "&", ", " ), )
         args= "self.args = _Info(%s)" % ( self.parm[ 1 : ].replace( "&", ", " ), )
-        print args
         exec args
         if not hasattr(self.args, 'page'):
            self.args.page=''
 
     def Title(self,title):
         pass
-        #xbmcplugin.setPluginCategory( handle=int( sys.argv[ 1 ] ), category=unquote_plus(title.encode("utf-8")) )
 
     def addDir(self,name,params,action,iconimage,fanart=None,contextmenu=None,total=0,info="*",replacemenu=True):
         #params est une liste de tuples [(nomparametre,valeurparametre),]
@@ -146,13 +138,8 @@ class Main:
             parameter="&".join([param+"="+repr(quote_param(valeur.encode("utf-8"))) for param,valeur in params])
         except:
             parameter=""
-        #print "Parameter = "
-        #print decoder.smart_utf8(parameter)
         #création de l'url
         u=sys.argv[0]+"?"+parameter+"&action="+repr(str(action))+"&name="+repr(quote_param(name.encode("utf8")))
-        
-        #print "addDir"
-        #print decoder.smart_utf8(u)
         
         ok=True
         #création de l'item de liste
@@ -333,8 +320,7 @@ class Main:
     def show_date(self):
         #period = year|month|date
         #value  = "2009"|"12/2009"|"25/12/2009"
-        #print "show_date"
-        #print self.args.period
+
         action="showdate"
         weekdayname = __language__(30005).split("|")
         monthname = __language__(30006).split("|")
@@ -342,7 +328,6 @@ class Main:
         fullmonthname = __language__(30008).split("|")
         if self.args.period=="year":
             listperiod=MPDB.get_years()
-            #print listperiod
             nextperiod="month"
             allperiod =""
             action="showdate"
@@ -433,7 +418,6 @@ class Main:
             filename = decoder.smart_unicode(filename)
 
             context = []
-            #print quote_param(path.encode('utf-8'))
             #context.append( (__language__(30303),"SlideShow(%s%s,recursive,notrandom)"%(sys.argv[0],sys.argv[2]) ) )
             context.append( ( __language__(30152),"XBMC.RunPlugin(\"%s?action='addtocollection'&viewmode='view'&path='%s'&filename='%s'\")"%(sys.argv[0],
                                                                                                                          quote_param(path.encode('utf-8')),
@@ -621,8 +605,7 @@ class Main:
             periodname = decoder.smart_unicode(periodname)
             dbdatestart = decoder.smart_unicode(dbdatestart)
             dbdateend = decoder.smart_unicode(dbdateend)
-            #print dbdatestart
-            #print dbdateend
+
             datestart,dateend = MPDB.Request("SELECT strftime('%%Y-%%m-%%d',('%s')),strftime('%%Y-%%m-%%d',datetime('%s','+1 days','-1.0 seconds'))"%(dbdatestart,dbdateend))[0]
             datestart = decoder.smart_unicode(datestart)
             dateend   = decoder.smart_unicode(dateend)
@@ -716,8 +699,6 @@ class Main:
         "show the root folders"
 
         refresh=True
-
-        #print "Argument " + self.args.do
 
         if self.args.do=="addroot":#add a root to scan
             dialog = xbmcgui.Dialog()
@@ -909,7 +890,7 @@ class Main:
     #traitement des menus contextuels
     ##################################
     def remove_period(self):
-        #print self.args.periodname
+
         MPDB.delPeriode(self.args.periodname)
         xbmc.executebuiltin( "Container.Update(\"%s?action='showperiod'&viewmode='view'&period=''\" , replace)"%sys.argv[0]  )
 
@@ -926,14 +907,12 @@ class Main:
         dateend = strftime("%Y-%m-%d",strptime(d.replace(" ","0"),"%d/%m/%Y"))
 
         kb = xbmc.Keyboard(decoder.smart_unicode(periodname), __language__(30110), False)
-        #kb = xbmc.Keyboard(u"öäü", "Unicode Test", False)
         kb.doModal()
         if (kb.isConfirmed()):
             titreperiode = kb.getText()
-            #print "confirmed =" + titreperiode
         else:
             titreperiode = periodname
-            #print "not confirmed =" + titreperiode
+            
         MPDB.renPeriode(self.args.periodname,titreperiode,datestart,dateend)
         xbmc.executebuiltin( "Container.Update(\"%s?action='showperiod'&viewmode='view'&period=''\" , replace)"%sys.argv[0]  )
 
@@ -1145,12 +1124,6 @@ class Main:
         print("MyPicsDB >> Function set_slideshow took %.3f s" % ( t ))
 
     def show_pics(self):
-        #print "Show_Pics " + self.args.method
-        #TODO : limit the number of pictures to display in the container and add multipage navigating
-        #order by %field% asc limit X offset Y
-        #TODO : pass the limit and offset values to functions in the library
-        # X = nombre de photos par pages
-        # Y = (p-1) * X | avec p le numéro de page (Commence par 1)
         if not self.args.page: #0 ou "" ou None : pas de pagination ; on affiche toutes les photos de la requête sans limite
             limit = -1  # SQL 'LIMIT' statement equals to -1 returns all resulting rows
             offset = -1 # SQL 'OFFSET' statement equals to -1  : return resulting rows with no offset

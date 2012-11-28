@@ -139,7 +139,7 @@ def main2():
 
     #dateadded = strftime("%Y-%m-%d %H:%M:%S")#pour inscrire la date de scan des images dans la base
     if options.rootpath:
-        options.rootpath = decoder.smart_utf8(unquote_plus( options.rootpath)).replace("\\\\", "\\").replace("\\\\", "\\")
+        options.rootpath = decoder.smart_utf8(unquote_plus( options.rootpath)).replace("\\\\", "\\").replace("\\\\", "\\").replace("\\'", "\'")
         #print "options.rootpath = " + smart_unicode(options.rootpath).encode('utf-8')
         scan = AddonScan()
         scan.create( __language__(30000) )
@@ -250,7 +250,8 @@ def browse_folder(dirname,parentfolderID=None,recursive=True,updatepics=False,ad
     sys_enc = sys.getfilesystemencoding()
     dirname = smart_unicode(dirname)
 
-    #print "In browse_folder"
+    print "In browse_folder"
+    print decoder.smart_utf8(dirname)
 
     #######
     # Pre STEP: cleanup keywords in database
@@ -332,8 +333,6 @@ def browse_folder(dirname,parentfolderID=None,recursive=True,updatepics=False,ad
             #on enlève l'image traitée de listdir
             if len(listdir) > 0:
                 listdir.pop(listdir.index(picfile))
-                #print "Pop "
-                #print smart_unicode(picfile).encode('utf-8')
             if not rescan: #si pas de rescan
                 #les images ne sont pas à scanner de force
                 if picfile in listDBdir: #si l'image est déjà en base
@@ -341,14 +340,12 @@ def browse_folder(dirname,parentfolderID=None,recursive=True,updatepics=False,ad
                     if updatepics: #si le paramètre est configuré pour mettre à jour les metas d'une photo
                         #Il faut mettre à jour les images...
                         if extension in vidsext:
-                            #print "Video"
                             DoScan = True
                             update = True
                             straction = __language__(30242)#Updating
                             if file_is_accessible(dirname, picfile):
                                 cptchanged = cptchanged + 1
                         elif not (MPDB.fileSHA(join(dirname,picfile))==MPDB.getFileSha(dirname,picfile)): #si l'image a changé depuis qu'elle est en base
-                            #print "No Video"
                             #Scan les metas et ajoute l'image avec un paramètre de mise à jour = true
                             DoScan = True
                             update = True
@@ -415,7 +412,7 @@ def browse_folder(dirname,parentfolderID=None,recursive=True,updatepics=False,ad
                               and isinstance(picentry[index], long) == False    \
                               and isinstance(picentry[index], float) == False:
                                     picentry[index] = ""
-                                #print index + "not a string but " + str(type(picentry[index]))
+
                         #if isinstance(picentry['EXIF ExifVersion'], str) == False:
                             #picentry['EXIF ExifVersion'] = ""
 
@@ -488,12 +485,7 @@ def file_is_accessible(dirname, picfile):
     dirname = smart_unicode(dirname)
     picfile = smart_unicode(picfile)
 
-    #print "is_accessible"
-    #print dirname.encode('utf-8')
-    #print picfile.encode('utf-8')
-
     filename = smart_unicode(join(dirname,picfile))
-    #print filename.encode('utf-8')
 
     try:
         a=str(stat(filename).st_mtime)
@@ -501,7 +493,6 @@ def file_is_accessible(dirname, picfile):
         try:
             a=str(stat(filename.encode('utf-8')).st_mtime)
         except:
-            #print "False stat"
             return False
     try:
         f = open(filename , 'rb')
@@ -511,10 +502,8 @@ def file_is_accessible(dirname, picfile):
             f = open(filename.encode('utf-8') , 'rb')
             f.close()
         except:
-            #print "False open"
             return False
 
-    #print "True"
     return True
 
 
