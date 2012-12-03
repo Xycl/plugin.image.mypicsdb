@@ -1,4 +1,7 @@
-2012/11/28 --> v 1.2.8.2
+2012/12/03 --> v 1.2.8.4
+Fix:    Fanart picture for list items removed.
+
+2012/11/28 --> v 1.2.8.3
 Fix:    Debug prints removed
 
 2012/11/27 --> v 1.2.8.2

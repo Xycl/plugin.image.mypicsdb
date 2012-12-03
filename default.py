@@ -144,8 +144,8 @@ class Main:
         ok=True
         #création de l'item de liste
         liz=xbmcgui.ListItem(name, thumbnailImage=iconimage)
-        if fanart:
-            liz.setProperty( "Fanart_Image", fanart )
+        #if fanart:
+        #    liz.setProperty( "Fanart_Image", fanart )
         #menu contextuel
         if contextmenu :
             liz.addContextMenuItems(contextmenu,replacemenu)
@@ -164,8 +164,8 @@ class Main:
         ok=True
         #création de l'item de liste
         liz=xbmcgui.ListItem(name, thumbnailImage=iconimage)
-        if fanart:
-            liz.setProperty( "Fanart_Image", fanart )
+        #if fanart:
+        #    liz.setProperty( "Fanart_Image", fanart )
         #menu contextuel
         if contextmenu :
             liz.addContextMenuItems(contextmenu,replacemenu)
