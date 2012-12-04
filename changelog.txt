@@ -1,3 +1,6 @@
+2012/12/03 --> v 1.2.9
+Update: Changed version number to 3 digits due to request from XBMC team
+
 2012/12/03 --> v 1.2.8.4
 Fix:    Fanart picture for list items removed.
 
