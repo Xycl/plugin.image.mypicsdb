@@ -232,8 +232,8 @@ class Main:
                 #TODO : add to favourite
                 #TODO : ...
             liz.addContextMenuItems(contextmenu,replacemenu)
-        if fanart:
-            liz.setProperty( "Fanart_Image", fanart )
+        #if fanart:
+        #    liz.setProperty( "Fanart_Image", fanart )
         
         ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=fullfilepath,listitem=liz,isFolder=False)
 
