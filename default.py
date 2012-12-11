@@ -509,50 +509,6 @@ class Main:
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 
-    def show_country(self):
-        countries = [(c_country,count) for c_country,count in MPDB.list_country()]
-        total = len(countries)
-        for countryname,count in countries:
-            if not countryname:
-                countrylabel = __language__(30091)
-                action = "showpics"
-                method = "countries"
-            else:
-                countrylabel = countryname
-                action = "showcity"
-                method = ""
-            self.addDir(name      = "%s (%s %s)"%(countrylabel,count,__language__(30050)),
-                        params    = [("method",method),("country",countryname),("city",""),("page",""),("viewmode","view")],
-                        action    = action,
-                        iconimage = join(PIC_PATH,"keywords.png"),
-                        fanart    = join(PIC_PATH,"fanart-keyword.png"),
-                        contextmenu   = None,
-                        total = total)
-        xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_NONE)
-        xbmcplugin.endOfDirectory(int(sys.argv[1]))
-
-
-    def show_city(self):
-        cities = [(u"%s"%c_city,count) for c_city,count in MPDB.list_city(unquote_plus(self.args.country).decode("utf8"))]
-        total = len(cities)
-        for cityname,count in cities:
-            if not cityname:
-                citylabel = __language__(30092)%unquote_plus(self.args.country).decode("utf8")
-            else:
-                citylabel = "%s - %s"%(cityname,unquote_plus(self.args.country).decode("utf8"))
-
-            if count:
-                self.addDir(name      = "%s (%s %s)"%(citylabel,count,__language__(30050)),
-                            params    = [("method","citiesincountry"),("country",unquote_plus(self.args.country).decode("utf8")),("city",cityname),("page",""),("viewmode","view")],
-                            action    = "showpics",
-                            iconimage = join(PIC_PATH,"keywords.png"),
-                            fanart    = join(PIC_PATH,"fanart-keyword.png"),
-                            contextmenu   = None,
-                            total = total)
-        xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_NONE)
-        xbmcplugin.endOfDirectory(int(sys.argv[1]))
-
-
     def show_period(self): #TODO finished the datestart and dateend editing
         self.addDir(name      = __language__(30106),
                     params    = [("period","setperiod"),("viewmode","view")],#paramètres
@@ -1024,8 +980,8 @@ class Main:
         START_TIME = time.time()
         # Get general statistics and set properties
         Count = MPDB.Request( """SELECT COUNT(*) FROM files WHERE "EXIF DateTimeOriginal" NOT NULL AND UseIt=1""" )[0]
-        Categories = MPDB.Request( """SELECT COUNT(*) FROM categories""" )[0]
         Collections = MPDB.Request( """SELECT COUNT(*) FROM collections""" )[0]
+        Categories = MPDB.Request( """select count(distinct tf.idFile) from TagTypes tt, TagContents tc, TagsInFiles tf where tt.idTagType = tc.idTagType and tc.idTagContent = tf.idTagContent and tt.TagTranslation = ( select TagTranslation from TagTypes tti where tti.TagType = 'Category')""" )[0]
         Folders = MPDB.Request( """SELECT COUNT(*) FROM folders WHERE HasPics = 1""" )[0]
         WINDOW.clearProperty( "MyPicsDB%s.Count" %(_method))
         WINDOW.setProperty ( "MyPicsDB%s.Count" %(_method), str(Count[0]) )
@@ -1184,29 +1140,6 @@ class Main:
             else:
                 filelist = MPDB.search_tag(unquote_plus(self.args.tag).decode("utf8"), unquote_plus(self.args.tagtype).decode("utf8"))
 
-        # we are showing pictures for a PERSON selection
-        elif self.args.method == "persons":
-            picfanart = join(PIC_PATH,"fanart-keyword.png")
-            if not self.args.person:#p_category
-                filelist = MPDB.search_person(None)
-            else:
-                filelist = MPDB.search_person(unquote_plus(self.args.person).decode("utf8"))
-
-        # we are showing pictures for a CATEGORY selection
-        elif self.args.method == "categories":
-            picfanart = join(PIC_PATH,"fanart-keyword.png")
-            if not self.args.cat:#p_category
-                filelist = MPDB.search_category(None)
-            else:
-                filelist = MPDB.search_category(unquote_plus(self.args.cat).decode("utf8"))
-
-        # we are showing pictures for a SUPPLEMENTAL CATEGORY selection
-        elif self.args.method == "supplementalcategories":
-            picfanart = join(PIC_PATH,"fanart-keyword.png")
-            if not self.args.cat:#p_supplementalcategory
-                filelist = MPDB.search_supplementalcategory(None)
-            else:
-                filelist = MPDB.search_supplementalcategory(unquote_plus(self.args.cat).decode("utf8"))
         # we are showing pictures for a COUNTRY selection
         elif self.args.method == "countries":
             picfanart = join(PIC_PATH,"fanart-keyword.png")
