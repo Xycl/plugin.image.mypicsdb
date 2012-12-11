@@ -268,16 +268,6 @@ def Make_new_base(DBpath,ecrase=True):
 
 
     try:
-        cn.execute("CREATE INDEX idxCitiesInFiles1 ON CitiesInFiles(idCity)")
-    except Exception,msg:
-        pass
-
-    try:
-        cn.execute("CREATE INDEX idxCountriesInFiles1 ON CountriesInFiles(idCountry)")
-    except Exception,msg:
-        pass
-
-    try:
         cn.execute("CREATE INDEX idxFilesInCollections1 ON FilesInCollections(idCol)")
     except Exception,msg:
         pass
@@ -815,33 +805,21 @@ def RemoveRoot(path):
 def RemovePath(path):
     "remove the given rootpath, remove pics from this path, ..."
     cptremoved = 0
-    #récupère l'id de ce chemin
     try:
         idpath = RequestWithBinds( """SELECT idFolder FROM folders WHERE FullPath = ?""",(decoder.smart_unicode(path),) )[0][0]
     except:
-        #le chemin n'est sans doute plus en base
         return 0
-    #1- supprime les images situées directement sous la racine du chemin à supprimer
+    
     cptremoved = Request( """SELECT count(*) FROM files WHERE idFolder='%s'"""%idpath )[0][0]
     Request( """DELETE FROM files WHERE idFolder='%s'"""%idpath)
-    #parcours tous les sous dossiers
+    
     for idchild in all_children(idpath):
-        #supprime les keywordsinfiles
-        #Request( """DELETE FROM KeywordsInFiles WHERE idKW in (SELECT idKW FROM KeywordsInFiles WHERE idFile in (SELECT idFile FROM files WHERE idFolder='%s'))"""%idchild )
-        #supprime les Categoriesinfiles
-        #Request( """DELETE FROM CategoriesInFiles WHERE idCategory in (SELECT idCategory FROM CategoriesInFiles WHERE idFile in (SELECT idFile FROM files WHERE idFolder='%s'))"""%idchild )
-        #supprime les photos de files in collection
         Request( """DELETE FROM FilesInCollections WHERE idFile in (SELECT idFile FROM files WHERE idFolder='%s')"""%idchild )
-        #2- supprime toutes les images
         cptremoved = cptremoved + Request( """SELECT count(*) FROM files WHERE idFolder='%s'"""%idchild)[0][0]
         Request( """DELETE FROM files WHERE idFolder='%s'"""%idchild)
-        #3 - supprime ce sous dossier
         Request( """DELETE FROM folders WHERE idFolder='%s'"""%idchild)
-        #supprime les SupplementalCategoriesInFiles
-        #Request( """DELETE FROM SupplementalCategoriesInFiles WHERE idSupplementalCategory in (SELECT idSupplementalCategory FROM SupplementalCategoriesInFiles WHERE idFile in (SELECT idFile FROM files WHERE idFolder='%s'))"""%idchild )
-    #4- supprime le dossier
     Request( """DELETE FROM folders WHERE idFolder='%s'"""%idpath)
-    #5- supprime les 'périodes' si elles ne contiennent plus de photos (TODO : voir si on supprime les périodes vides ou pas)
+ 
     for periodname,datestart,dateend in ListPeriodes():
         if Request( """SELECT count(*) FROM files WHERE datetime("EXIF DateTimeOriginal") BETWEEN '%s' AND '%s'"""%(datestart,dateend) )[0][0]==0:
             Request( """DELETE FROM Periodes WHERE PeriodeName='%s'"""%periodname )
