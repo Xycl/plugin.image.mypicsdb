@@ -1176,11 +1176,11 @@ def DefaultTagTypesTranslation():
     Request("update TagTypes set TagTranslation = 'Country' where TagTranslation =  'Country/primary location name'")
     Request("update TagTypes set TagTranslation = 'Country' where TagTranslation =  'Photoshop:Country'")
     Request("update TagTypes set TagTranslation = 'Country' where TagTranslation =  'Iptc4xmpExt:CountryName'")
-    Request("update TagTypes set TagTranslation = 'Country' where TagTranslation =  'Iptc4xmpCore:Country'")
 
     Request("update TagTypes set TagTranslation = 'Country Code' where TagTranslation =  'Country/primary location code'")
     Request("update TagTypes set TagTranslation = 'Country Code' where TagTranslation =  'Iptc4xmpCore:CountryCode'")
-    
+    Request("update TagTypes set TagTranslation = 'Country Code' where TagTranslation =  'Iptc4xmpCore:Country'")
+        
     Request("update TagTypes set TagTranslation = 'State' where TagTranslation =  'Province/state'")
     Request("update TagTypes set TagTranslation = 'State' where TagTranslation =  'Photoshop:State'")
     Request("update TagTypes set TagTranslation = 'State' where TagTranslation =  'Iptc4xmpExt:ProvinceState'")
