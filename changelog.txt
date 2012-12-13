@@ -1,5 +1,5 @@
 2012/12/12 --> v 1.2.11
-Fix:    Change all files to Unix style line break
+Fix:    Changed all files to Unix style line break
 Update: New EXIF parser
 
 2012/12/12 --> v 1.2.10
