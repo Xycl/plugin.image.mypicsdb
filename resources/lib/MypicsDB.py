@@ -883,8 +883,6 @@ def get_exif(picfile):
     #   et lecture des tags EXIF (on ne prend pas les makernotes, données constructeurs)
     #tags = EXIF.process_file(f,details=False)
     tags = EXIF_file(f,details=False)
-    print "EXIF"
-    print tags
     #fermeture du fichier
     f.close()
     #pré-initialisation des champs à  mettre en base
