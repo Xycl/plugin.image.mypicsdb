@@ -178,11 +178,7 @@ class Main:
         ok=True
         
         
-        # revert smb:// to \\ replacement
         fullfilepath = join(picpath,picname)
-
-        fullfilepath=fullfilepath.replace("\\\\", "smb://")
-        fullfilepath=fullfilepath.replace("\\", "/")
         
         liz=xbmcgui.ListItem(picname,info)
         date = MPDB.getDate(picpath,picname)
@@ -660,12 +656,6 @@ class Main:
             
             if not newroot:
                 return
-            #if not RunningOS.startswith("darwin") and newroot.startswith("smb:"):
-            #    newroot=newroot.replace("smb://","\\\\")
-            #    newroot=newroot.replace("/","\\")
-            #newroot = unquote_plus(newroot)
-                
-            #newroot = newroot[:len(newroot)-1]
 
             if str(self.args.exclude)=="1":
                 MPDB.AddRoot(newroot,0,0,1)
