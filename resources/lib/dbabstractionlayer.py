@@ -44,7 +44,7 @@ cursor = db.cursor()
 Supported methods:
 1) close() which closes the cursor.
 2) execute(statement, bind_variables). To use bind variables use the ? as placeholder. Example: "select * from table where column = ?".
-3) fetchone(). Fetches one row.
+3) fetchone(). Fetches one row. Return None in case of end of fetch.
 4) fetchall(). Fetches all rows.
 5) request(). Does an execute() and fetchall() without the possiblity to use bind variables.
 6) request_with_binds(). Does an execute() and fetchall() with bind variables.
@@ -104,7 +104,7 @@ class SqliteConnection(BaseConnection):
 
     def connect(self, db_name):
         self.db_name = db_name
-        self.connection = database.connect(dbname)
+        self.connection = database.connect(db_name)
         self.connection.text_factory = unicode
 
 
@@ -127,7 +127,7 @@ class BaseCursor(object):
     LOGNONE = 7
 
 
-    def __init__(self, cursor)
+    def __init__(self, cursor):
         self.cursor = cursor
 
 
@@ -136,14 +136,20 @@ class BaseCursor(object):
 
 
     def execute(self, sql, bindvariables=None):
-        if bindvariables is not None and isinstance(self, MysqlCursor) == True
+        if bindvariables is not None and isinstance(self, MysqlCursor) == True:
             sql = sql.replace('?', '%s')
-        self.cursor.execute(sql, bindvariables)
+        if bindvariables is not None:
+            self.cursor.execute(sql, bindvariables)
+        else:
+            self.cursor.execute(sql)
 
 
     def fetchone(self):
-        row_object = self.cursor.fetchone():
-        return [column for column in row_object]
+        row_object = self.cursor.fetchone()
+        if row_object is not None:
+            return [column for column in row_object]
+        else:
+            return None
 
 
     def fetchall(self):
@@ -210,6 +216,7 @@ class BaseCursor(object):
 
 
 class MysqlCursor(BaseCursor):
+    pass
 """
     def __init__(self, cursor)
         self.cursor = cursor
@@ -233,6 +240,7 @@ class MysqlCursor(BaseCursor):
 
 
 class SqliteCursor(BaseCursor):
+    pass
 """
     def __init__(self, cursor)
         self.cursor = cursor
@@ -251,24 +259,24 @@ class SqliteCursor(BaseCursor):
         return [row for row in self.cursor]
 """
 
+database=''
 
-
-class DBFactory:
-
+def DBFactory(backend, db_name, *args):
+    global database
+    
     backends = {'mysql':MysqlConnection, 'sqlite':SqliteConnection}
 
-    # *args are the arguments for method connect of the called DB class
-    def __new__(self, backend, *args):
-
-        if backend.lower() == 'mysql':
-            	import mysql.connector as database
+    if backend.lower() == 'mysql':
+        print "mysql"
+        import mysql.connector as database
+            
+    # default is to use Sqlite
+    else:
+        print "Sqlite"
+        try:
+            from sqlite3 import dbapi2 as database
+        except:
+            from pysqlite2 import dbapi2 as database        
                 
-        # default is to use Sqlite
-        else:
-            try:
-                from sqlite3 import dbapi2 as database
-            except:
-                from pysqlite2 import dbapi2 as database        
-                
-        return DBFactory.backends[backend](*args)
+    return backends[backend](db_name, *args)
     

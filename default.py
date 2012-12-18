@@ -52,7 +52,7 @@ import resources.lib.FilterWizard as FilterWizard
 import resources.lib.TranslationEditor as TranslationEditor
 import resources.lib.Viewer as Viewer
 
-#these few lines are taken from AppleMovieTrailers script
+# these few lines are taken from AppleMovieTrailers script
 # Shared resources
 BASE_RESOURCE_PATH = join( home, "resources" )
 DATA_PATH = Addon.getAddonInfo('profile')
@@ -660,10 +660,10 @@ class Main:
             
             if not newroot:
                 return
-            if not RunningOS.startswith("darwin") and newroot.startswith("smb:"):
-                newroot=newroot.replace("smb://","\\\\")
-                newroot=newroot.replace("/","\\")
-
+            #if not RunningOS.startswith("darwin") and newroot.startswith("smb:"):
+            #    newroot=newroot.replace("smb://","\\\\")
+            #    newroot=newroot.replace("/","\\")
+            #newroot = unquote_plus(newroot)
                 
             #newroot = newroot[:len(newroot)-1]
 
@@ -679,7 +679,17 @@ class Main:
 
                 #ajoute le rootfolder dans la base
                 try:
-                    MPDB.AddRoot(newroot,recursive,update,0)#TODO : traiter le exclude (=0 pour le moment) pour gérer les chemins à exclure
+                    if newroot.startswith('multipath://'):
+                        print "Multipaths"
+                        newpartialroot = newroot[12:-1].split('/')
+                        for item in newpartialroot:
+                            print "AddRoot: " + unquote_plus(item)
+                            MPDB.AddRoot(unquote_plus(item),recursive,update,0)#TODO : traiter le exclude (=0 pour le moment) pour gérer les chemins à exclure
+                    else:
+                        MPDB.AddRoot(newroot,recursive,update,0)#TODO : traiter le exclude (=0 pour le moment) pour gérer les chemins à exclure
+                    
+                
+                    #MPDB.AddRoot(newroot,recursive,update,0)#TODO : traiter le exclude (=0 pour le moment) pour gérer les chemins à exclure
                     xbmc.executebuiltin( "Container.Refresh(\"%s?action='rootfolders'&do='showroots'&exclude='0'&viewmode='view'\",)"%(sys.argv[0],))
 
                 except:
@@ -687,11 +697,22 @@ class Main:
                 xbmc.executebuiltin( "Notification(%s,%s,%s,%s)"%(__language__(30000).encode("utf8"),__language__(30204).encode("utf8"),3000,join(home,"icon.png").encode("utf8") ) )
                 if not(xbmc.getInfoLabel( "Window.Property(DialogAddonScan.IsAlive)" ) == "true"): #si dialogaddonscan n'est pas en cours d'utilisation...
                     if dialog.yesno(__language__(30000),__language__(30206)):#do a scan now ?
-                        xbmc.executebuiltin( "RunScript(%s,%s--rootpath=%s)"%( join( home, "scanpath.py"),
-                                                                               recursive and "-r, " or "",
-                                                                               quote_param(newroot)
-                                                                              )
-                                           )
+                        if newroot.startswith('multipath://'):
+                            print "Multipaths"
+                            newpartialroot = newroot[12:-1].split('/')
+                            for item in newpartialroot:
+                                print "AddRoot: " + unquote_plus(item)
+                                xbmc.executebuiltin( "RunScript(%s,%s--rootpath=%s)"%( join( home, "scanpath.py"),
+                                                                                       recursive and "-r, " or "",
+                                                                                       quote_param(unquote_plus(item))
+                                                                                      )
+                                                    )
+                        else:
+                            xbmc.executebuiltin( "RunScript(%s,%s--rootpath=%s)"%( join( home, "scanpath.py"),
+                                                                                   recursive and "-r, " or "",
+                                                                                   quote_param(newroot)
+                                                                                  )
+                                                )
 
                 else:
                     #dialogaddonscan était en cours d'utilisation, on return
@@ -727,9 +748,9 @@ class Main:
         elif self.args.do=="scanall":
             if not(xbmc.getInfoLabel( "Window.Property(DialogAddonScan.IsAlive)" ) == "true"): #si dialogaddonscan n'est pas en cours d'utilisation...
 
-                dialog = xbmcgui.Dialog()
-                if True == dialog.yesno(__language__(30000), __language__(30214), __language__(30215), __language__(30216) ):
-                    MPDB.Request('Update Files set sha = NULL')
+                #dialog = xbmcgui.Dialog()
+                #if True == dialog.yesno(__language__(30000), __language__(30214), __language__(30215), __language__(30216) ):
+                #    MPDB.Request('Update Files set sha = NULL')
                 
                 xbmc.executebuiltin( "RunScript(%s,--database)"% join( home, "scanpath.py") )
                 return

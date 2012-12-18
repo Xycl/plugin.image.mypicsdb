@@ -12,7 +12,7 @@ from os.path import join, exists, isfile, isdir
 from urllib import unquote_plus
 from traceback import print_exc
 
-import  xbmcaddon, xbmc
+import  xbmcaddon, xbmc, xbmcgui
 from XMP import XMP_Tags
 import CharsetDecoder as decoder
 
@@ -26,8 +26,9 @@ except:
     pass
 
 
-
-Addon = xbmcaddon.Addon(id='plugin.image.mypicsdb')
+Addon = ( sys.modules[ "__main__" ].Addon )
+__language__ = ( sys.modules[ "__main__" ].__language__ )
+#Addon = xbmcaddon.Addon(id='plugin.image.mypicsdb')
 home = Addon.getAddonInfo('path')
 
 #these few lines are taken from AppleMovieTrailers script
@@ -83,23 +84,7 @@ def mount(mountpoint="z:",path="\\",login=None,password=""):
         log( "%s is already mounted !"%mountpoint )
     return exists(mountpoint)
 
-def CreateMissingIndexes(cn, strVersion):    
-    try:
-        cn.execute("drop index idxFiles")
-    except:
-        pass
-    try:
-        cn.execute("create index idxFiles1 on Files(idFile, idFolder)")
-    except:
-        pass
-    try:
-        cn.execute("CREATE INDEX idxFolders1 ON Folders(idFolder)")
-    except:
-        pass
-    try:
-        cn.execute("CREATE INDEX idxFolders2 ON Folders(ParentFolder)")
-    except:
-        pass
+
                     
 def VersionTable():
     #table 'Version'
@@ -109,24 +94,21 @@ def VersionTable():
   
     try:    
         cn.execute("CREATE TABLE DBVersion ( strVersion text primary key  )")
-        cn.execute("insert into DBVersion (strVersion) values('1.2.7')")
-        # Cause the table didn't exist the DB version is max 1.1.9
-        CreateMissingIndexes(cn, '1.1.9')
+        cn.execute("insert into DBVersion (strVersion) values('1.9.0')")
+
         conn.commit() 
     except Exception,msg:
         if msg.args[0].startswith("table DBVersion already exists"):
             # Test Version of DB
             strVersion = Request("Select strVersion from DBVersion")[0][0];
-            if strVersion == '1.1.9':
-            # create missing indexes:
-                try:
-                    CreateMissingIndexes(cn, '1.1.9')
-                    cn.execute("Update DBVersion set strVersion = '1.2.7'")
-                    strVersion = '1.2.7'
-                    conn.commit() 
-                except Exception,msg:
-                    log( "MyPicsDB database version could not be updated. ", LOGERROR )
 
+            if strVersion != '1.9.0':
+                dialog = xbmcgui.Dialog()
+                dialog.ok(__language__(30000).encode("utf8"), "Database will be updated", "Please re-scan your folders")
+            
+                Make_new_base(pictureDB, True)
+                VersionTable()
+                
             log( "MyPicsDB database version is %s"%str(strVersion), LOGDEBUG )
             
         else: #sinon on imprime l'exception levée pour la traiter
@@ -153,9 +135,8 @@ def Make_new_base(DBpath,ecrase=True):
 
     #table 'files'
     try:
-        cn.execute("""CREATE TABLE files ( idFile integer primary key, idFolder integer, strPath text, strFilename text, ftype text, DateAdded DATETIME, mtime text, UseIt integer , sha text, Thumb text,  "Image Rating" text, City text,
-                    CONSTRAINT UNI_FILE UNIQUE ("strPath","strFilename")
-                                   )""")
+        cn.execute("""CREATE TABLE files ( idFile integer primary key, idFolder integer, strPath text, strFilename text, ftype text, DateAdded DATETIME, Thumb text,  ImageRating text, ImageDateTime DATETIME,
+                    CONSTRAINT UNI_FILE UNIQUE (strPath,strFilename))""")
     except Exception,msg:
         if msg.args[0].startswith("table 'files' already exists"):
             #cette exception survient lorsque la table existe déjà.
@@ -340,37 +321,13 @@ def DB_cleanup_keywords():
     cn=conn.cursor()
     conn.text_factory = unicode #sqlite.OptimizedUnicode
 
-    # if complete path was removed/renamed on hard disk then delete them
-    for path in list_path():
-        try:
-            if not isdir(path):
-                DB_del_pic(path)
-        except:
-            if not isdir(path.encode('utf-8')):
-                DB_del_pic(path)
-
     try:
         # in old version something went wrong with deleteing old unused folders
         for i in range(1,10):
             cn.execute('delete from folders where ParentFolder not in (select idFolder from folders) and ParentFolder is not null')
 
-        cn.execute('delete from files where sha is null')
-        #cn.execute('delete from folders where haspics = 0')
-        #cn.execute('delete from folders where idFolder not in (select idFolder from Files)')
         cn.execute('delete from files where idFolder not in( select idFolder from folders)')
 
-        #cn.execute( "delete from keywordsInFiles where idFile not in(select idFile from Files )")
-        #cn.execute( "delete from keywords where idKW not in (select idKW from keywordsInFiles)")
-        #cn.execute( "delete from categoriesInFiles where idFile not in(select idFile from Files )")
-        #cn.execute( "delete from Categories where idCategory not in (select idCategory from categoriesInFiles)")
-        #cn.execute( "delete from supplementalCategoriesInFiles where idFile not in(select idFile from Files )")
-        #cn.execute( "delete from SupplementalCategories where idSupplementalCategory not in (select idSupplementalCategory from supplementalCategoriesInFiles)")
-        #cn.execute( "delete from countriesInFiles where idFile not in(select idFile from Files )")
-        #cn.execute( "delete from Countries where idCountry not in (select idCountry from countriesInFiles)")
-        #cn.execute( "delete from citiesInFiles where idFile not in(select idFile from Files )")
-        #cn.execute( "delete from Cities where idCity not in (select idCity from citiesInFiles)")
-        #cn.execute( "delete from personsInFiles where idFile not in(select idFile from Files )")
-        #cn.execute( "delete from Persons where idPerson not in (select idPerson from personsInFiles)")
 
         cn.execute( "delete from TagsInFiles where idFile not in(select idFile from Files )")
         cn.execute( "delete from TagContents where idTagContent not in (select idTagContent from TagsInFiles)")
@@ -417,7 +374,7 @@ def DB_listdir(path):
     conn.text_factory = unicode #sqlite.OptimizedUnicode
     
     try:
-        cn.execute( """SELECT f.strFilename FROM files f,folders p WHERE f.idFolder=p.idFolder AND p.FullPath=(?)""",(path,))
+        cn.execute( u"SELECT f.strFilename FROM files f,folders p WHERE f.idFolder=p.idFolder AND p.FullPath=(?)",(path,))
     except Exception,msg:
         log( "ERROR : DB_listdir ...", LOGERROR )
         log( "DB_listdir(%s)"%path, LOGERROR )
@@ -446,11 +403,22 @@ def DB_file_insert(path,filename,dictionnary,update=False):
     conn = sqlite.connect(pictureDB)
     cn=conn.cursor()
 
+                                 
+    #idFile integer primary key, idFolder integer, strPath text, strFilename text, ftype text, DateAdded DATETIME,  Thumb text,  "ImageRating" text, 
+
     conn.text_factory = unicode#sqlite.OptimizedUnicode
     try:
-        cn.execute( """INSERT INTO files('%s') values (%s)""" % ( "','".join(dictionnary.keys()), ",".join(["?"]*len(dictionnary.values())) ) ,
-                                                                     dictionnary.values()
-                    )
+        if "ImageDateTime" in dictionnary:
+            imagedatetime = dictionnary["ImageDateTime"]
+        elif "EXIF DateTimeOriginal" in dictionnary:
+            imagedatetime = dictionnary["EXIF DateTimeOriginal"]
+        elif "EXIF DateTimeDigitized" in dictionnary:
+            imagedatetime = dictionnary["EXIF DateTimeDigitized"]
+        else:
+            imagedatetime = None
+            
+        cn.execute( """INSERT INTO files(idFolder, strPath, strFilename, ftype, DateAdded,  Thumb,  ImageRating, ImageDateTime) values (?, ?, ?, ?, ?, ?, ?, ?)""", 
+                      ( dictionnary["idFolder"],  dictionnary["strPath"], dictionnary["strFilename"], dictionnary["ftype"], dictionnary["DateAdded"], dictionnary["Thumb"], dictionnary["ImageRating"], imagedatetime ) )
         conn.commit()
     except Exception,msg:
         log( ">>> DB_file_insert ...", LOGERROR )
@@ -580,6 +548,7 @@ def DB_folder_insert(foldername,folderpath,parentfolderID,haspic):
     return retour
 
 def get_children(folderid):
+    print "get_children(" + str(folderid) + ")"
     """search all children folders ids for the given folder id"""
     childrens=[c[0] for c in RequestWithBinds("SELECT idFolder FROM folders WHERE ParentFolder=? ", (folderid,))]
     log( childrens )
@@ -605,13 +574,14 @@ def DB_del_pic(picpath,picfile=None): #TODO : revoir la vérif du dossier inutil
             else:
                 idpath = Request("""SELECT idFolder FROM folders WHERE FullPath is null""")[0][0]#le premier du tuple à un élément
 
-            log( "DB_del_pic(%s,%s)"%( decoder.smart_utf8(picpath),decoder.smart_utf8(picfile)), LOGDEBUG )
+            print( "DB_del_pic(%s,%s)"%( decoder.smart_utf8(picpath),decoder.smart_utf8(picfile)), LOGDEBUG )
 
             deletelist=[]#va lister les id des dossiers à supprimer
             deletelist.append(idpath)#le dossier en paramètres est aussi à supprimer
             deletelist.extend(get_children(str(idpath)))#on ajoute tous les enfants en sous enfants du dossier
 
             Request( """DELETE FROM files WHERE idFolder in ("%s")"""%""" "," """.join([str(i) for i in deletelist]) )
+            print """DELETE FROM folders WHERE idFolder in ("%s") """%""" "," """.join([str(i) for i in deletelist])
             Request( """DELETE FROM folders WHERE idFolder in ("%s") """%""" "," """.join([str(i) for i in deletelist]) )
         except:
             pass
@@ -669,7 +639,7 @@ def DB_deltree(picpath):
 
 def getRating(path,filename):   
     try:
-        return [row for row in RequestWithBinds( """SELECT files."Image Rating" FROM files WHERE strPath=? AND strFilename=? """, (path,filename) )][0][0]
+        return [row for row in RequestWithBinds( """SELECT files.ImageRating FROM files WHERE strPath=? AND strFilename=? """, (path,filename) )][0][0]
     except IndexError:
         return None
 
@@ -696,7 +666,7 @@ def delCollection(Colname):
         
 def getCollectionPics(Colname):      
     """List all pics associated to the Collection given as Colname"""
-    return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM Files WHERE idFile IN (SELECT idFile FROM FilesInCollections WHERE idCol IN (SELECT idCol FROM Collections WHERE CollectionName=?)) ORDER BY "EXIF DateTimeOriginal" ASC""",(Colname,))]
+    return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM Files WHERE idFile IN (SELECT idFile FROM FilesInCollections WHERE idCol IN (SELECT idCol FROM Collections WHERE CollectionName=?)) ORDER BY ImageDateTime ASC""",(Colname,))]
 
 def renCollection(Colname,newname):   
     """rename give collection"""
@@ -742,7 +712,7 @@ def renPeriode(periodname,newname,newdatestart,newdateend):
 def PicsForPeriode(periodname):    
     """Get pics for the given period name"""
     period = RequestWithBinds( """SELECT DateStart,DateEnd FROM Periodes WHERE PeriodeName=?""", (periodname,) )
-    return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM files WHERE datetime("EXIF DateTimeOriginal") BETWEEN ? AND ? ORDER BY "EXIF DateTimeOriginal" ASC""",period )]
+    return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM files WHERE datetime(ImageDateTime) BETWEEN ? AND ? ORDER BY ImageDateTime ASC""",period )]
 
 def Searchfiles(column,searchterm,count=False):
     searchterm = searchterm.replace("'", "''")      
@@ -797,31 +767,40 @@ def getRoot(path):
 def RemoveRoot(path):
     "remove the given rootpath, remove pics from this path, ..."
     #first remove the path with all its pictures / subfolders / keywords / pictures in collections...
+    print "RemovePath"
     RemovePath(path)
     #then remove the rootpath itself
+    print  """DELETE FROM Rootpaths WHERE path='%s' """%decoder.smart_utf8(path)
     RequestWithBinds( """DELETE FROM Rootpaths WHERE path=? """, (decoder.smart_unicode(path),) )
 
 
 def RemovePath(path):
     "remove the given rootpath, remove pics from this path, ..."
+    print "RemovePath"
+    print decoder.smart_utf8(path)
     cptremoved = 0
     try:
         idpath = RequestWithBinds( """SELECT idFolder FROM folders WHERE FullPath = ?""",(decoder.smart_unicode(path),) )[0][0]
+        print idpath
     except:
         return 0
     
     cptremoved = Request( """SELECT count(*) FROM files WHERE idFolder='%s'"""%idpath )[0][0]
+    print """DELETE FROM files WHERE idFolder='%s'"""%idpath
     Request( """DELETE FROM files WHERE idFolder='%s'"""%idpath)
     
     for idchild in all_children(idpath):
+        print "Childs"
+        print idchild
         Request( """DELETE FROM FilesInCollections WHERE idFile in (SELECT idFile FROM files WHERE idFolder='%s')"""%idchild )
         cptremoved = cptremoved + Request( """SELECT count(*) FROM files WHERE idFolder='%s'"""%idchild)[0][0]
         Request( """DELETE FROM files WHERE idFolder='%s'"""%idchild)
         Request( """DELETE FROM folders WHERE idFolder='%s'"""%idchild)
+    print """DELETE FROM folders WHERE idFolder='%s'"""%idpath
     Request( """DELETE FROM folders WHERE idFolder='%s'"""%idpath)
  
     for periodname,datestart,dateend in ListPeriodes():
-        if Request( """SELECT count(*) FROM files WHERE datetime("EXIF DateTimeOriginal") BETWEEN '%s' AND '%s'"""%(datestart,dateend) )[0][0]==0:
+        if Request( """SELECT count(*) FROM files WHERE datetime(ImageDateTime) BETWEEN '%s' AND '%s'"""%(datestart,dateend) )[0][0]==0:
             Request( """DELETE FROM Periodes WHERE PeriodeName='%s'"""%periodname )
     DB_cleanup_keywords()
     return cptremoved
@@ -1392,7 +1371,7 @@ def search_between_dates(DateStart=("2007","%Y"),DateEnd=("2008","%Y")):
         Smodifier = "''"
 
     #SELECT strPath,strFilename FROM files WHERE strftime('%Y-%m-%d %H:%M:%S', "EXIF DateTimeOriginal") BETWEEN strftime('%Y-%m-%d %H:%M:%S','2007-01-01 00:00:01') AND strftime('%Y-%m-%d %H:%M:%S','2007-12-31 23:59:59') ORDER BY "EXIF DateTimeOriginal" ASC
-    request = """SELECT strPath,strFilename FROM files WHERE datetime("EXIF DateTimeOriginal") BETWEEN datetime('%s',%s) AND datetime('%s',%s) ORDER BY "EXIF DateTimeOriginal" ASC"""%(DS,Smodifier,DE,Emodifier)
+    request = """SELECT strPath,strFilename FROM files WHERE datetime(ImageDateTime) BETWEEN datetime('%s',%s) AND datetime('%s',%s) ORDER BY ImageDateTime ASC"""%(DS,Smodifier,DE,Emodifier)
     return [row for row in Request(request)]
 
 def pics_for_period(periodtype,date):
@@ -1404,30 +1383,30 @@ def pics_for_period(periodtype,date):
     except:
         print_exc()
         log ("pics_for_period ( periodtype = ['date'|'month'|'year'] , date = corresponding to the period (year|year-month|year-month-day)")
-    request = """SELECT strPath,strFilename FROM files WHERE datetime("EXIF DateTimeOriginal") BETWEEN datetime('%s','%s') AND datetime('%s','%s','%s') ORDER BY "EXIF DateTimeOriginal" ASC;"""%(sdate,modif1,
+    request = """SELECT strPath,strFilename FROM files WHERE datetime(ImageDateTime) BETWEEN datetime('%s','%s') AND datetime('%s','%s','%s') ORDER BY ImageDateTime ASC;"""%(sdate,modif1,
                                                                                                                                                                                                   sdate,modif1,modif2)
     return [row for row in Request(request)]
 
 def get_years():
-    return [t for (t,) in Request("""SELECT DISTINCT strftime("%Y","EXIF DateTimeOriginal") FROM files where "EXIF DateTimeOriginal" NOT NULL ORDER BY "EXIF DateTimeOriginal" ASC""")]
+    return [t for (t,) in Request("""SELECT DISTINCT strftime("%Y",ImageDateTime) FROM files where ImageDateTime NOT NULL ORDER BY ImageDateTime ASC""")]
     
 def get_months(year):
-    return [t for (t,) in Request("""SELECT distinct strftime("%%Y-%%m","EXIF DateTimeOriginal") FROM files where strftime("%%Y","EXIF DateTimeOriginal") = '%s' ORDER BY "EXIF DateTimeOriginal" ASC"""%year)]
+    return [t for (t,) in Request("""SELECT distinct strftime("%%Y-%%m",ImageDateTime) FROM files where strftime("%%Y",ImageDateTime) = '%s' ORDER BY ImageDateTime ASC"""%year)]
 
 def get_dates(year_month):
-    return [t for (t,) in Request("""SELECT distinct strftime("%%Y-%%m-%%d","EXIF DateTimeOriginal") FROM files where strftime("%%Y-%%m","EXIF DateTimeOriginal") = '%s' ORDER BY "EXIF DateTimeOriginal" ASC"""%year_month)]
+    return [t for (t,) in Request("""SELECT distinct strftime("%%Y-%%m-%%d",ImageDateTime) FROM files where strftime("%%Y-%%m",ImageDateTime) = '%s' ORDER BY ImageDateTime ASC"""%year_month)]
     
 def search_all_dates():# TODO check if it is really usefull (check 'get_pics_dates' to see if it is not the same)
     """return all files from database sorted by 'EXIF DateTimeOriginal' """
-    return [t for t in Request("""SELECT strPath,strFilename FROM files ORDER BY "EXIF DateTimeOriginal" ASC""")]
+    return [t for t in Request("""SELECT strPath,strFilename FROM files ORDER BY ImageDateTime ASC""")]
     
 def get_pics_dates():
     """return all different dates from 'EXIF DateTimeOriginal'"""
-    return [t for (t,) in Request("""SELECT DISTINCT strftime("%Y-%m-%d","EXIF DateTimeOriginal") FROM files WHERE length(trim("EXIF DateTimeOriginal"))>0  ORDER BY "EXIF DateTimeOriginal" ASC""")]
+    return [t for (t,) in Request("""SELECT DISTINCT strftime("%Y-%m-%d",ImageDateTime) FROM files WHERE length(trim(ImageDateTime))>0  ORDER BY ImageDateTime ASC""")]
 
 def getDate(path,filename):
     try:
-        return [row for row in RequestWithBinds( """SELECT files."EXIF DateTimeOriginal" FROM files WHERE strPath=? AND strFilename=? """,(path,filename) )][0][0]
+        return [row for row in RequestWithBinds( """SELECT files.ImageDateTime FROM files WHERE strPath=? AND strFilename=? """,(path,filename) )][0][0]
     except IndexError:
         return None
 
@@ -1495,11 +1474,11 @@ if __name__=="__main__":
     print
     print
     #print "\n".join(get_years())
-    print "\n".join([t for (t,) in Request("""SELECT DISTINCT strftime("%Y","EXIF DateTimeOriginal") FROM files where "EXIF DateTimeOriginal" NOT NULL""")])
+    print "\n".join([t for (t,) in Request("""SELECT DISTINCT strftime("%Y",ImageDateTime) FROM files where ImageDateTime NOT NULL""")])
     #print "\n".join(get_months("2006"))
-    print "\n".join([t for (t,) in Request("""SELECT distinct strftime("%%Y-%%m","EXIF DateTimeOriginal") FROM files where strftime("%%Y","EXIF DateTimeOriginal") = '%s'"""%2007)])
+    print "\n".join([t for (t,) in Request("""SELECT distinct strftime("%%Y-%%m",ImageDateTime) FROM files where strftime("%%Y",ImageDateTime) = '%s'"""%2007)])
     #print "\n".join(get_dates("2006-07"))
-    print "\n".join([t for (t,) in Request("""SELECT distinct strftime("%%Y-%%m-%%d","EXIF DateTimeOriginal") FROM files where strftime("%%Y-%%m","EXIF DateTimeOriginal") = '%s'"""%"2006-07")])
+    print "\n".join([t for (t,) in Request("""SELECT distinct strftime("%%Y-%%m-%%d",ImageDateTime) FROM files where strftime("%%Y-%%m",ImageDateTime) = '%s'"""%"2006-07")])
     print
     print u"Les modèles d'appareils photos".encode("utf8")
     print u"\n".join([u"\t%s"%k.decode("utf8") for k in list_cam_models()]).encode("utf8")
