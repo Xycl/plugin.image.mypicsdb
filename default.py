@@ -206,7 +206,7 @@ class Main:
             if coords: 
                 suffix = suffix + "[COLOR=C0C0C0C0][G][/COLOR]"
 
-            (exiftime,) = MPDB.RequestWithBinds( """select coalesce("EXIF DateTimeOriginal", '0') from files where strPath=? and strFilename=? """,(picpath,picname))
+            (exiftime,) = MPDB.RequestWithBinds( """select coalesce(ImageDateTime, '0') from files where strPath=? and strFilename=? """,(picpath,picname))
             resolution = MPDB.RequestWithBinds( """select coalesce("EXIF ExifImageWidth", '0'),  coalesce("EXIF ExifImageLength", '0') from files where strPath=? and strFilename=? """,(picpath,picname))
             infolabels = { "picturepath":picname+" "+suffix, "date": date  }
             if exiftime[0] != None and exiftime[0] != "0":
@@ -1000,7 +1000,7 @@ class Main:
         WINDOW = xbmcgui.Window( 10000 )
         START_TIME = time.time()
         # Get general statistics and set properties
-        Count = MPDB.Request( """SELECT COUNT(*) FROM files WHERE "EXIF DateTimeOriginal" NOT NULL AND UseIt=1""" )[0]
+        Count = MPDB.Request( """SELECT COUNT(*) FROM files WHERE ImageDateTime IS NOT NULL""" )[0]
         Collections = MPDB.Request( """SELECT COUNT(*) FROM collections""" )[0]
         Categories = MPDB.Request( """select count(distinct tf.idFile) from TagTypes tt, TagContents tc, TagsInFiles tf where tt.idTagType = tc.idTagType and tc.idTagContent = tf.idTagContent and tt.TagTranslation = ( select TagTranslation from TagTypes tti where tti.TagType = 'Category')""" )[0]
         Folders = MPDB.Request( """SELECT COUNT(*) FROM folders WHERE HasPics = 1""" )[0]
@@ -1013,14 +1013,14 @@ class Main:
         WINDOW.clearProperty( "MyPicsDB%s.Folders" %(_method))
         WINDOW.setProperty ( "MyPicsDB%s.Folders" %(_method), str(Folders[0]) )
         # Build query string
-        _query = """SELECT b.FolderName, a.strPath, a.strFilename, "EXIF DateTimeOriginal" """
+        _query = """SELECT b.FolderName, a.strPath, a.strFilename, ImageDateTime """
         _query += """FROM files AS a, folders AS b """
-        _query += """WHERE "EXIF DateTimeOriginal" NOT NULL AND UseIt=1 AND a.idFolder = b.idFolder """
+        _query += """WHERE ImageDateTime IS NOT NULL AND a.idFolder = b.idFolder """
         if _method == "Latest":
             # Get latest pictures based on shooted date time or added date time
             _sort = m.args.sort
             if _sort == "Shooted":
-                _query += """ORDER BY "EXIF DateTimeOriginal" DESC LIMIT %s""" %(str(_limit))
+                _query += """ORDER BY ImageDateTime DESC LIMIT %s""" %(str(_limit))
             if _sort == "Added":
                 _query += """ORDER BY "DateAdded" DESC LIMIT %s""" %(str(_limit))
         if _method == "Random":
@@ -1187,7 +1187,7 @@ class Main:
             #   il faut la modifier pour récupérer les photos filles des sous dossiers
             picfanart = join(PIC_PATH,"fanart-folder.png")
             listid = MPDB.all_children(self.args.folderid)
-            filelist = [row for row in MPDB.Request( """SELECT p.FullPath,f.strFilename FROM files f,folders p WHERE f.idFolder=p.idFolder AND p.ParentFolder in ('%s') ORDER BY "EXIF DateTimeOriginal" ASC LIMIT %s OFFSET %s"""%("','".join([str(i) for i in listid]),
+            filelist = [row for row in MPDB.Request( """SELECT p.FullPath,f.strFilename FROM files f,folders p WHERE f.idFolder=p.idFolder AND p.ParentFolder in ('%s') ORDER BY ImageDateTime ASC LIMIT %s OFFSET %s"""%("','".join([str(i) for i in listid]),
                                                                                                                                                                                                                                     limit,
                                                                                                                                                                                                                                     offset) )]
 
@@ -1202,23 +1202,20 @@ class Main:
         elif self.args.method == "lastmonth":
             #show pics taken within last month
             picfanart = join(PIC_PATH,"fanart-date.png")
-            filelist = [row for row in MPDB.Request( """SELECT strPath,strFilename FROM files WHERE datetime("EXIF DateTimeOriginal") BETWEEN datetime('now','-1 months') AND datetime('now') ORDER BY "EXIF DateTimeOriginal" ASC LIMIT %s OFFSET %s"""%(limit,
-                                                                                                                                                                                                                                                          offset))]
+            filelist = [row for row in MPDB.Request( """SELECT strPath,strFilename FROM files WHERE datetime(ImageDateTime) BETWEEN datetime('now','-1 months') AND datetime('now') ORDER BY ImageDateTime ASC LIMIT %s OFFSET %s"""%(limit,offset))]
 
         elif self.args.method == "recentpicsdb":#pictures added to database within x last days __OK
             picfanart = join(PIC_PATH,"fanart-date.png")
             numberofdays = Addon.getSetting("recentnbdays")
-            filelist = [row for row in MPDB.Request( """SELECT strPath,strFilename FROM files WHERE DateAdded IN (SELECT DISTINCT DateAdded FROM files WHERE DateAdded>=datetime('now','start of day','-%s days')) AND UseIt = 1  ORDER BY DateAdded ASC LIMIT %s OFFSET %s"""%(numberofdays,
-                                                                                                                                                                                                                                                                                limit,
-                                                                                                                                                                                                                                                                                offset))]
+            filelist = [row for row in MPDB.Request( """SELECT strPath,strFilename FROM files WHERE DateAdded IN (SELECT DISTINCT DateAdded FROM files WHERE DateAdded>=datetime('now','start of day','-%s days'))  ORDER BY DateAdded ASC LIMIT %s OFFSET %s"""%(numberofdays,limit,offset))]
 
         elif self.args.method =="lastpicsshooted":#X last pictures shooted __OK
             picfanart = join(PIC_PATH,"fanart-date.png")
-            filelist = [row for row in MPDB.Request( """SELECT strPath,strFilename FROM files WHERE "EXIF DateTimeOriginal" NOT NULL AND UseIt=1 ORDER BY "EXIF DateTimeOriginal" DESC LIMIT %s"""%Addon.getSetting('lastpicsnumber') )]
+            filelist = [row for row in MPDB.Request( """SELECT strPath,strFilename FROM files WHERE ImageDateTime IS NOT NULL ORDER BY ImageDateTime DESC LIMIT %s"""%Addon.getSetting('lastpicsnumber') )]
 
         elif self.args.method =="videos":#show all videos __OK
             picfanart = join(PIC_PATH,"fanart-videos.png")
-            filelist = [row for row in MPDB.Request( """SELECT strPath,strFilename FROM files WHERE UseIt=1 AND ftype="video" ORDER BY "EXIF DateTimeOriginal" DESC LIMIT %s OFFSET %s"""%(limit,offset) )]
+            filelist = [row for row in MPDB.Request( """SELECT strPath,strFilename FROM files WHERE ftype="video" ORDER BY ImageDateTime DESC LIMIT %s OFFSET %s"""%(limit,offset) )]
 
         #on teste l'argumen 'viewmode'
             #si viewmode = view : on liste les images
