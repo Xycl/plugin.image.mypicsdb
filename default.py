@@ -37,7 +37,7 @@ try:
    import StorageServer
 except:
    import resources.lib.storageserverdummy as StorageServer
-   
+
 # set variables used by other modules   
 Addon = xbmcaddon.Addon(id='plugin.image.mypicsdb')
 __language__ = Addon.getLocalizedString
@@ -111,16 +111,17 @@ class _Info:
     def __setitem__(self,key,value):
         self.__dict__[key]=value
 
+    
 class Main:
     def __init__(self):
         self.get_args()
 
     def get_args(self):
-        
+
         print "MyPicturesDB plugin called :"
         print "sys.argv[0] = %s ---  sys.argv[2] = %s"%(sys.argv[0],sys.argv[2])
         print "-"*20
-        
+
         self.parm = decoder.smart_utf8(unquote_plus(sys.argv[2])).replace("\\\\", "\\")
         sys.argv[2] = self.parm
         args= "self.args = _Info(%s)" % ( self.parm[ 1 : ].replace( "&", ", " ), )
@@ -140,7 +141,7 @@ class Main:
             parameter=""
         #création de l'url
         u=sys.argv[0]+"?"+parameter+"&action="+repr(str(action))+"&name="+repr(quote_param(name.encode("utf8")))
-        
+
         ok=True
         #création de l'item de liste
         liz=xbmcgui.ListItem(name, thumbnailImage=iconimage)
@@ -176,10 +177,9 @@ class Main:
 
     def addPic(self,picname,picpath,info="*",fanart=None,contextmenu=None,replacemenu=True):
         ok=True
-        
-        
+
         fullfilepath = join(picpath,picname)
-        
+
         liz=xbmcgui.ListItem(picname,info)
         date = MPDB.getDate(picpath,picname)
         date = date and strftime("%d.%m.%Y",strptime(date,"%Y-%m-%d %H:%M:%S")) or ""
@@ -203,18 +203,44 @@ class Main:
                 suffix = suffix + "[COLOR=C0C0C0C0][G][/COLOR]"
 
             (exiftime,) = MPDB.RequestWithBinds( """select coalesce(ImageDateTime, '0') from files where strPath=? and strFilename=? """,(picpath,picname))
-            resolution = MPDB.RequestWithBinds( """select coalesce("EXIF ExifImageWidth", '0'),  coalesce("EXIF ExifImageLength", '0') from files where strPath=? and strFilename=? """,(picpath,picname))
+            resolutionX = MPDB.RequestWithBinds( """select coalesce(tc.TagContent,0) from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
+                                                     where tt.TagType = 'EXIF ExifImageWidth'
+                                                       and tt.idTagType = tc.idTagType
+                                                       and tc.idTagContent = tif.idTagContent
+                                                       and tif.idFile = fi.idFile
+                                                       and fi.strPath = ?
+                                                       and fi.strFilename = ?  """,(picpath,picname))
+
+            resolutionY = MPDB.RequestWithBinds( """select coalesce(tc.TagContent,0) from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
+                                                     where tt.TagType = 'EXIF ExifImageLength'
+                                                       and tt.idTagType = tc.idTagType
+                                                       and tc.idTagContent = tif.idTagContent
+                                                       and tif.idFile = fi.idFile
+                                                       and fi.strPath = ?
+                                                       and fi.strFilename = ?  """,(picpath,picname))     
+
+            #resolution = MPDB.RequestWithBinds( """select coalesce("EXIF ExifImageWidth", '0'),  coalesce("EXIF ExifImageLength", '0') from files where strPath=? and strFilename=? """,(picpath,picname))
             infolabels = { "picturepath":picname+" "+suffix, "date": date  }
-            if exiftime[0] != None and exiftime[0] != "0":
-                infolabels["exif:exiftime"] = exiftime[0]
-            if resolution[0][0] != None and resolution[0][1] != None and resolution[0][0] != "0" and resolution[0][1] != "0":
-                infolabels["exif:resolution"] = str(resolution[0][0]) + ',' + str(resolution[0][1])
+            try:
+                if exiftime[0] != None and exiftime[0] != "0":
+                    infolabels["exif:exiftime"] = exiftime[0]
+            except:
+                pass
 
+            try:
+                resolutionX = resolutionX[0][0]
+                resolutionY = resolutionY[0][0]
 
-            
+                if resolutionX != None and resolutionY != None and resolutionX != "0" and resolutionY != "0":
+                    infolabels["exif:resolution"] = str(resolutionX) + ',' + str(resolutionY)
+            except:
+                pass
+
             if rating:
                 suffix = suffix + "[COLOR=C0FFFF00]"+("*"*int(rating))+"[/COLOR][COLOR=C0C0C0C0]"+("*"*(5-int(rating)))+"[/COLOR]"
+
             liz.setInfo( type="pictures", infoLabels=infolabels )
+
         liz.setLabel(picname+" "+suffix)
         #liz.setLabel2(suffix)
         if contextmenu:
@@ -228,7 +254,7 @@ class Main:
                 #TODO : add to favourite
                 #TODO : ...
             liz.addContextMenuItems(contextmenu,replacemenu)
-        
+
         ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=fullfilepath,listitem=liz,isFolder=False)
 
     def show_home(self):
@@ -301,7 +327,7 @@ class Main:
         self.addAction(unescape(__language__(30620)),[("showtranslationeditor",""),("viewmode","view")],"showtranslationeditor",
                     join(PIC_PATH,"keywords.png"),
                     fanart=join(PIC_PATH,"fanart-keyword.png"))
-                    
+
         # Show readme
         self.addAction(unescape(__language__(30123)),[("help",""),("viewmode","view")],"help",
                     join(PIC_PATH,"keywords.png"),
@@ -432,7 +458,7 @@ class Main:
 
     def show_help(self):
         Viewer.Viewer()
-        
+
     def show_wizard(self):
         global GlobalFilterTrue, GlobalFilterFalse, GlobalMatchAll
         picfanart = join(PIC_PATH,"fanart-keyword.png")
@@ -440,13 +466,13 @@ class Main:
         ui.setDelegate(FilterWizardDelegate)
         ui.doModal()
         del ui
-        
+
         newtagtrue = ""
         newtagfalse = ""
         matchall = (1 if GlobalMatchAll else 0)
-        
+
         if len(GlobalFilterTrue) > 0:
-            
+
             for tag in GlobalFilterTrue:
                 if len(newtagtrue)==0:
                     newtagtrue = tag
@@ -455,7 +481,7 @@ class Main:
             newtagtrue = decoder.smart_unicode(newtagtrue)
 
         if len(GlobalFilterFalse) > 0:
-            
+
             for tag in GlobalFilterFalse:
                 if len(newtagfalse)==0:
                     newtagfalse = tag
@@ -653,7 +679,7 @@ class Main:
         if self.args.do=="addroot":#add a root to scan
             dialog = xbmcgui.Dialog()
             newroot = dialog.browse(0, __language__(30201) , 'pictures')
-            
+
             if not newroot:
                 return
 
@@ -665,7 +691,7 @@ class Main:
                 dialogok.ok(__language__(30000), __language__(30217), __language__(30218) )
             else:
                 recursive = dialog.yesno(__language__(30000),__language__(30202)) and 1 or 0 #browse recursively this folder ?
-                update = dialog.yesno(__language__(30000),__language__(30203)) and 1 or 0 # Remove files from database if pictures does not exists?
+                update = True #dialog.yesno(__language__(30000),__language__(30203)) and 1 or 0 # Remove files from database if pictures does not exists?
 
                 #ajoute le rootfolder dans la base
                 try:
@@ -677,8 +703,8 @@ class Main:
                             MPDB.AddRoot(unquote_plus(item),recursive,update,0)#TODO : traiter le exclude (=0 pour le moment) pour gérer les chemins à exclure
                     else:
                         MPDB.AddRoot(newroot,recursive,update,0)#TODO : traiter le exclude (=0 pour le moment) pour gérer les chemins à exclure
-                    
-                
+
+
                     #MPDB.AddRoot(newroot,recursive,update,0)#TODO : traiter le exclude (=0 pour le moment) pour gérer les chemins à exclure
                     xbmc.executebuiltin( "Container.Refresh(\"%s?action='rootfolders'&do='showroots'&exclude='0'&viewmode='view'\",)"%(sys.argv[0],))
 
@@ -741,7 +767,7 @@ class Main:
                 #dialog = xbmcgui.Dialog()
                 #if True == dialog.yesno(__language__(30000), __language__(30214), __language__(30215), __language__(30216) ):
                 #    MPDB.Request('Update Files set sha = NULL')
-                
+
                 xbmc.executebuiltin( "RunScript(%s,--database)"% join( home, "scanpath.py") )
                 return
             else:
@@ -842,6 +868,7 @@ class Main:
         showmap.doModal()
         del showmap
 
+
     def prettydate(self,dateformat,datetuple):
         "Replace %a %A %b %B date string formater (see strftime format) by the day/month names for the given date tuple given"
         dateformat = dateformat.replace("%a",__language__(30005).split("|")[datetuple.tm_wday])      #replace %a marker by short day name
@@ -877,7 +904,7 @@ class Main:
             titreperiode = kb.getText()
         else:
             titreperiode = periodname
-            
+
         MPDB.renPeriode(self.args.periodname,titreperiode,datestart,dateend)
         xbmc.executebuiltin( "Container.Update(\"%s?action='showperiod'&viewmode='view'&period=''\" , replace)"%sys.argv[0]  )
 

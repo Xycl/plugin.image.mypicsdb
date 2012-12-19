@@ -200,12 +200,10 @@ class VFSScanner:
                 try:
 
                     if extension in self.picture_extensions:
-                        print "Pictures found"
                         (file, isremote) = self.filescanner.getlocalfile(pic)
-                        print file
-                        tags = self._get_metas(file)
+                        self.log("Scanning file %s"%smart_utf8(file))
+                        tags = self._get_metas(smart_utf8(file))
                         picentry.update(tags)
-                        
 
                         # if isremote == True then the file was copied to cache directory.
                         if isremote:
@@ -231,7 +229,6 @@ class VFSScanner:
     def _get_metas(self, fullpath):
         picentry = {}
         extension = os.path.splitext(fullpath)[1].upper()
-
         if extension in self.picture_extensions:
             ###############################
             #    getting  EXIF  infos     #
@@ -334,14 +331,11 @@ class VFSScanner:
         # get XMP infos               #
         ###############################
         xmpclass = XMP_Tags()
-        print "In _get_xmp(" + fullpath + ")"
-        print os.path.dirname(fullpath)
-        print os.path.basename(fullpath)
+
         tags = xmpclass.get_xmp(os.path.dirname(fullpath), os.path.basename(fullpath))
 
         for tagname in tags:
-            print "Tagname"
-            print tagname
+
             if tagname == 'Iptc4xmpExt:PersonInImage':
                 key = 'persons'
 

@@ -85,13 +85,13 @@ def mount(mountpoint="z:",path="\\",login=None,password=""):
     return exists(mountpoint)
 
 
-                    
+
 def VersionTable():
     #table 'Version'
     conn = sqlite.connect(pictureDB)
     conn.text_factory = unicode #sqlite.OptimizedUnicode
     cn=conn.cursor()
-  
+
     try:    
         cn.execute("CREATE TABLE DBVersion ( strVersion text primary key  )")
         cn.execute("insert into DBVersion (strVersion) values('1.9.0')")
@@ -105,17 +105,17 @@ def VersionTable():
             if strVersion != '1.9.0':
                 dialog = xbmcgui.Dialog()
                 dialog.ok(__language__(30000).encode("utf8"), "Database will be updated", "Please re-scan your folders")
-            
+
                 Make_new_base(pictureDB, True)
                 VersionTable()
-                
+
             log( "MyPicsDB database version is %s"%str(strVersion), LOGDEBUG )
-            
+
         else: #sinon on imprime l'exception levée pour la traiter
             log( ">>> VersionTable - CREATE TABLE DBVersion ...", LOGERROR )
             log( "%s - %s"%(Exception,msg), LOGERROR )
     cn.close()
-            
+
 def Make_new_base(DBpath,ecrase=True):
 ##    if not(isfile(DBpath)):
 ##        f=open("DBpath","w")
@@ -285,13 +285,14 @@ def Make_new_base(DBpath,ecrase=True):
 
     conn.commit()
 
-
+    """
     # test table files for column city
     try:
         cn.execute("select City from files where idfile = -1")
     except Exception,msg:
         if msg.args[0].startswith("no such column: City"):
             addColumn('files', 'City')
+    """
 
     cn.close()
 
@@ -372,7 +373,7 @@ def DB_listdir(path):
     conn = sqlite.connect(pictureDB)
     cn=conn.cursor()
     conn.text_factory = unicode #sqlite.OptimizedUnicode
-    
+
     try:
         cn.execute( u"SELECT f.strFilename FROM files f,folders p WHERE f.idFolder=p.idFolder AND p.FullPath=(?)",(path,))
     except Exception,msg:
@@ -386,7 +387,7 @@ def DB_listdir(path):
     #print retour
     cn.close()
     return retour
-    
+
 tagTypeDBKeys = {}
 def DB_file_insert(path,filename,dictionnary,update=False):
     """
@@ -403,20 +404,23 @@ def DB_file_insert(path,filename,dictionnary,update=False):
     conn = sqlite.connect(pictureDB)
     cn=conn.cursor()
 
-                                 
+
     #idFile integer primary key, idFolder integer, strPath text, strFilename text, ftype text, DateAdded DATETIME,  Thumb text,  "ImageRating" text, 
 
     conn.text_factory = unicode#sqlite.OptimizedUnicode
     try:
-        if "ImageDateTime" in dictionnary:
-            imagedatetime = dictionnary["ImageDateTime"]
-        elif "EXIF DateTimeOriginal" in dictionnary:
+        imagedatetime = ""
+        if  "EXIF DateTimeOriginal" in dictionnary:
             imagedatetime = dictionnary["EXIF DateTimeOriginal"]
-        elif "EXIF DateTimeDigitized" in dictionnary:
+            #print "1 = " + str(imagedatetime)
+        if len(imagedatetime.strip()) < 10 and "ImageDateTime" in dictionnary:
+            imagedatetime = dictionnary["ImageDateTime"]
+            #print "2 = " + str(imagedatetime)
+        if len(imagedatetime.strip()) < 10 and "EXIF DateTimeDigitized" in dictionnary:
             imagedatetime = dictionnary["EXIF DateTimeDigitized"]
-        else:
-            imagedatetime = None
-            
+            #print "3 = " + str(imagedatetime)
+
+
         cn.execute( """INSERT INTO files(idFolder, strPath, strFilename, ftype, DateAdded,  Thumb,  ImageRating, ImageDateTime) values (?, ?, ?, ?, ?, ?, ?, ?)""", 
                       ( dictionnary["idFolder"],  dictionnary["strPath"], dictionnary["strFilename"], dictionnary["ftype"], dictionnary["DateAdded"], dictionnary["Thumb"], dictionnary["ImageRating"], imagedatetime ) )
         conn.commit()
@@ -444,7 +448,7 @@ def DB_file_insert(path,filename,dictionnary,update=False):
             if tagType not in ['sha', 'strFilename', 'strPath',
                                'mtime', 'ftype',
                                'source', 'urgency', 'time created', 'date created']:
-                
+
                 tagValues = dictionnary[tagType].split(lists_separator)
 
                 tagType = tagType[0].upper() + tagType[1:]
@@ -454,11 +458,11 @@ def DB_file_insert(path,filename,dictionnary,update=False):
                     # change dates
                     if tagType == 'EXIF DateTimeOriginal':
                         value = value[:10]
-                        
+
                     # first make sure that the tag exists in table TagTypes
                     # is it already in our list?
                     if not tagType in tagTypeDBKeys:
-                  
+
                         # not in list therefore insert into table TagTypes
                         try:
                             cn.execute(""" INSERT INTO TagTypes(TagType, TagTranslation) VALUES(?, ?) """,(tagType,tagType))
@@ -476,7 +480,7 @@ def DB_file_insert(path,filename,dictionnary,update=False):
                         tagTypeDBKeys[tagType] = idTagType
                     else :
                         idTagType = tagTypeDBKeys[tagType]
-                            
+
                     try:
                         cn.execute(""" INSERT INTO TagContents(idTagType,TagContent) VALUES(?,?) """,(idTagType,value))
                     except Exception,msg:
@@ -519,7 +523,7 @@ def DB_file_insert(path,filename,dictionnary,update=False):
 
     conn.commit()
     cn.close()
-    
+
     # Set default translation for tag types
     DefaultTagTypesTranslation()
 
@@ -531,7 +535,7 @@ def DB_folder_insert(foldername,folderpath,parentfolderID,haspic):
     conn = sqlite.connect(pictureDB)
     cn=conn.cursor()
     conn.text_factory = sqlite.OptimizedUnicode
-    
+
     #insert in the folders database
     try:
         cn.execute("""INSERT INTO folders(FolderName,ParentFolder,FullPath,HasPics) VALUES (?,?,?,?) """,(foldername,parentfolderID,folderpath,haspic))
@@ -596,7 +600,7 @@ def fileSHA ( filepath ) :
         Output : string : contains the hexadecimal representation of the SHA of the file.
                           returns '0' if file could not be read (file not found, no read rights...)
     """
-    
+
     try:
         import hashlib
         digest = hashlib.md5()
@@ -604,7 +608,7 @@ def fileSHA ( filepath ) :
         # for Python << 2.5
         import md5
         digest = md5.new()    
-        
+
     filepath = decoder.smart_unicode(filepath)
     try:
         try:
@@ -663,7 +667,7 @@ def delCollection(Colname):
         RequestWithBinds( """DELETE FROM Collections WHERE CollectionName=? """,(Colname,) )
     else:
         log( """delCollection : User did not specify a name for the collection""" )
-        
+
 def getCollectionPics(Colname):      
     """List all pics associated to the Collection given as Colname"""
     return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM Files WHERE idFile IN (SELECT idFile FROM FilesInCollections WHERE idCol IN (SELECT idCol FROM Collections WHERE CollectionName=?)) ORDER BY ImageDateTime ASC""",(Colname,))]
@@ -723,15 +727,45 @@ def Searchfiles(column,searchterm,count=False):
         return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE files.'%s' LIKE "%%%s%%";"""%(column,searchterm))]
 ###
 def getGPS(filepath,filename):
-    coords = RequestWithBinds( """SELECT files.'GPS GPSLatitudeRef',files.'GPS GPSLatitude' as lat,files.'GPS GPSLongitudeRef',files.'GPS GPSLongitude' as lon FROM files WHERE lat NOT NULL AND lon NOT NULL AND strPath=? AND strFilename=?""",(filepath,filename) )
+
+    latR = RequestWithBinds( """select tc.TagContent from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
+                                where tt.TagType = 'GPS GPSLatitudeRef'
+                                  and tt.idTagType = tc.idTagType
+                                  and tc.idTagContent = tif.idTagContent
+                                  and tif.idFile = fi.idFile
+                                  and fi.strPath = ?
+                                  and fi.strFilename = ?""",  (filepath,filename) )
+    lat = RequestWithBinds( """select tc.TagContent from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
+                                where tt.TagType = 'GPS GPSLatitude'
+                                  and tt.idTagType = tc.idTagType
+                                  and tc.idTagContent = tif.idTagContent
+                                  and tif.idFile = fi.idFile
+                                  and fi.strPath = ?
+                                  and fi.strFilename = ?""",  (filepath,filename) )
+    lonR = RequestWithBinds( """select tc.TagContent from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
+                                where tt.TagType = 'GPS GPSLongitudeRef'
+                                  and tt.idTagType = tc.idTagType
+                                  and tc.idTagContent = tif.idTagContent
+                                  and tif.idFile = fi.idFile
+                                  and fi.strPath = ?
+                                  and fi.strFilename = ?""",  (filepath,filename) )
+    lon = RequestWithBinds( """select tc.TagContent from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
+                                where tt.TagType = 'GPS GPSLongitude'
+                                  and tt.idTagType = tc.idTagType
+                                  and tc.idTagContent = tif.idTagContent
+                                  and tif.idFile = fi.idFile
+                                  and fi.strPath = ?
+                                  and fi.strFilename = ?""",  (filepath,filename) )
     try:
-        coords=coords[0]
+        latR=latR[0][0]
+        lat=lat[0][0]
+        lonR=lonR[0][0]
+        lon=lon[0][0]
     except IndexError:
         return None
-    if not coords: 
-        return None
-        
-    latR,lat,lonR,lon=coords
+    if not latR or not lat or not lonR or not lon: 
+        return None                            
+
     tuplat = lat.replace(" ","").replace("[","").replace("]","").split(",")
     tuplon = lon.replace(" ","").replace("[","").replace("]","").split(",")
     lD,lM,lS = lat.replace(" ","").replace("[","").replace("]","").split(",")[:3]
@@ -784,11 +818,11 @@ def RemovePath(path):
         print idpath
     except:
         return 0
-    
+
     cptremoved = Request( """SELECT count(*) FROM files WHERE idFolder='%s'"""%idpath )[0][0]
     print """DELETE FROM files WHERE idFolder='%s'"""%idpath
     Request( """DELETE FROM files WHERE idFolder='%s'"""%idpath)
-    
+
     for idchild in all_children(idpath):
         print "Childs"
         print idchild
@@ -798,7 +832,7 @@ def RemovePath(path):
         Request( """DELETE FROM folders WHERE idFolder='%s'"""%idchild)
     print """DELETE FROM folders WHERE idFolder='%s'"""%idpath
     Request( """DELETE FROM folders WHERE idFolder='%s'"""%idpath)
- 
+
     for periodname,datestart,dateend in ListPeriodes():
         if Request( """SELECT count(*) FROM files WHERE datetime(ImageDateTime) BETWEEN '%s' AND '%s'"""%(datestart,dateend) )[0][0]==0:
             Request( """DELETE FROM Periodes WHERE PeriodeName='%s'"""%periodname )
@@ -898,21 +932,21 @@ def get_exif(picfile):
                 log( "", LOGERROR )
     return picentry
 
-        
+
 def get_xmp(dirname, picfile):
     ###############################
     #    getting  XMP   infos     #
     ###############################
-   
-   
-    
+
+
+
     xmpclass = XMP_Tags()
     tags = xmpclass.get_xmp(dirname, picfile)
-    
+
     for tagname in tags:
         if tagname == 'Iptc4xmpExt:PersonInImage':
             key = 'persons'
-            
+
             if tags.has_key(key):
                 tags[key] += '||' + tags[tagname]
             else:
@@ -954,11 +988,11 @@ def get_iptc(path,filename):
             log( "", LOGDEBUG )
             return {}
     iptc = {}
-    
+
     if len(info.data) < 4:
         return iptc
 
-        
+
     for k in info.data.keys():
         if k in IPTC_FIELDS:
             #if IPTC_FIELDS[k] in ["supplemental category","keywords","contact"]:
@@ -1026,7 +1060,7 @@ def Request(SQLrequest):
     cn.close()
     return retour
 
-    
+
 def RequestWithBinds(SQLrequest, bindVariablesOrg):
     conn = sqlite.connect(pictureDB)
     conn.text_factory = unicode #sqlite.OptimizedUnicode
@@ -1059,18 +1093,18 @@ def RequestWithBinds(SQLrequest, bindVariablesOrg):
         retour= []
     cn.close()
     return retour
-    
+
 def search_filter_tags(FilterInlineArrayTrue, FilterInlineArrayFalse, MatchAll):
 
     if len(FilterInlineArrayTrue) == 0 and len(FilterInlineArrayFalse) == 0:
         return
-        
+
     FilterInlineArrayTrue = unquote_plus(FilterInlineArrayTrue)
     FilterArrayTrue = FilterInlineArrayTrue.split("|||")
 
     FilterInlineArrayFalse = unquote_plus(FilterInlineArrayFalse)
     FilterArrayFalse = FilterInlineArrayFalse.split("|||")    
-    
+
     OuterSelect = "SELECT distinct strPath,strFilename FROM FILES WHERE 1=1 "
     # These selects are joined with IN clause
     InnerSelect = "SELECT tif.idfile FROM TagContents tc, TagsInFiles tif , TagTypes tt WHERE tif.idTagContent = tc.idTagContent AND tc.idTagType = tt.idTagType "
@@ -1082,7 +1116,7 @@ def search_filter_tags(FilterInlineArrayTrue, FilterInlineArrayFalse, MatchAll):
                 KeyValue = Filter.split("||")
                 Key = KeyValue[0]
                 Value = KeyValue[1].replace("'", "''")
-                
+
                 Condition = "AND tt.TagTranslation = '"+Key+"' AND tc.TagContent = '"+Value+"' "
                 OuterSelect += " AND idFile in ( " + InnerSelect + Condition + " ) "
 
@@ -1092,10 +1126,10 @@ def search_filter_tags(FilterInlineArrayTrue, FilterInlineArrayFalse, MatchAll):
                 KeyValue = Filter.split("||")
                 Key = KeyValue[0]
                 Value = KeyValue[1].replace("'", "''")
-                
+
                 Condition = "AND tt.TagTranslation = '"+Key+"' AND tc.TagContent = '"+Value+"' "
                 OuterSelect += " AND idFile not in ( " + InnerSelect + Condition + " ) "            
-                
+
     else:
         OldKey = ""
         OldValue = ""
@@ -1106,7 +1140,7 @@ def search_filter_tags(FilterInlineArrayTrue, FilterInlineArrayFalse, MatchAll):
                 KeyValue = Filter.split("||")
                 Key = KeyValue[0]
                 Value = KeyValue[1].replace("'", "''")
-                
+
                 if Key != OldKey:
                     if len(OldKey) > 0:
                         Condition = "AND tt.TagTranslation = '"+OldKey+"' AND tc.TagContent in( "+OldValue+" ) "
@@ -1117,15 +1151,15 @@ def search_filter_tags(FilterInlineArrayTrue, FilterInlineArrayFalse, MatchAll):
                     OldValue += ", '" + Value + "'"
             Condition = "AND tt.TagTranslation = '"+OldKey+"' AND tc.TagContent in( "+OldValue+" ) "
             OuterSelect += " AND idFile in ( " + InnerSelect + Condition + " ) "
-        
-        
+
+
         if len(FilterInlineArrayFalse) > 0:
             for Filter in FilterArrayFalse:
 
                 KeyValue = Filter.split("||")
                 Key = KeyValue[0]
                 Value = KeyValue[1].replace("'", "''")
-                
+
                 if Key != OldKey:
                     if len(OldKey) > 0:
                         Condition = "AND tt.TagTranslation = '"+OldKey+"' AND tc.TagContent in( "+OldValue+" ) "
@@ -1134,7 +1168,7 @@ def search_filter_tags(FilterInlineArrayTrue, FilterInlineArrayFalse, MatchAll):
                     OldValue = "'" + Value + "'"
                 else:
                     OldValue += ", '" + Value + "'"
-                    
+
             Condition = "AND tt.TagTranslation = '"+OldKey+"' AND tc.TagContent in( "+OldValue+" ) "
             OuterSelect += " AND idFile in ( " + InnerSelect + Condition + " ) "
 
@@ -1159,32 +1193,32 @@ def DefaultTagTypesTranslation():
     Request("update TagTypes set TagTranslation = 'Country Code' where TagTranslation =  'Country/primary location code'")
     Request("update TagTypes set TagTranslation = 'Country Code' where TagTranslation =  'Iptc4xmpCore:CountryCode'")
     Request("update TagTypes set TagTranslation = 'Country Code' where TagTranslation =  'Iptc4xmpCore:Country'")
-        
+
     Request("update TagTypes set TagTranslation = 'State' where TagTranslation =  'Province/state'")
     Request("update TagTypes set TagTranslation = 'State' where TagTranslation =  'Photoshop:State'")
     Request("update TagTypes set TagTranslation = 'State' where TagTranslation =  'Iptc4xmpExt:ProvinceState'")
-    
+
     Request("update TagTypes set TagTranslation = 'City' where TagTranslation = 'Photoshop:City'")
     Request("update TagTypes set TagTranslation = 'City' where TagTranslation = 'Iptc4xmpExt:City'")
     Request("update TagTypes set TagTranslation = 'Location' where TagTranslation =  'Iptc4xmpCore:Location'")
     Request("update TagTypes set TagTranslation = 'Event' where TagTranslation = 'Iptc4xmpExt:Event'")
-    
+
     Request("update TagTypes set TagTranslation = 'Date Added' where TagTranslation =  'DateAdded'")
     Request("update TagTypes set TagTranslation = 'Date Created' where TagTranslation =  'EXIF DateTimeOriginal'")
     Request("update TagTypes set TagTranslation = 'Date/Time Created' where TagTranslation =  'Photoshop:DateCreated'")
     Request("update TagTypes set TagTranslation = 'Date/Time Created' where TagTranslation =  'Image DateTime'")
-    
+
     Request("update TagTypes set TagTranslation = 'Description' where TagTranslation = 'Caption/abstract'")
     Request("update TagTypes set TagTranslation = 'Description' where TagTranslation = 'Dc:description'")
     Request("update TagTypes set TagTranslation = 'Description' where TagTranslation = 'Iptc4xmpCore:Description'")
 
     Request("update TagTypes set TagTranslation = 'Headline' where TagTranslation = 'Iptc4xmpCore:Headline'")
     Request("update TagTypes set TagTranslation = 'Headline' where TagTranslation =  'Photoshop:Headline'")
-    
+
     Request("update TagTypes set TagTranslation = 'Title' where TagTranslation = 'Object name'")
     Request("update TagTypes set TagTranslation = 'Title' where TagTranslation = 'Dc:title'")
     Request("update TagTypes set TagTranslation = 'Title' where TagTranslation = 'Iptc4xmpCore:Title'")
-    
+
     Request("update TagTypes set TagTranslation = 'Creator' where TagTranslation = 'Writer/editor'")
     Request("update TagTypes set TagTranslation = 'Creator' where TagTranslation = 'By-line'")
     Request("update TagTypes set TagTranslation = 'Creator' where TagTranslation = 'Dc:creator'")
@@ -1211,7 +1245,7 @@ def DefaultTagTypesTranslation():
     Request("update TagTypes set TagTranslation = 'Image Length' where TagTranslation =  'EXIF ExifImageLength'")
     Request("update TagTypes set TagTranslation = 'Orientation' where TagTranslation =  'EXIF SceneCaptureType'")
     Request("update TagTypes set TagTranslation = 'Flash' where TagTranslation =  'EXIF Flash'")
-    
+
     # default to not visible
     Request("update TagTypes set TagTranslation = '' where TagTranslation =  'EXIF DateTimeDigitized'")
     Request("update TagTypes set TagTranslation = '' where TagTranslation =  'EXIF DigitalZoomRatio'")
@@ -1225,10 +1259,10 @@ def DefaultTagTypesTranslation():
     Request("update TagTypes set TagTranslation = '' where TagTranslation =  'GPS GPSLatitudeRef'")
     Request("update TagTypes set TagTranslation = '' where TagTranslation =  'GPS GPSLongitude'")
     Request("update TagTypes set TagTranslation = '' where TagTranslation =  'GPS GPSLongitudeRef'")
-    
-    
+
+
     #Request("delete from TagTypes where idTagType not in (select distinct idTagType from TagContents)")
-    
+
 def list_TagTypes():
     DefaultTagTypesTranslation()
     return [row for (row,) in Request( """SELECT distinct tt.TagTranslation FROM TagTypes tt, TagContents tc, TagsInFiles tif 
@@ -1251,10 +1285,10 @@ def countTagTypes(tagType,limit=-1,offset=-1):
         return RequestWithBinds("""SELECT count(distinct TagContent) FROM tagsInFiles tif, TagContents tc, TagTypes tt WHERE tif.idTagContent = tc.idTagContent AND tc.idTagType = tt.idTagType and length(trim(tt.TagTranslation))>0 and tt.idTagType =? """, (tagType,) )[0][0]
     else:
         return Request("""SELECT count(*) FROM TagTypes where length(trim(TagTranslation))>0""" )[0][0]
-        
+
 def setTranslatedTagType(TagType, TagTranslation):
     RequestWithBinds("Update TagTypes set TagTranslation = ? where TagType = ? ",(TagTranslation.encode('utf-8'), TagType.encode('utf-8')))
-    
+
 def getTagTypesForTranslation():
     return [row for row in Request('select TagType, TagTranslation from TagTypes order by 2,1')]
 
@@ -1271,7 +1305,7 @@ def list_TagsAndCount(tagType):
    and tc.idTagType = tt.idTagType 
    and tt.TagTranslation=? 
 group BY LOWER(TagContent)""",(tagType.encode("utf8"),) )]
-    
+
 def countTags(kw,tagType, limit=-1,offset=-1):
     if kw is not None:
         return RequestWithBinds("""select count(distinct idFile) from  TagContents tc, TagsInFiles tif, TagTypes tt  where tc.idTagContent = tif.idTagContent and tc.TagContent = ? and tc.idTagType = tt.idTagType and tt.TagTranslation = ? """,(kw, tagType))[0][0]
@@ -1389,17 +1423,17 @@ def pics_for_period(periodtype,date):
 
 def get_years():
     return [t for (t,) in Request("""SELECT DISTINCT strftime("%Y",ImageDateTime) FROM files where ImageDateTime NOT NULL ORDER BY ImageDateTime ASC""")]
-    
+
 def get_months(year):
     return [t for (t,) in Request("""SELECT distinct strftime("%%Y-%%m",ImageDateTime) FROM files where strftime("%%Y",ImageDateTime) = '%s' ORDER BY ImageDateTime ASC"""%year)]
 
 def get_dates(year_month):
     return [t for (t,) in Request("""SELECT distinct strftime("%%Y-%%m-%%d",ImageDateTime) FROM files where strftime("%%Y-%%m",ImageDateTime) = '%s' ORDER BY ImageDateTime ASC"""%year_month)]
-    
+
 def search_all_dates():# TODO check if it is really usefull (check 'get_pics_dates' to see if it is not the same)
     """return all files from database sorted by 'EXIF DateTimeOriginal' """
     return [t for t in Request("""SELECT strPath,strFilename FROM files ORDER BY ImageDateTime ASC""")]
-    
+
 def get_pics_dates():
     """return all different dates from 'EXIF DateTimeOriginal'"""
     return [t for (t,) in Request("""SELECT DISTINCT strftime("%Y-%m-%d",ImageDateTime) FROM files WHERE length(trim(ImageDateTime))>0  ORDER BY ImageDateTime ASC""")]
@@ -1414,10 +1448,10 @@ if __name__=="__main__":
     # initialisation de la base :
     pictureDB = join(DATA_PATH,"MyPictures.db")
     #   - efface les tables et les recréés
-    
+
     print "Start"
     log("sadkfjask")
-    
+
     Make_new_base(pictureDB,ecrase=True)
     #mount(mountpoint="y:",path="\\\\192.168.0.1\\photos",login="titi",password="toto")
 

@@ -87,7 +87,7 @@ class Scanner(object):
     def getlocalfile(self, file):
         
         if os.path.exists(file):
-            print "Local = " + file
+            #print "Local = " + file
             return file, False
         else:
             tempdir     = xbmc.translatePath('special://temp')
@@ -95,7 +95,7 @@ class Scanner(object):
             destination = os.path.join(tempdir,filename)
             xbmcvfs.copy(file, destination)
 
-            print "Remote = " + destination
+            #print "Remote = " + destination
             return destination, True
 
         
