@@ -154,7 +154,6 @@ class VFSScanner:
 
         (dirnames, filenames) = self.filescanner.walk(path, False, self.picture_extensions if self.use_videos == "false" else self.all_extensions)
 
-        
         # insert the new path into database
         foldername = smart_unicode(os.path.basename(path))
         if len(foldername)==0:
@@ -166,6 +165,9 @@ class VFSScanner:
         # needed for 'added', 'updated' or 'deleted' decision
         filesfromdb = mpdb.DB_listdir(smart_unicode(path))
 
+        print path
+        print filesfromdb
+        
         # scan pictures and insert them into database
         if filenames:
             for pic in filenames:
@@ -202,7 +204,7 @@ class VFSScanner:
                     if extension in self.picture_extensions:
                         (file, isremote) = self.filescanner.getlocalfile(pic)
                         self.log("Scanning file %s"%smart_utf8(file))
-                        tags = self._get_metas(smart_utf8(file))
+                        tags = self._get_metas(smart_unicode(file))
                         picentry.update(tags)
 
                         # if isremote == True then the file was copied to cache directory.
@@ -233,8 +235,6 @@ class VFSScanner:
             ###############################
             #    getting  EXIF  infos     #
             ###############################
-            #reading EXIF infos
-
             try:
                 exif = self._get_exif(fullpath)
                 picentry.update(exif)

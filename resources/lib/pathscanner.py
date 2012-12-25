@@ -19,7 +19,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
 
-import os, urllib
+import os, urllib, re
 import xbmc, xbmcvfs
 
 class Scanner(object):
@@ -42,6 +42,7 @@ class Scanner(object):
                     filenames.append(file)               
                
         else:
+            #print "In else"
             dirnames, filenames = self._walk(urllib.unquote_plus(path), recursive, types)
 
                     
@@ -54,7 +55,10 @@ class Scanner(object):
         dirs      = []
         files     = []
 
-        if xbmcvfs.exists(xbmc.translatePath(path)):
+        path = xbmc.translatePath(path)
+
+        if xbmcvfs.exists(xbmc.translatePath(path)) or re.match(r"[a-zA-Z]:\\", path) is not None:
+            print "in exists"
             subdirs, files = xbmcvfs.listdir(path)
             for dir in subdirs:
                 dirnames.append(os.path.join(path, dir))
@@ -74,7 +78,10 @@ class Scanner(object):
                         dirnames.append(item)
                     for item in filenames1:
                         filenames.append(item)
-            
+        
+        else:
+            print path 
+            print "does not exists"
         return dirnames, filenames
 
 
