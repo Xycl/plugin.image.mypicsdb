@@ -44,9 +44,7 @@ def get_crc32( parm ):
     return '%08x' % crc    
     
 def quote_param(parm):
-    #parm = smart_utf8( parm.replace ("'", "\\'").replace ('"', '\\"') )
     parm = smart_utf8( parm.replace("\\", "\\\\\\\\").replace ("'", "\\'").replace ('"', '\\"') )
-    #parm = smart_utf8( parm.replace ("'", "\\'") )
     parm = quote_plus(parm)
     
     return parm
