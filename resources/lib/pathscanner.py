@@ -42,7 +42,6 @@ class Scanner(object):
                     filenames.append(file)               
                
         else:
-            #print "In else"
             dirnames, filenames = self._walk(urllib.unquote_plus(path), recursive, types)
 
                     
@@ -58,7 +57,6 @@ class Scanner(object):
         path = xbmc.translatePath(path)
 
         if xbmcvfs.exists(xbmc.translatePath(path)) or re.match(r"[a-zA-Z]:\\", path) is not None:
-            print "in exists"
             subdirs, files = xbmcvfs.listdir(path)
             for dir in subdirs:
                 dirnames.append(os.path.join(path, dir))
@@ -79,9 +77,6 @@ class Scanner(object):
                     for item in filenames1:
                         filenames.append(item)
         
-        else:
-            print path 
-            print "does not exists"
         return dirnames, filenames
 
 
@@ -94,7 +89,6 @@ class Scanner(object):
     def getlocalfile(self, file):
         
         if os.path.exists(file):
-            #print "Local = " + file
             return file, False
         else:
             tempdir     = xbmc.translatePath('special://temp')
@@ -102,7 +96,6 @@ class Scanner(object):
             destination = os.path.join(tempdir,filename)
             xbmcvfs.copy(file, destination)
 
-            #print "Remote = " + destination
             return destination, True
 
         
