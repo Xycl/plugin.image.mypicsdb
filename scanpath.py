@@ -57,7 +57,8 @@ class VFSScanner:
         self.picsupdated = 0
         self.picsadded   = 0
         self.picsscanned = 0
-        self.picroots    = 0
+        self.current_root_entry = 0
+        self.total_root_entries = 0
         self.totalfiles  = 0
 
         for path,recursive,update,exclude in mpdb.RootFolders():
@@ -99,28 +100,47 @@ class VFSScanner:
         self.options = options
 
         if self.options.rootpath:
+            self.scan = AddonScan()
+            self.scan.create( __language__(30000) )
+            self.current_root_entry = 1
+            self.total_root_entries = 1
+            self.scan.update(0,0,
+                        __language__(30000)+" ["+__language__(30241)+"]",#MyPicture Database [preparing]
+                        __language__(30247))#please wait...
+             
             self.options.rootpath = smart_utf8(unquote_plus( self.options.rootpath)).replace("\\\\", "\\").replace("\\\\", "\\").replace("\\'", "\'")
             self._countfiles(self.options.rootpath)
-            self.picroots = 1
+            self.total_root_entries = 1
             self._addpath(self.options.rootpath, None, self.options.recursive, True)
+            
+            self.scan.close()
 
         elif self.options.database:
             paths = mpdb.RootFolders()
 
             if paths:
+                self.scan = AddonScan()
+                self.scan.create( __language__(30000) )
+                self.current_root_entry = 0
+                self.total_root_entries = 0
+                self.scan.update(0,0,
+                            __language__(30000)+" ["+__language__(30241)+"]",#MyPicture Database [preparing]
+                            __language__(30247))#please wait...
                 
                 for path,recursive,update,exclude in paths:
                     if exclude==0:
-                        self.picroots += 1
+                        self.total_root_entries += 1
                         self._countfiles(path,False)
 
                 for path,recursive,update,exclude in paths:
                     if exclude==0:
                         try:
-                            #iroots=iroots+1
+                            self.current_root_entry += 1
                             self._addpath(path, None, recursive, update)
                         except:
                             print_exc()
+                            
+                self.scan.close()
 
         xbmc.executebuiltin( "Notification(%s,%s)"%(__language__(30000).encode("utf8"),
                                                     __language__(30248).encode("utf8")%(self.picsscanned,self.picsadded,self.picsdeleted,self.picsupdated)
@@ -165,9 +185,6 @@ class VFSScanner:
         # needed for 'added', 'updated' or 'deleted' decision
         filesfromdb = mpdb.DB_listdir(smart_unicode(path))
 
-        print path
-        print filesfromdb
-        
         # scan pictures and insert them into database
         if filenames:
             for pic in filenames:
@@ -215,7 +232,15 @@ class VFSScanner:
                     pass
 
                 mpdb.DB_file_insert(path, filename, picentry, sqlupdate)
-
+                
+                straction = __language__(30242)#Updating
+                if self.scan and self.totalfiles!=0 and self.total_root_entries!=0:
+                    self.scan.update(int(100*float(self.picsscanned)/float(self.totalfiles)),#cptscanned-(cptscanned/100)*100,
+                                  #cptscanned/100,
+                                  int(100*float(self.current_root_entry)/float(self.total_root_entries)),
+                                  __language__(30000)+"[%s] (%0.2f%%)"%(straction,100*float(self.picsscanned)/float(self.totalfiles)),#"MyPicture Database [%s] (%0.2f%%)"
+                                  filename)
+                
         # all pics left in list filesfromdb weren't found in file system.
         # therefore delete them from db
         if filesfromdb:
