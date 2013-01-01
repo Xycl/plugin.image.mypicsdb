@@ -191,19 +191,6 @@ class VFSScanner:
                 self.picsscanned += 1
                 filename = smart_unicode(os.path.basename(pic))
                 extension = os.path.splitext(pic)[1].upper()
-
-                if filename in filesfromdb:
-                    if update:
-                        sqlupdate   = True
-                        self.picsupdated += 1
-                        filesfromdb.pop(filesfromdb.index(filename))
-                    else:
-                        filesfromdb.pop(filesfromdb.index(filename))
-                        continue
-
-                else:
-                    sqlupdate  = False
-                    self.picsadded   += 1
                     
                 picentry = { "idFolder": folderid,
                              "strPath": path,
@@ -221,6 +208,27 @@ class VFSScanner:
                     if extension in self.picture_extensions:
                         (file, isremote) = self.filescanner.getlocalfile(pic)
                         self.log("Scanning file %s"%smart_utf8(file))
+                        filesha = mpdb.fileSHA(file) 
+                        
+                        if filename in filesfromdb:  # then it's an update
+                            #if update:
+                                sqlupdate   = True
+                                
+                                if mpdb.getFileSha(path,filename) != filesha:  # if sha is equal then don't scan again
+                                    self.picsupdated += 1
+                                    filesfromdb.pop(filesfromdb.index(filename))
+                                else:
+                                    filesfromdb.pop(filesfromdb.index(filename))
+                                    continue
+                                
+                            #else:
+                            #    filesfromdb.pop(filesfromdb.index(filename))
+                            #    continue
+
+                        else:
+                            sqlupdate  = False
+                            self.picsadded   += 1
+
                         tags = self._get_metas(smart_unicode(file))
                         picentry.update(tags)
 
@@ -231,14 +239,14 @@ class VFSScanner:
                     print msg
                     pass
 
-                mpdb.DB_file_insert(path, filename, picentry, sqlupdate)
+                mpdb.DB_file_insert(path, filename, picentry, sqlupdate, filesha)
                 
-                straction = __language__(30242)#Updating
+                action = __language__(30242)#Updating
                 if self.scan and self.totalfiles!=0 and self.total_root_entries!=0:
                     self.scan.update(int(100*float(self.picsscanned)/float(self.totalfiles)),#cptscanned-(cptscanned/100)*100,
                                   #cptscanned/100,
                                   int(100*float(self.current_root_entry)/float(self.total_root_entries)),
-                                  __language__(30000)+"[%s] (%0.2f%%)"%(straction,100*float(self.picsscanned)/float(self.totalfiles)),#"MyPicture Database [%s] (%0.2f%%)"
+                                  __language__(30000)+"[%s] (%0.2f%%)"%(action,100*float(self.picsscanned)/float(self.totalfiles)),#"MyPicture Database [%s] (%0.2f%%)"
                                   filename)
                 
         # all pics left in list filesfromdb weren't found in file system.

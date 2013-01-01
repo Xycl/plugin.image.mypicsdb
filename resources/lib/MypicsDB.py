@@ -94,24 +94,29 @@ def VersionTable():
 
     try:    
         cn.execute("CREATE TABLE DBVersion ( strVersion text primary key  )")
-        cn.execute("insert into DBVersion (strVersion) values('1.9.0')")
+        cn.execute("insert into DBVersion (strVersion) values('1.9.5')")
 
         conn.commit() 
     except Exception,msg:
+        print "In exception handler"
         if msg.args[0].startswith("table DBVersion already exists"):
             # Test Version of DB
             strVersion = Request("Select strVersion from DBVersion")[0][0];
 
-            if strVersion != '1.9.0':
+            if strVersion < '1.9.0':
                 dialog = xbmcgui.Dialog()
                 dialog.ok(__language__(30000).encode("utf8"), "Database will be updated", "Please re-scan your folders")
-
                 Make_new_base(pictureDB, True)
                 VersionTable()
-
+                
+            elif strVersion == '1.9.0':
+                addColumn('files', 'Sha')
+                cn.execute("update DBVersion set strVersion = '1.9.5'")
+                conn.commit() 
+                
             log( "MyPicsDB database version is %s"%str(strVersion), LOGDEBUG )
 
-        else: #sinon on imprime l'exception levée pour la traiter
+        else: 
             log( ">>> VersionTable - CREATE TABLE DBVersion ...", LOGERROR )
             log( "%s - %s"%(Exception,msg), LOGERROR )
     cn.close()
@@ -135,7 +140,7 @@ def Make_new_base(DBpath,ecrase=True):
 
     #table 'files'
     try:
-        cn.execute("""CREATE TABLE files ( idFile integer primary key, idFolder integer, strPath text, strFilename text, ftype text, DateAdded DATETIME, Thumb text,  ImageRating text, ImageDateTime DATETIME,
+        cn.execute("""CREATE TABLE files ( idFile integer primary key, idFolder integer, strPath text, strFilename text, ftype text, DateAdded DATETIME, Thumb text,  ImageRating text, ImageDateTime DATETIME, Sha text,
                     CONSTRAINT UNI_FILE UNIQUE (strPath,strFilename))""")
     except Exception,msg:
         if msg.args[0].startswith("table 'files' already exists"):
@@ -389,7 +394,7 @@ def DB_listdir(path):
     return retour
 
 tagTypeDBKeys = {}
-def DB_file_insert(path,filename,dictionnary,update=False):
+def DB_file_insert(path,filename,dictionnary,update=False, sha=0):
     """
     insert into file database the dictionnary values into the dictionnary keys fields
     keys are DB fields ; values are DB values
@@ -421,8 +426,8 @@ def DB_file_insert(path,filename,dictionnary,update=False):
             #print "3 = " + str(imagedatetime)
 
 
-        cn.execute( """INSERT INTO files(idFolder, strPath, strFilename, ftype, DateAdded,  Thumb,  ImageRating, ImageDateTime) values (?, ?, ?, ?, ?, ?, ?, ?)""", 
-                      ( dictionnary["idFolder"],  dictionnary["strPath"], dictionnary["strFilename"], dictionnary["ftype"], dictionnary["DateAdded"], dictionnary["Thumb"], dictionnary["ImageRating"], imagedatetime ) )
+        cn.execute( """INSERT INTO files(idFolder, strPath, strFilename, ftype, DateAdded,  Thumb,  ImageRating, ImageDateTime, Sha) values (?, ?, ?, ?, ?, ?, ?, ?, ?)""", 
+                      ( dictionnary["idFolder"],  dictionnary["strPath"], dictionnary["strFilename"], dictionnary["ftype"], dictionnary["DateAdded"], dictionnary["Thumb"], dictionnary["ImageRating"], imagedatetime, sha ) )
         conn.commit()
     except Exception,msg:
         log( ">>> DB_file_insert ...", LOGERROR )
