@@ -1099,10 +1099,10 @@ def search_filter_tags(FilterInlineArrayTrue, FilterInlineArrayFalse, MatchAll):
     if len(FilterInlineArrayTrue) == 0 and len(FilterInlineArrayFalse) == 0:
         return
 
-    FilterInlineArrayTrue = unquote_plus(FilterInlineArrayTrue)
+    #FilterInlineArrayTrue = unquote_plus(FilterInlineArrayTrue)
     FilterArrayTrue = FilterInlineArrayTrue.split("|||")
 
-    FilterInlineArrayFalse = unquote_plus(FilterInlineArrayFalse)
+    #FilterInlineArrayFalse = unquote_plus(FilterInlineArrayFalse)
     FilterArrayFalse = FilterInlineArrayFalse.split("|||")    
 
     OuterSelect = "SELECT distinct strPath,strFilename FROM FILES WHERE 1=1 "

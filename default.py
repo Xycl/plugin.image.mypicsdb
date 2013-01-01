@@ -124,11 +124,34 @@ class Main:
 
         self.parm = decoder.smart_utf8(unquote_plus(sys.argv[2])).replace("\\\\", "\\")
         sys.argv[2] = self.parm
-        args= "self.args = _Info(%s)" % ( self.parm[ 1 : ].replace( "&", ", " ), )
+        #args= "self.args = _Info(%s)" % ( self.parm[ 1 : ].replace( "&", ", " ), )
+        args= "self.args = _Info(%s)" % ( self.cleanup(self.parm[ 1 : ]), )
         exec args
         if not hasattr(self.args, 'page'):
            self.args.page=''
 
+    def cleanup(self, parm):
+        
+        in_apostrophe=False
+        output=""
+        
+        for char in parm:
+            if char == "'" or char == '"':
+                if not in_apostrophe:
+                    in_apostrophe = True
+                else:
+                    in_apostrophe = False
+            if char == "&":
+                if not in_apostrophe:
+                    output += ","
+                else:
+                    output += "&"
+                continue
+                
+            output += char
+            
+        return output
+        
     def Title(self,title):
         pass
 
@@ -672,7 +695,7 @@ class Main:
         xbmcplugin.endOfDirectory( int(sys.argv[1]),updateListing=refresh)
 
     def show_roots(self):
-        "show the root folders"
+        #show the root folders
 
         refresh=True
 
