@@ -63,7 +63,7 @@ class VFSScanner:
 
         for path,recursive,update,exclude in mpdb.RootFolders():
             if exclude:
-                self.exclude_folders.append(smart_unicode(path))
+                self.exclude_folders.append(smart_unicode(path[:len(path)-1]))
 
         for ext in Addon.getSetting("picsext").split("|"):
             self.picture_extensions.append("." + ext.replace(".","").upper())
@@ -139,7 +139,7 @@ class VFSScanner:
                             self._addpath(path, None, recursive, update)
                         except:
                             print_exc()
-                            
+
                 self.scan.close()
 
         xbmc.executebuiltin( "Notification(%s,%s)"%(__language__(30000).encode("utf8"),
@@ -166,7 +166,7 @@ class VFSScanner:
         olddir          = ''
 
         path = smart_unicode(path)
-        
+
         # Check excluded paths
         if path in self.exclude_folders:
             self.picsdeleted = self.picsdeleted + mpdb.RemovePath(path)

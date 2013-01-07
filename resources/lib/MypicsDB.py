@@ -723,13 +723,27 @@ def PicsForPeriode(periodname):
     period = RequestWithBinds( """SELECT DateStart,DateEnd FROM Periodes WHERE PeriodeName=?""", (periodname,) )
     return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM files WHERE datetime(ImageDateTime) BETWEEN ? AND ? ORDER BY ImageDateTime ASC""",period )]
 
-def Searchfiles(column,searchterm,count=False):
-    searchterm = searchterm.replace("'", "''")      
+def Searchfiles(tagtype, tagvalue, count=False):
+    #tagvalue = tagvalue.replace("'", "''")
 
+    val = tagvalue.lower().replace("'", "''")
+    
     if count:
-        return [row for row in Request( """SELECT count(*) FROM files WHERE files.'%s' LIKE "%%%s%%";"""%(column,searchterm))][0][0]
+        return [row for row in RequestWithBinds( """select count(*)
+                                                      from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
+                                                     where tt.idTagType = tc.idTagType
+                                                       and tc.idTagContent = tif.idTagContent
+                                                       and tt.TagType = ?
+                                                       and lower(tc.TagContent) LIKE '%%%s%%'
+                                                       and tif.idFile = fi.idFile"""%val, (tagtype,))][0][0]
     else:
-        return [row for row in Request( """SELECT strPath,strFilename FROM files WHERE files.'%s' LIKE "%%%s%%";"""%(column,searchterm))]
+        return [row for row in RequestWithBinds( """select fi.strPath, fi.strFilename
+                                                      from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
+                                                     where tt.idTagType = tc.idTagType
+                                                       and tc.idTagContent = tif.idTagContent
+                                                       and tt.TagType = ?
+                                                       and lower(tc.TagContent) LIKE '%%%s%%'
+                                                       and tif.idFile = fi.idFile"""%val, (tagtype, ))]
 ###
 def getGPS(filepath,filename):
 
@@ -1298,11 +1312,11 @@ def getTagTypesForTranslation():
     return [row for row in Request('select TagType, TagTranslation from TagTypes order by 2,1')]
 
 def list_Tags(tagType):
-    """Return a list of all keywords in database"""
+    """Return a list of all tags in database"""
     return [row for (row,) in Request( """select distinct TagContent from TagContents tc, TagsInFiles tif, TagTypes tt  where tc.idTagContent = tif.idTagContent and tc.idTagType = tt.idTagType and tt.TagTranslation='%s' ORDER BY LOWER(TagContent) ASC"""%tagType.encode("utf8") )]
 
 def list_TagsAndCount(tagType):
-    """Return a list of all keywords in database"""
+    """Return a list of all tags in database"""
     return [row for row in RequestWithBinds( """
     select TagContent, count(distinct idfile) 
   from TagContents tc, TagsInFiles tif, TagTypes tt  

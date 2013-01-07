@@ -6,8 +6,7 @@ a) You must add picture sources to XBMC
 b) Within MyPicsDB (not in the configuration) select menu "Paths of pictures folders" to add these paths to the database.
 
 HINT: Net shares or use of a NAS
-Python add-ons aren't able to access remote files! This will change with Frodo due to amendment of xbmcvfs.
-To access remote files there are three possibilities depending on your used OS.
+If you use FRODO then everything is fine but if you still use Eden or Dharma then you've three possibilities depending on your used OS.
 
 a) Windows client with SMB access to NAS
    The path to a remote SMB source is stored in XBMC like SMB://server/directory

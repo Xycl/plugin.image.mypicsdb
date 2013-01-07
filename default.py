@@ -675,18 +675,19 @@ class Main:
             motrecherche = self.args.searchterm
             refresh=True
 
-        filedesc = MPDB.get_fields("files")
+
+        listtags = [k for k in MPDB.list_TagTypesAndCount()]
         result = False
-        for colname,coltype in filedesc:
-            compte = MPDB.Searchfiles(colname,motrecherche,count=True)
+        for tag, nb in listtags:            
+            compte = MPDB.Searchfiles(tag, motrecherche, count=True)
             if compte:
                 result = True
-                self.addDir(name      = __language__(30116)%(compte,motrecherche.decode("utf8"),files_fields_description.has_key(colname) and files_fields_description[colname] or colname),
-                            params    = [("method","search"),("field",u"%s"%colname.decode("utf8")),("searchterm",u"%s"%motrecherche.decode("utf8")),("page","1"),("viewmode","view")],#paramètres
+                self.addDir(name      = __language__(30116)%(compte,motrecherche.decode("utf8"),tag ), #files_fields_description.has_key(colname) and files_fields_description[colname] or colname),
+                            params    = [("method","search"),("field",u"%s"%tag.decode("utf8")),("searchterm",u"%s"%motrecherche.decode("utf8")),("page","1"),("viewmode","view")],#paramètres
                             action    = "showpics",#action
                             iconimage = join(PIC_PATH,"search.png"),#icone
                             fanart    = join(PIC_PATH,"fanart-search.png"),
-                            contextmenu   = [(__language__(30152),"XBMC.RunPlugin(\"%s?action='addfolder'&method='search'&field='%s'&searchterm='%s'&viewmode='scan'\")"%(sys.argv[0],colname,motrecherche))])#menucontextuel
+                            contextmenu   = [(__language__(30152),"XBMC.RunPlugin(\"%s?action='addfolder'&method='search'&field='%s'&searchterm='%s'&viewmode='scan'\")"%(sys.argv[0],tag,motrecherche))])#menucontextuel
         if not result:
             dialog = xbmcgui.Dialog()
             dialog.ok(__language__(30000).encode("utf8"), __language__(30119).encode("utf8")%motrecherche)

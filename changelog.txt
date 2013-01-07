@@ -1,3 +1,7 @@
+2013/01/07 --> v 1.9.6
+Fix:    Global search works again (broken after cleanup of DB)
+Fix:    Excluded paths work again (broken after deployment of new file scanner)
+
 2013/01/01 --> v 1.9.5
 Update: Files which Sha value isn't changed won't be re-scanned
 Update: Latest translations pulled.
