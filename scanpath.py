@@ -165,51 +165,63 @@ class VFSScanner:
         uniquedirnames  = []
         olddir          = ''
 
-        path = smart_unicode(path)
+        try:
+            path = smart_unicode(path)
 
-        # Check excluded paths
-        if path in self.exclude_folders:
-            self.picsdeleted = self.picsdeleted + mpdb.RemovePath(path)
-            return
+            # Check excluded paths
+            if path in self.exclude_folders:
+                self.picsdeleted = self.picsdeleted + mpdb.RemovePath(path)
+                return
 
-        (dirnames, filenames) = self.filescanner.walk(path, False, self.picture_extensions if self.use_videos == "false" else self.all_extensions)
+            (dirnames, filenames) = self.filescanner.walk(path, False, self.picture_extensions if self.use_videos == "false" else self.all_extensions)
 
-        # insert the new path into database
-        foldername = smart_unicode(os.path.basename(path))
-        if len(foldername)==0:
-            foldername = os.path.split(os.path.dirname(path))[1]
-        
-        folderid = mpdb.DB_folder_insert(foldername, path, parentfolderid, 1 if len(filenames)>0 else 0 )
-        
-        # get currently stored files for 'path' from database.
-        # needed for 'added', 'updated' or 'deleted' decision
-        filesfromdb = mpdb.DB_listdir(smart_unicode(path))
+            # insert the new path into database
+            foldername = smart_unicode(os.path.basename(path))
+            if len(foldername)==0:
+                foldername = os.path.split(os.path.dirname(path))[1]
+            
+            folderid = mpdb.DB_folder_insert(foldername, path, parentfolderid, 1 if len(filenames)>0 else 0 )
+            
+            # get currently stored files for 'path' from database.
+            # needed for 'added', 'updated' or 'deleted' decision
+            filesfromdb = mpdb.DB_listdir(smart_unicode(path))
 
-        # scan pictures and insert them into database
-        if filenames:
-            for pic in filenames:
-                self.picsscanned += 1
-                filename = smart_unicode(os.path.basename(pic))
-                extension = os.path.splitext(pic)[1].upper()
+            print filesfromdb
+            
+            # scan pictures and insert them into database
+            if filenames:
+                for pic in filenames:
+                    self.picsscanned += 1
+                    filename = smart_unicode(os.path.basename(pic))
+                    extension = os.path.splitext(pic)[1].upper()
+                        
+                    picentry = { "idFolder": folderid,
+                                 "strPath": path,
+                                 "strFilename": filename,
+                                 "ftype": extension in self.picture_extensions and "picture" or extension in self.video_extensions and "video" or "",
+                                 "DateAdded": strftime("%Y-%m-%d %H:%M:%S"),
+                                 "Thumb": "",
+                                 "ImageRating": None
+                                 }
+
+
+
+                    sqlupdate = False
+                    filesha   = 0
                     
-                picentry = { "idFolder": folderid,
-                             "strPath": path,
-                             "strFilename": filename,
-                             "ftype": extension in self.picture_extensions and "picture" or extension in self.video_extensions and "video" or "",
-                             "DateAdded": strftime("%Y-%m-%d %H:%M:%S"),
-                             "Thumb": "",
-                             "ImageRating": None
-                             }
-
-
-                # get the meta tags. but only for pictures
-                try:
-
+                    # get the meta tags. but only for pictures
                     if extension in self.picture_extensions:
                         (file, isremote) = self.filescanner.getlocalfile(pic)
-                        self.log("Scanning file %s"%smart_utf8(file))
+                        self.log("Scanning picture %s"%smart_utf8(file))
                         filesha = mpdb.fileSHA(file) 
-                        
+
+                        tags = self._get_metas(smart_unicode(file))
+                        picentry.update(tags)
+
+                        # if isremote == True then the file was copied to cache directory.
+                        if isremote:
+                            self.filescanner.delete(file)
+                            
                         if filename in filesfromdb:  # then it's an update
                             #if update:
                                 sqlupdate   = True
@@ -228,37 +240,51 @@ class VFSScanner:
                         else:
                             sqlupdate  = False
                             self.picsadded   += 1
+                            
+                    # videos aren't scanned and therefore never updated
+                    elif extension in self.video_extensions:
+                        self.log("Adding video file %s"%smart_utf8(pic))
+                        
+                        if filename in filesfromdb:  # then it's an update
+                            sqlupdate   = True
+                            print "True"
+                            filesfromdb.pop(filesfromdb.index(filename))
+                            continue
 
-                        tags = self._get_metas(smart_unicode(file))
-                        picentry.update(tags)
 
-                        # if isremote == True then the file was copied to cache directory.
-                        if isremote:
-                            self.filescanner.delete(file)
-                except Exception,msg:
-                    print msg
-                    pass
+                        else:
+                            print "False"
+                            sqlupdate  = False
+                            self.picsadded   += 1
 
-                mpdb.DB_file_insert(path, filename, picentry, sqlupdate, filesha)
-                
-                action = __language__(30242)#Updating
-                if self.scan and self.totalfiles!=0 and self.total_root_entries!=0:
-                    self.scan.update(int(100*float(self.picsscanned)/float(self.totalfiles)),#cptscanned-(cptscanned/100)*100,
-                                  #cptscanned/100,
-                                  int(100*float(self.current_root_entry)/float(self.total_root_entries)),
-                                  __language__(30000)+"[%s] (%0.2f%%)"%(action,100*float(self.picsscanned)/float(self.totalfiles)),#"MyPicture Database [%s] (%0.2f%%)"
-                                  filename)
-                
-        # all pics left in list filesfromdb weren't found in file system.
-        # therefore delete them from db
-        if filesfromdb:
-            for pic in filesfromdb:
-                mpdb.DB_del_pic(path, pic)
-                self.picsdeleted += 1
+                    else:
+                        continue
 
-        if recursive:
-            for dir in dirnames:
-                self._addpath(dir, folderid, True, update)
+
+                    mpdb.DB_file_insert(path, filename, picentry, sqlupdate, filesha)
+                    
+                    action = __language__(30242)#Updating
+                    if self.scan and self.totalfiles!=0 and self.total_root_entries!=0:
+                        self.scan.update(int(100*float(self.picsscanned)/float(self.totalfiles)),#cptscanned-(cptscanned/100)*100,
+                                      #cptscanned/100,
+                                      int(100*float(self.current_root_entry)/float(self.total_root_entries)),
+                                      __language__(30000)+"[%s] (%0.2f%%)"%(action,100*float(self.picsscanned)/float(self.totalfiles)),#"MyPicture Database [%s] (%0.2f%%)"
+                                      filename)
+                    
+            # all pics left in list filesfromdb weren't found in file system.
+            # therefore delete them from db
+            if filesfromdb:
+                for pic in filesfromdb:
+                    mpdb.DB_del_pic(path, pic)
+                    self.picsdeleted += 1
+
+            if recursive:
+                for dir in dirnames:
+                    self._addpath(dir, folderid, True, update)
+
+        except Exception,msg:
+            print msg
+            pass
 
 
     def _get_metas(self, fullpath):

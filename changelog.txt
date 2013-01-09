@@ -1,3 +1,6 @@
+2013/01/09 --> v 1.9.7
+Fix:    Video files fixed.
+
 2013/01/07 --> v 1.9.6
 Fix:    Global search works again (broken after cleanup of DB)
 Fix:    Excluded paths work again (broken after deployment of new file scanner)
