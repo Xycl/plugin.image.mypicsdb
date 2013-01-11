@@ -51,6 +51,7 @@ Supported methods:
 """
 
 import xbmc
+import CharsetDecoder as decoder
 
 class BaseConnection(object):
 
@@ -77,7 +78,7 @@ class MysqlConnection(BaseConnection):
         self.connect(*args)
 
 
-    def connect( self, db_name, db_user, db_pass, db_address='127.0.0.1', port=3306):
+    def connect( self, db_name, db_user, db_pass, db_address='127.0.0.1', db_port=3306):
         self.db_name  = db_name
         self.db_user = db_user
         self.db_pass = db_pass
@@ -156,29 +157,29 @@ class BaseCursor(object):
         return [row for row in self.cursor.fetchall()]
 
 
-    def log(msg, level=LOGDEBUG):
+    def log(self, msg, level=LOGDEBUG):
         if type(msg).__name__=='unicode':
             msg = msg.encode('utf-8')
-        if DEBUGGING:
+        if BaseCursor.DEBUGGING:
             xbmc.log(str("MyPicsDB >> %s"%msg.__str__()), level)
 
 
-    def request(statement):
+    def request(self, statement):
         try:
             self.execute( statement )
             retour = self.fetchall()
             self.commit()
         except Exception,msg:
-            self.log( "The request failed :", LOGERROR )
-            self.log( "%s - %s"%(Exception,msg), LOGERROR )
-            self.log( "SQL Request> %s"%statement, LOGERROR)
-            self.log( "---", LOGERROR )
+            self.log( "The request failed :", BaseCursor.LOGERROR )
+            self.log( "%s - %s"%(Exception,msg), BaseCursor.LOGERROR )
+            self.log( "SQL Request> %s"%statement, BaseCursor.LOGERROR)
+            self.log( "---", BaseCursor.LOGERROR )
             retour= []
 
         return retour
 
 
-    def request_with_binds(statement, bindvariables):
+    def request_with_binds(self, statement, bindvariables):
 
         binds = []
         for value in bindvariables:
@@ -193,20 +194,20 @@ class BaseCursor(object):
 
         except Exception,msg:
             try:
-                self.log( "The request failed :", LOGERROR )
-                self.log( "%s - %s"%(Exception,msg), LOGERROR )
+                self.log( "The request failed :", BaseCursor.LOGERROR )
+                self.log( "%s - %s"%(Exception,msg), BaseCursor.LOGERROR )
             except:
                 pass
             try:
-                self.log( "SQL RequestWithBinds > %s"%statement, LOGERROR)
+                self.log( "SQL RequestWithBinds > %s"%statement, BaseCursor.LOGERROR)
             except:
                 pass
             try:
                 i = 1
                 for var in binds:
-                    self.log ("SQL RequestWithBinds %d> %s"%(i,var), LOGERROR)
+                    self.log ("SQL RequestWithBinds %d> %s"%(i,var), BaseCursor.LOGERROR)
                     i=i+1
-                self.log( "---", LOGERROR )
+                self.log( "---", BaseCursor.LOGERROR )
             except:
                 pass
             retour= []
@@ -259,10 +260,10 @@ class SqliteCursor(BaseCursor):
         return [row for row in self.cursor]
 """
 
-database=''
+#database=''
 
 def DBFactory(backend, db_name, *args):
-    global database
+    #global database
     
     backends = {'mysql':MysqlConnection, 'sqlite':SqliteConnection}
 

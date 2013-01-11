@@ -7,12 +7,12 @@ Todo :
 
 
 """
-import os,sys,re
+import os,sys #,re
 from os.path import join, exists, isfile, isdir
-from urllib import unquote_plus
+#from urllib import unquote_plus
 from traceback import print_exc
 
-import  xbmcaddon, xbmc, xbmcgui
+import  xbmc, xbmcgui
 from XMP import XMP_Tags
 import CharsetDecoder as decoder
 
@@ -72,7 +72,7 @@ def log(msg, level=LOGDEBUG):
 #net use z: \\remote\share\ login /USER:password
 #mount -t cifs //ntserver/download -o username=vivek,password=myPassword /mnt/ntserver
 def mount(mountpoint="z:",path="\\",login=None,password=""):
-    import os
+    
     print "net use %s %s %s /USER:%s"%(mountpoint,path,login,password)
     if not exists(mountpoint):
         log( "Mounting %s as %s..."%(path,mountpoint) )
@@ -302,9 +302,9 @@ def Make_new_base(DBpath,ecrase=True):
     cn.close()
 
 columnList = []
-def addColumn(table,colheader,format="text"):
+def addColumn(table,colheader,formatstring="text"):
     global columnList
-    key = table + '||' + colheader + '||' + format
+    key = table + '||' + colheader + '||' + formatstring
     try:
         columnList.index(key);
         return
@@ -312,10 +312,10 @@ def addColumn(table,colheader,format="text"):
         conn = sqlite.connect(pictureDB)
         cn=conn.cursor()
         try:
-            cn.execute("""ALTER TABLE %s ADD "%s" %s"""%(table,colheader,format))
+            cn.execute("""ALTER TABLE %s ADD "%s" %s"""%(table,colheader,formatstring))
         except Exception,msg:
             if not msg.args[0].startswith("duplicate column name"):
-                log( 'EXCEPTION >> addColums %s,%s,%s'%(table,colheader,format), LOGERROR )
+                log( 'EXCEPTION >> addColums %s,%s,%s'%(table,colheader,formatstring), LOGERROR )
                 log( "\t%s - %s"%(Exception,msg), LOGERROR )
 
         conn.commit()
@@ -479,7 +479,7 @@ def DB_file_insert(path,filename,dictionnary,update=False, sha=0):
                                 log( 'tagType = %s'%tagType, LOGERROR )
                                 log( "\t%s - %s"%(Exception,msg), LOGERROR )
 
-                         # select the key of the tag from table TagTypes
+                        # select the key of the tag from table TagTypes
                         cn.execute("SELECT min(idTagType) FROM TagTypes WHERE TagType = ? ",(tagType,) )
                         idTagType= [row[0] for row in cn][0]
                         tagTypeDBKeys[tagType] = idTagType
@@ -617,15 +617,15 @@ def fileSHA ( filepath ) :
     filepath = decoder.smart_unicode(filepath)
     try:
         try:
-            file = open(filepath,'rb')
+            filehandle = open(filepath,'rb')
         except:
-            file = open(filepath.encode('utf-8'),'rb')
+            filehandle = open(filepath.encode('utf-8'),'rb')
 
-        data = file.read(65536)
+        data = filehandle.read(65536)
         while len(data) != 0:
             digest.update(data)
-            data = file.read(65536)
-        file.close()
+            data = filehandle.read(65536)
+        filehandle.close()
     except:
         print_exc()
         return '0'
@@ -785,8 +785,8 @@ def getGPS(filepath,filename):
     if not latR or not lat or not lonR or not lon: 
         return None                            
 
-    tuplat = lat.replace(" ","").replace("[","").replace("]","").split(",")
-    tuplon = lon.replace(" ","").replace("[","").replace("]","").split(",")
+    #tuplat = lat.replace(" ","").replace("[","").replace("]","").split(",")
+    #tuplon = lon.replace(" ","").replace("[","").replace("]","").split(",")
     lD,lM,lS = lat.replace(" ","").replace("[","").replace("]","").split(",")[:3]
     LD,LM,LS = lon.replace(" ","").replace("[","").replace("]","").split(",")[:3]
     exec("lD=%s"%lD)
@@ -831,7 +831,7 @@ def RemovePath(path):
     "remove the given rootpath, remove pics from this path, ..."
     print "RemovePath"
     print decoder.smart_utf8(path)
-    cptremoved = 0
+    #cptremoved = 0
     try:
         idpath = RequestWithBinds( """SELECT idFolder FROM folders WHERE FullPath = ?""",(decoder.smart_unicode(path),) )[0][0]
         print idpath
@@ -862,7 +862,6 @@ def RemovePath(path):
 ##########################################
 
 def hook_directory ( filepath,filename,filecount, nbfiles ):
-    import sys
     log( "%s/%s - %s"%(filecount,nbfiles,join(filepath,filename)) )
 
 class dummy_update:#TODO : check if this is usefull
@@ -970,7 +969,7 @@ def get_xmp(dirname, picfile):
                 tags[key] += '||' + tags[tagname]
             else:
                 tags[key] = tags[tagname]
-                MPDB.addColumn("files", key)
+                addColumn("files", key)
         else:           
             addColumn("files", tagname)
     if tags.has_key('Iptc4xmpExt:PersonInImage'):
@@ -1352,10 +1351,10 @@ def countPicsFolder(folderid):
 
 def countPeriod(period,value):
     #   lister les images pour une date donnée
-    format = {"year":"%Y","month":"%Y-%m","date":"%Y-%m-%d","":"%Y"}[period]
+    formatstring = {"year":"%Y","month":"%Y-%m","date":"%Y-%m-%d","":"%Y"}[period]
     if period=="year" or period=="":
         if value:
-            #filelist = search_between_dates( (value,format) , ( str( int(value) +1 ),format) )
+            #filelist = search_between_dates( (value,formatstring) , ( str( int(value) +1 ),formatstring) )
             filelist = pics_for_period('year',value)
         else:
             filelist = search_all_dates()
@@ -1368,7 +1367,7 @@ def countPeriod(period,value):
         amini=min(listyears)
         amaxi=max(listyears)
         if amini and amaxi:
-            filelist = search_between_dates( ("%s"%(amini),format) , ( "%s"%(amaxi),format) )
+            filelist = search_between_dates( ("%s"%(amini),formatstring) , ( "%s"%(amaxi),formatstring) )
         else:
             filelist = []
     return len(filelist)

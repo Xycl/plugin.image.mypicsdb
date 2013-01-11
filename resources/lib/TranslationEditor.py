@@ -1,8 +1,6 @@
 import sys
-import os
 import xbmc
 import xbmcgui
-import urllib
 import MypicsDB as MPDB
 import CharsetDecoder as decoder
 
@@ -36,8 +34,7 @@ class TranslationEditor( xbmcgui.WindowXMLDialog ):
         self.getControl( TAGS_LIST ).reset()
         
         TagTypesAndTranslation =  MPDB.getTagTypesForTranslation()
-        TotalTagTypes = len(TagTypesAndTranslation)
-        i=0
+
         for TagTypeAndTranslation in TagTypesAndTranslation:
             listitem = xbmcgui.ListItem( label=TagTypeAndTranslation[0], label2=TagTypeAndTranslation[1]) 
             self.getControl( TAGS_LIST ).addItem( listitem )
@@ -48,16 +45,15 @@ class TranslationEditor( xbmcgui.WindowXMLDialog ):
      
     
     def onClick( self, controlId ):
-      pass    
+        pass    
 
     def onFocus( self, controlId ):
-      self.controlId = controlId
+        self.controlId = controlId
 
     def onAction( self, action ):
         #try:
             # Cancel
             if ( action.getId() in CANCEL_DIALOG or self.getFocusId() == BUTTON_CANCEL and action.getId() in SELECT_ITEM ):
-                array = []
                 self.close()
             # Okay
             if ( self.getFocusId() == BUTTON_OK and action.getId() in SELECT_ITEM ):
@@ -66,7 +62,7 @@ class TranslationEditor( xbmcgui.WindowXMLDialog ):
             # Select or deselect item in list
             if ( action.getId() in SELECT_ITEM and self.getFocusId() == TAGS_LIST ):
                 item = self.getControl( TAGS_LIST ).getSelectedItem()
-                pos  = self.getControl( TAGS_LIST ).getSelectedPosition()
+                #pos  = self.getControl( TAGS_LIST ).getSelectedPosition()
                 
                 kb = xbmc.Keyboard(item.getLabel2(),  _(30623)%( decoder.smart_utf8(item.getLabel())), False)
                 kb.doModal()

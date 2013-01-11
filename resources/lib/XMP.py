@@ -4,7 +4,7 @@ Todo : Due to performance reasons RDF data is parsed by string functions.
        Perhaps there is a fast xml parser library?
 """
 
-import os,sys,re
+import re
 from os.path import join
 import CharsetDecoder as decoder
 from HTMLParser import HTMLParser

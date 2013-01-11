@@ -2,7 +2,7 @@
 # -*- coding: utf8 -*-
 
 # xbmc modules
-import xbmc, xbmcgui, xbmcaddon
+import xbmc, xbmcaddon
 Addon = xbmcaddon.Addon(id='plugin.image.mypicsdb')
 __language__ = Addon.getLocalizedString
 
@@ -161,9 +161,6 @@ class VFSScanner:
     def _addpath(self, path, parentfolderid, recursive, update):
         dirnames        = []
         filenames       = []
-        fullpath        = []
-        uniquedirnames  = []
-        olddir          = ''
 
         try:
             path = smart_unicode(path)
@@ -211,16 +208,16 @@ class VFSScanner:
                     
                     # get the meta tags. but only for pictures
                     if extension in self.picture_extensions:
-                        (file, isremote) = self.filescanner.getlocalfile(pic)
-                        self.log("Scanning picture %s"%smart_utf8(file))
-                        filesha = mpdb.fileSHA(file) 
+                        (localfile, isremote) = self.filescanner.getlocalfile(pic)
+                        self.log("Scanning picture %s"%smart_utf8(pic))
+                        filesha = mpdb.fileSHA(localfile) 
 
-                        tags = self._get_metas(smart_unicode(file))
+                        tags = self._get_metas(smart_unicode(localfile))
                         picentry.update(tags)
 
                         # if isremote == True then the file was copied to cache directory.
                         if isremote:
-                            self.filescanner.delete(file)
+                            self.filescanner.delete(localfile)
                             
                         if filename in filesfromdb:  # then it's an update
                             #if update:
@@ -279,8 +276,8 @@ class VFSScanner:
                     self.picsdeleted += 1
 
             if recursive:
-                for dir in dirnames:
-                    self._addpath(dir, folderid, True, update)
+                for dirname in dirnames:
+                    self._addpath(dirname, folderid, True, update)
 
         except Exception,msg:
             print msg
@@ -442,7 +439,7 @@ class VFSScanner:
                 elif isinstance(info.data[k],str):
                     iptc[IPTC_FIELDS[k]] = info.data[k].decode("utf8")
                 else:
-                    self.log( "%s,%s"%(path,filename) )
+                    self.log( "%s"%fullpath )
                     self.log( "WARNING : type returned by iptc field is not handled :" )
                     self.log( repr(type(info.data[k])) )
 
@@ -452,7 +449,7 @@ class VFSScanner:
                     self.log( " '%s' IPTC field is not handled. Data for this field : \n%s"%(k,info.data[k][:80]) , VFSScanner.LOGERROR)
                 except:
                     self.log( " '%s' IPTC field is not handled (unreadable data for this field)"%k , VFSScanner.LOGERROR)
-                self.log( "IPTC data for picture %s will be ignored"%filename , VFSScanner.LOGERROR)
+                self.log( "IPTC data for picture %s will be ignored"%fullpath , VFSScanner.LOGERROR)
                 ipt = {}
                 return ipt
 

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
 
-from urllib import quote_plus,unquote_plus
+from urllib import quote_plus
 
 def smart_unicode(s):
     """credit : sfaxman"""

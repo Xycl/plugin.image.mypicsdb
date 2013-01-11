@@ -13,14 +13,14 @@ TODO :
 """
 import os, sys, time
 from os.path import join,isfile,basename,dirname,splitext
-from urllib import quote_plus,unquote_plus
+from urllib import unquote_plus
 from resources.lib.CharsetDecoder import quote_param
-from time import strftime,strptime,gmtime
+from time import strftime,strptime
 from traceback import print_exc
 
 import xbmc, xbmcaddon, xbmcplugin,xbmcgui
 
-from xbmcgui import Window
+#from xbmcgui import Window
 
 # MikeBZH44
 try:
@@ -106,7 +106,7 @@ def unescape(text):
 class _Info:
     def __init__( self, *args, **kwargs ):
         self.__dict__.update( kwargs )
-    def has_key(key):
+    def has_key(self, key):
         return key in self.__dict__
     def __setitem__(self,key,value):
         self.__dict__[key]=value
@@ -128,7 +128,7 @@ class Main:
         args= "self.args = _Info(%s)" % ( self.cleanup(self.parm[ 1 : ]), )
         exec args
         if not hasattr(self.args, 'page'):
-           self.args.page=''
+            self.args.page=''
 
     def cleanup(self, parm):
         
@@ -165,7 +165,6 @@ class Main:
         #création de l'url
         u=sys.argv[0]+"?"+parameter+"&action="+repr(str(action))+"&name="+repr(quote_param(name.encode("utf8")))
 
-        ok=True
         #création de l'item de liste
         liz=xbmcgui.ListItem(name, thumbnailImage=iconimage)
         #if fanart:
@@ -173,8 +172,8 @@ class Main:
         #menu contextuel
         if contextmenu :
             liz.addContextMenuItems(contextmenu,replacemenu)
-        ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=u,listitem=liz,isFolder=True)#,totalItems=total)
-        return ok
+        return xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=u,listitem=liz,isFolder=True)#,totalItems=total)
+
 
     def addAction(self,name,params,action,iconimage,fanart=None,contextmenu=None,total=0,info="*",replacemenu=True):
         #params est une liste de tuples [(nomparametre,valeurparametre),]
@@ -185,7 +184,7 @@ class Main:
             parameter=""
         #création de l'url
         u=sys.argv[0]+"?"+parameter+"&action="+repr(str(action))+"&name="+repr(quote_param(name.encode("utf8")))
-        ok=True
+
         #création de l'item de liste
         liz=xbmcgui.ListItem(name, thumbnailImage=iconimage)
         #if fanart:
@@ -194,13 +193,10 @@ class Main:
         if contextmenu :
             liz.addContextMenuItems(contextmenu,replacemenu)
 
-        ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=u,listitem=liz,isFolder=False)#,totalItems=total)
+        return xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=u,listitem=liz,isFolder=False)#,totalItems=total)
 
-        return ok
 
     def addPic(self,picname,picpath,info="*",fanart=None,contextmenu=None,replacemenu=True):
-        ok=True
-
         fullfilepath = join(picpath,picname)
 
         liz=xbmcgui.ListItem(picname,info)
@@ -278,7 +274,7 @@ class Main:
                 #TODO : ...
             liz.addContextMenuItems(contextmenu,replacemenu)
 
-        ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=fullfilepath,listitem=liz,isFolder=False)
+        return xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=fullfilepath,listitem=liz,isFolder=False)
 
     def show_home(self):
 
@@ -365,9 +361,9 @@ class Main:
         #value  = "2009"|"12/2009"|"25/12/2009"
 
         action="showdate"
-        weekdayname = __language__(30005).split("|")
+        #weekdayname = __language__(30005).split("|")
         monthname = __language__(30006).split("|")
-        fullweekdayname = __language__(30007).split("|")
+        #fullweekdayname = __language__(30007).split("|")
         fullmonthname = __language__(30008).split("|")
         if self.args.period=="year":
             listperiod=MPDB.get_years()
@@ -393,7 +389,7 @@ class Main:
             allperiod = "month"
             action="showpics"
             periodformat="%Y-%m-%d"
-            page=""
+            #page=""
             displaydate=__language__(30002)#"%a %d %b %Y"
             thisdateformat="%Y-%m"
             displaythisdate=__language__(30003)#"%b %Y"
@@ -484,7 +480,7 @@ class Main:
 
     def show_wizard(self):
         global GlobalFilterTrue, GlobalFilterFalse, GlobalMatchAll
-        picfanart = join(PIC_PATH,"fanart-keyword.png")
+        #picfanart = join(PIC_PATH,"fanart-keyword.png")
         ui = FilterWizard.FilterWizard( "FilterWizard.xml" , Addon.getAddonInfo('path'), "Default")
         ui.setDelegate(FilterWizardDelegate)
         ui.doModal()
@@ -698,8 +694,6 @@ class Main:
     def show_roots(self):
         #show the root folders
 
-        refresh=True
-
         if self.args.do=="addroot":#add a root to scan
             dialog = xbmcgui.Dialog()
             newroot = dialog.browse(0, __language__(30201) , 'pictures')
@@ -799,8 +793,6 @@ class Main:
                 return
         elif self.args.do=="refreshpaths":
             pass
-        else:
-            refresh=False
 
         if int(sys.argv[1]) >= 0:
             excludefolders=[]
@@ -877,14 +869,14 @@ class Main:
 
         try:
             path = decoder.smart_unicode(unquote_plus(self.args.path))
-            file = decoder.smart_unicode(unquote_plus(self.args.filename))
-            joined = decoder.smart_utf8(join(path,file))
+            filename = decoder.smart_unicode(unquote_plus(self.args.filename))
+            joined = decoder.smart_utf8(join(path,filename))
             showmap = geomaps.main(datapath = DATA_PATH, place =self.args.place, picfile = joined )
         except:
             try:
-                path = smart_utf8(unquote_plus(self.args.path))
-                file = smart_utf8(unquote_plus(self.args.filename))
-                joined = join(path,file)
+                path = decoder.smart_utf8(unquote_plus(self.args.path))
+                filename = decoder.smart_utf8(unquote_plus(self.args.filename))
+                joined = join(path,filename)
                 showmap = geomaps.main(datapath = DATA_PATH, place =self.args.place, picfile = joined )
             except:
                 return
@@ -1157,7 +1149,7 @@ class Main:
         elif self.args.method == "date":
             #   lister les images pour une date donnée
             picfanart = join(PIC_PATH,"fanart-date.png")
-            format = {"year":"%Y","month":"%Y-%m","date":"%Y-%m-%d","":"%Y","period":"%Y-%m-%d"}[self.args.period]
+            formatstring = {"year":"%Y","month":"%Y-%m","date":"%Y-%m-%d","":"%Y","period":"%Y-%m-%d"}[self.args.period]
             if self.args.period=="year" or self.args.period=="":
                 if self.args.value:
                     filelist = MPDB.pics_for_period('year',self.args.value)
@@ -1169,26 +1161,16 @@ class Main:
 
             elif self.args.period=="period":
                 picfanart = join(PIC_PATH,"fanart-period.png")
-                filelist = MPDB.search_between_dates(DateStart=(unquote_plus(self.args.datestart),format),
-                                                     DateEnd=(unquote_plus(self.args.dateend),format))
+                filelist = MPDB.search_between_dates(DateStart=(unquote_plus(self.args.datestart),formatstring),
+                                                     DateEnd=(unquote_plus(self.args.dateend),formatstring))
             else:#period not recognized, show whole pics : TODO check if useful and if it can not be optimized for something better
                 listyears=MPDB.get_years()
                 amini=min(listyears)
                 amaxi=max(listyears)
                 if amini and amaxi:
-                    filelist = MPDB.search_between_dates( ("%s"%(amini),format) , ( "%s"%(amaxi),format) )
+                    filelist = MPDB.search_between_dates( ("%s"%(amini),formatstring) , ( "%s"%(amaxi),formatstring) )
                 else:
                     filelist = []
-
-        # we are showing pictures for a KEYWORD selection
-        elif self.args.method == "keyword":
-            #   lister les images correspondant au mot clé
-            picfanart = join(PIC_PATH,"fanart-keyword.png")
-            if not self.args.kw: #le mot clé est vide '' --> les photos sans mots clés
-                filelist = MPDB.search_keyword(None,limit,offset)
-            else:
-                filelist = MPDB.search_keyword(unquote_plus(self.args.kw).decode("utf8"),limit,offset)
-
 
         # we are showing pictures for a TAG selection
         elif self.args.method == "wizard":
@@ -1202,25 +1184,7 @@ class Main:
             else:
                 filelist = MPDB.search_tag(unquote_plus(self.args.tag).decode("utf8"), unquote_plus(self.args.tagtype).decode("utf8"))
 
-        # we are showing pictures for a COUNTRY selection
-        elif self.args.method == "countries":
-            picfanart = join(PIC_PATH,"fanart-keyword.png")
-            if not self.args.country:#p_country
-                filelist = MPDB.search_country(None)
-            else:
-                filelist = MPDB.search_country(unquote_plus(self.args.country).decode("utf8"))
 
-        # we are showing pictures for a CITY selection
-        elif self.args.method == "citiesincountry":
-            picfanart = join(PIC_PATH,"fanart-keyword.png")
-            filelist = MPDB.search_city4country(unquote_plus(self.args.country).decode("utf8"),unquote_plus(self.args.city).decode("utf8"))
-        # we are showing pictures for a CITY selection
-        elif self.args.method == "cities":
-            picfanart = join(PIC_PATH,"fanart-keyword.png")
-            if not self.args.city:#p_city
-                filelist = MPDB.search_city(None)
-            else:
-                filelist = MPDB.search_city(unquote_plus(self.args.city).decode("utf8"))
         # we are showing pictures for a FOLDER selection
         elif self.args.method == "folders":
             #   lister les images du dossier self.args.folderid et ses sous-dossiers
@@ -1267,16 +1231,16 @@ class Main:
             return filelist
         if self.args.viewmode=="diapo":
             pDialog = xbmcgui.DialogProgress()
-            ret = pDialog.create(__language__(30000), 'Preparing SlideShow :','')
+            pDialog.create(__language__(30000), 'Preparing SlideShow :','')
             from urllib import urlopen
             HTTP_API_url = "http://%s/xbmcCmds/xbmcHttp?command="%xbmc.getIPAddress()
-            html = urlopen(HTTP_API_url + "ClearSlideshow" )
+            urlopen(HTTP_API_url + "ClearSlideshow" )
             c=0
             for path,filename in filelist:
                 c=c+1
                 pDialog.update(int(100*(float(c)/len(filelist))) , "Adding pictures to the slideshow",filename)
                 if pDialog.iscanceled():break
-                html = urlopen(HTTP_API_url + "AddToSlideshow(%s)" % quote_param(join(path,filename)))
+                urlopen(HTTP_API_url + "AddToSlideshow(%s)" % quote_param(join(path,filename)))
             if not pDialog.iscanceled(): xbmc.executebuiltin( "SlideShow(,,notrandom)" )
             pDialog.close()
             return
@@ -1302,7 +1266,7 @@ class Main:
             tar = taropen(destination.encode(sys.getfilesystemencoding()),mode="w:gz")#open a tar file using gz compression
             error = 0
             pDialog = xbmcgui.DialogProgress()
-            ret = pDialog.create(__language__(30000), __language__(30063),'')
+            pDialog.create(__language__(30000), __language__(30063),'')
             compte=0
             msg=""
             for (path,filename) in filelist:
@@ -1375,7 +1339,7 @@ class Main:
             #browse(type, heading, shares[, mask, useThumbs, treatAsFolder, default])
             from shutil import copy
             pDialog = xbmcgui.DialogProgress()
-            ret = pDialog.create(__language__(30000),__language__(30184))# 'Copying files...')
+            pDialog.create(__language__(30000),__language__(30184))# 'Copying files...')
             i=0.0
             cpt=0
             for path,filename in filelist:

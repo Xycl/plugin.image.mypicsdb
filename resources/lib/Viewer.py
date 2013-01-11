@@ -7,6 +7,7 @@ import os
 import xbmc
 import xbmcgui
 from xbmcaddon import Addon
+from traceback import print_exc
 
 # constants
 ADDON      = Addon( "plugin.image.mypicsdb" )

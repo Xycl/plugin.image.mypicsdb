@@ -36,13 +36,13 @@ class Scanner(object):
             for item in dirs:
                 dirnames1, filenames1 = self._walk(urllib.unquote_plus(item), recursive, types)
 
-                for dir in dirnames1:
-                    dirnames.append(dir)
-                for file in filenames1:
-                    filenames.append(file)               
+                for dirname in dirnames1:
+                    dirnames.append(dirname)
+                for filename in filenames1:
+                    filenames.append(filename)               
                
         else:
-            dirnames, filenames = self._walk(urllib.unquote_plus(path), recursive, types)
+            dirnames, filenames = self._walk(path, recursive, types)
 
                     
         return dirnames, filenames
@@ -51,22 +51,21 @@ class Scanner(object):
     def _walk(self, path, recursive, types):
         filenames = []
         dirnames   = []
-        dirs      = []
         files     = []
 
         path = xbmc.translatePath(path)
 
         if xbmcvfs.exists(xbmc.translatePath(path)) or re.match(r"[a-zA-Z]:\\", path) is not None:
             subdirs, files = xbmcvfs.listdir(path)
-            for dir in subdirs:
-                dirnames.append(os.path.join(path, dir))
+            for subdir in subdirs:
+                dirnames.append(os.path.join(path, subdir))
 
-            for file in files:
+            for filename in files:
                 if types is not None:
-                    if os.path.splitext(file)[1].upper() in types or os.path.splitext(file)[1].lower() in types :
-                        filenames.append(os.path.join(path, file))
+                    if os.path.splitext(filename)[1].upper() in types or os.path.splitext(filename)[1].lower() in types :
+                        filenames.append(os.path.join(path, filename))
                 else:              
-                    filenames.append(os.path.join(path, file))
+                    filenames.append(os.path.join(path, filename))
 
 
             if recursive:
@@ -80,21 +79,21 @@ class Scanner(object):
         return dirnames, filenames
 
 
-    def getname(self, file):
-        return os.path.basename(file)
+    def getname(self, filename):
+        return os.path.basename(filename)
 
-    def delete(self, file):
-        xbmcvfs.delete(file)
+    def delete(self, filename):
+        xbmcvfs.delete(filename)
         
-    def getlocalfile(self, file):
+    def getlocalfile(self, filename):
         
-        if os.path.exists(file):
-            return file, False
+        if os.path.exists(filename):
+            return filename, False
         else:
             tempdir     = xbmc.translatePath('special://temp')
-            filename    = self.getname(file)
-            destination = os.path.join(tempdir,filename)
-            xbmcvfs.copy(file, destination)
+            basefilename    = self.getname(filename)
+            destination = os.path.join(tempdir, basefilename)
+            xbmcvfs.copy(filename, destination)
 
             return destination, True
 

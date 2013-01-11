@@ -2,10 +2,7 @@
 # -*- coding: utf8 -*-
 
 import sys
-import os
-import xbmc
 import xbmcgui
-import urllib
 import MypicsDB as MPDB
 import CharsetDecoder as decoder
 
@@ -33,8 +30,8 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
     def __init__( self, xml, cwd, default):
         xbmcgui.WindowXMLDialog.__init__(self)
         
-    def setDelegate(self, filter):
-        self.filter = filter
+    def setDelegate(self, filterfunc):
+        self.filter = filterfunc
         
     def onInit( self ):  
         self.setup_all()
@@ -60,8 +57,7 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
         else:
             self.getControl( CHECKED_LABEL ).setLabel(  _(30612)% (self.checkedTags) )
         
-        
-        TotalTagTypes = len(self.TagTypes)
+
         i = 0
         for TagType in self.TagTypes:
             TagTypeItem = xbmcgui.ListItem( label=TagType)   
@@ -90,7 +86,7 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
     
         self.getControl( TAGS_CONTENT_LIST ).reset()
         TagContents = [u"%s"%k  for k in MPDB.list_Tags(tagType)]
-        TotalTagContents = len(TagContents)
+
         self.CurrentlySelectedTagType = tagType
         
         for TagContent in TagContents:
@@ -106,10 +102,10 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
             self.getControl( TAGS_CONTENT_LIST ).addItem( TagContentItem )
             
     def onClick( self, controlId ):
-      pass    
+        pass    
 
     def onFocus( self, controlId ):
-      self.controlId = controlId
+        self.controlId = controlId
 
     def checkGUITagContent(self, item, checked):
         
