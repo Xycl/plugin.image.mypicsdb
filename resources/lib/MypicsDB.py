@@ -29,7 +29,7 @@ except:
 Addon = ( sys.modules[ "__main__" ].Addon )
 __language__ = ( sys.modules[ "__main__" ].__language__ )
 #Addon = xbmcaddon.Addon(id='plugin.image.mypicsdb')
-home = Addon.getAddonInfo('path')
+home = Addon.getAddonInfo('path').decode('uft-8')
 
 #these few lines are taken from AppleMovieTrailers script
 # Shared resources
