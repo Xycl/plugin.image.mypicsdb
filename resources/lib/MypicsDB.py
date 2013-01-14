@@ -667,6 +667,7 @@ def NewCollection(Colname):
         log( """NewCollection : User did not specify a name for the collection.""")
 def delCollection(Colname):      
     """delete a collection"""
+    log("delCollection(%s)"%Colname)
     if Colname:
         RequestWithBinds( """DELETE FROM FilesInCollections WHERE idCol=(SELECT idCol FROM Collections WHERE CollectionName=?)""", (Colname,))
         RequestWithBinds( """DELETE FROM Collections WHERE CollectionName=? """,(Colname,) )
@@ -695,6 +696,7 @@ def addPicToCollection(Colname,filepath,filename):
     RequestWithBinds( """INSERT INTO FilesInCollections(idCol,idFile) VALUES ( (SELECT idCol FROM Collections WHERE CollectionName=?) , (SELECT idFile FROM files WHERE strPath=? AND strFilename=?) )""",(Colname,filepath,filename) )
 
 def delPicFromCollection(Colname,filepath,filename):
+    log("delPicFromCollection(%s, %s, %s)"%(Colname,filepath,filename))
     RequestWithBinds( """DELETE FROM FilesInCollections WHERE idCol=(SELECT idCol FROM Collections WHERE CollectionName=?) AND idFile=(SELECT idFile FROM files WHERE strPath=? AND strFilename=?)""",(Colname,filepath,filename) )
 
 ####################
@@ -820,7 +822,6 @@ def getRoot(path):
 def RemoveRoot(path):
     "remove the given rootpath, remove pics from this path, ..."
     #first remove the path with all its pictures / subfolders / keywords / pictures in collections...
-    print "RemovePath"
     RemovePath(path)
     #then remove the rootpath itself
     print  """DELETE FROM Rootpaths WHERE path='%s' """%decoder.smart_utf8(path)

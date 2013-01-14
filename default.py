@@ -123,6 +123,8 @@ class Main:
         print "-"*20
 
         self.parm = decoder.smart_utf8(unquote_plus(sys.argv[2])).replace("\\\\", "\\")
+        
+        print decoder.smart_utf8(self.parm)
         sys.argv[2] = self.parm
         #args= "self.args = _Info(%s)" % ( self.parm[ 1 : ].replace( "&", ", " ), )
         args= "self.args = _Info(%s)" % ( self.cleanup(self.parm[ 1 : ]), )
@@ -530,7 +532,7 @@ class Main:
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
     def show_tags(self):
-        tagtype = unquote_plus(self.args.tagtype).decode("utf8")
+        tagtype = self.args.tagtype.decode("utf8")
         listtags = [k  for k in MPDB.list_TagsAndCount(tagtype)]
         total = len(listtags)
         for tag, nb in listtags:
@@ -551,6 +553,8 @@ class Main:
 
 
     def show_period(self): #TODO finished the datestart and dateend editing
+        MPDB.log("show_period")
+        update=False
         self.addDir(name      = __language__(30106),
                     params    = [("period","setperiod"),("viewmode","view")],#paramètres
                     action    = "showperiod",#action
@@ -559,41 +563,47 @@ class Main:
                     contextmenu   = None)#menucontextuel
         #If We previously choose to add a new period, this test will ask user for setting the period :
         if self.args.period=="setperiod":
+            MPDB.log("setperiod")
             dateofpics = MPDB.get_pics_dates()#the choice of the date is made with pictures in database (datetime of pics are used)
+            
+            
             nameddates = [strftime(self.prettydate(__language__(30002),strptime(date,"%Y-%m-%d")).encode("utf8"),strptime(date,"%Y-%m-%d")) for date in dateofpics]
-            dialog = xbmcgui.Dialog()
-            rets = dialog.select(__language__(30107),["[[%s]]"%__language__(30114)] + nameddates)#dateofpics)#choose the start date
-            if not rets==-1:#is not canceled
-                if rets==0: #input manually the date
-                    d = dialog.numeric(1, __language__(30117) ,strftime("%d/%m/%Y",strptime(dateofpics[0],"%Y-%m-%d")) )
-                    datestart = strftime("%Y-%m-%d",strptime(d.replace(" ","0"),"%d/%m/%Y"))
-                    deb=0
-                else:
-                    datestart = dateofpics[rets-1]
-                    deb=rets-1
-
-                retf = dialog.select(__language__(30108),["[[%s]]"%__language__(30114)] + nameddates[deb:])#dateofpics[deb:])#choose the end date (all dates before startdate are ignored to preserve begin/end)
-                if not retf==-1:#if end date is not canceled...
-                    if retf==0:#choix d'un date de fin manuelle ou choix précédent de la date de début manuelle
-                        d = dialog.numeric(1, __language__(30118) ,strftime("%d/%m/%Y",strptime(dateofpics[-1],"%Y-%m-%d")) )
-                        dateend = strftime("%Y-%m-%d",strptime(d.replace(" ","0"),"%d/%m/%Y"))
+            MPDB.log(nameddates)
+            if len(nameddates):
+                
+                dialog = xbmcgui.Dialog()
+                rets = dialog.select(__language__(30107),["[[%s]]"%__language__(30114)] + nameddates)#dateofpics)#choose the start date
+                if not rets==-1:#is not canceled
+                    if rets==0: #input manually the date
+                        d = dialog.numeric(1, __language__(30117) ,strftime("%d/%m/%Y",strptime(dateofpics[0],"%Y-%m-%d")) )
+                        datestart = strftime("%Y-%m-%d",strptime(d.replace(" ","0"),"%d/%m/%Y"))
                         deb=0
                     else:
-                        dateend = dateofpics[deb+retf-1]
-                    #now input the title for the period
-                    #
-                    kb = xbmc.Keyboard(decoder.smart_utf8(__language__(30109)%(datestart,dateend)), __language__(30110), False)
-                    kb.doModal()
-                    if (kb.isConfirmed()):
-                        titreperiode = kb.getText()
-                    else:
-                        titreperiode = __language__(30109)%(datestart,dateend)
-                    #add the new period inside the database
-                    MPDB.addPeriode(decoder.smart_unicode(titreperiode),decoder.smart_unicode("datetime('%s')"%datestart),decoder.smart_unicode("datetime('%s')"%dateend) )
+                        datestart = dateofpics[rets-1]
+                        deb=rets-1
+    
+                    retf = dialog.select(__language__(30108),["[[%s]]"%__language__(30114)] + nameddates[deb:])#dateofpics[deb:])#choose the end date (all dates before startdate are ignored to preserve begin/end)
+                    if not retf==-1:#if end date is not canceled...
+                        if retf==0:#choix d'un date de fin manuelle ou choix précédent de la date de début manuelle
+                            d = dialog.numeric(1, __language__(30118) ,strftime("%d/%m/%Y",strptime(dateofpics[-1],"%Y-%m-%d")) )
+                            dateend = strftime("%Y-%m-%d",strptime(d.replace(" ","0"),"%d/%m/%Y"))
+                            deb=0
+                        else:
+                            dateend = dateofpics[deb+retf-1]
+                        #now input the title for the period
+                        #
+                        kb = xbmc.Keyboard(decoder.smart_utf8(__language__(30109)%(datestart,dateend)), __language__(30110), False)
+                        kb.doModal()
+                        if (kb.isConfirmed()):
+                            titreperiode = kb.getText()
+                        else:
+                            titreperiode = __language__(30109)%(datestart,dateend)
+                        #add the new period inside the database
+                        MPDB.addPeriode(decoder.smart_unicode(titreperiode),decoder.smart_unicode("datetime('%s')"%datestart),decoder.smart_unicode("datetime('%s')"%dateend) )
+                update=True
+            else:
+                MPDB.log("No pictures with an EXIF date stored in DB")
 
-            update=True
-        else:
-            update=False
 
         #search for inbase periods and show periods
         for periodname,dbdatestart,dbdateend in MPDB.ListPeriodes():
@@ -759,7 +769,7 @@ class Main:
 
         elif self.args.do=="delroot":
             try:
-                MPDB.RemoveRoot( unquote_plus(self.args.delpath) )
+                MPDB.RemoveRoot( self.args.delpath) 
             except IndexError,msg:
                 print IndexError,msg
             #TODO : this notification does not work with é letters in the string....
@@ -768,7 +778,7 @@ class Main:
         elif self.args.do=="rootclic":#clic sur un chemin (à exclure ou à scanner)
             if not(xbmc.getInfoLabel( "Window.Property(DialogAddonScan.IsAlive)" ) == "true"): #si dialogaddonscan n'est pas en cours d'utilisation...
                 if str(self.args.exclude)=="0":#le chemin choisi n'est pas un chemin à exclure...
-                    path,recursive,update,exclude = MPDB.getRoot(unquote_plus(self.args.rootpath))
+                    path,recursive,update,exclude = MPDB.getRoot(self.args.rootpath)
                     xbmc.executebuiltin( "RunScript(%s,%s--rootpath=%s)"%( join( home, "scanpath.py"),
                                                                            recursive and "-r, " or "",
                                                                            quote_param(path)
@@ -868,14 +878,14 @@ class Main:
         import geomaps
 
         try:
-            path = decoder.smart_unicode(unquote_plus(self.args.path))
-            filename = decoder.smart_unicode(unquote_plus(self.args.filename))
+            path = decoder.smart_unicode(self.args.path)
+            filename = decoder.smart_unicode(self.args.filename)
             joined = decoder.smart_utf8(join(path,filename))
             showmap = geomaps.main(datapath = DATA_PATH, place =self.args.place, picfile = joined )
         except:
             try:
-                path = decoder.smart_utf8(unquote_plus(self.args.path))
-                filename = decoder.smart_utf8(unquote_plus(self.args.filename))
+                path = decoder.smart_utf8(self.args.path)
+                filename = decoder.smart_utf8(self.args.filename)
                 joined = join(path,filename)
                 showmap = geomaps.main(datapath = DATA_PATH, place =self.args.place, picfile = joined )
             except:
@@ -904,7 +914,7 @@ class Main:
 
     def rename_period(self):
         #TODO : test if 'datestart' is before 'dateend'
-        periodname = unquote_plus(self.args.periodname)
+        periodname = self.args.periodname
         datestart,dateend = MPDB.RequestWithBinds( """SELECT DateStart,DateEnd FROM Periodes WHERE PeriodeName=? """, (periodname,) )[0]
 
         dialog = xbmcgui.Dialog()
@@ -945,8 +955,8 @@ class Main:
             namecollection = listcollection[rets]
         #3 associe en base l'id du fichier avec l'id de la collection
         namecollection = decoder.smart_unicode(namecollection)
-        path     = decoder.smart_unicode(unquote_plus(self.args.path))
-        filename = decoder.smart_unicode(unquote_plus(self.args.filename))
+        path     = decoder.smart_unicode(self.args.path)
+        filename = decoder.smart_unicode(self.args.filename)
 
         MPDB.addPicToCollection( namecollection, path, filename )
         xbmc.executebuiltin( "Notification(%s,%s %s,%s,%s)"%(__language__(30000).encode('utf-8'),
@@ -989,21 +999,21 @@ class Main:
                              )
 
     def remove_collection(self):
-        MPDB.delCollection(unquote_plus(self.args.collect))
+        MPDB.delCollection(self.args.collect)
         xbmc.executebuiltin( "Container.Update(\"%s?action='showcollection'&viewmode='view'&collect=''&method='show'\" , replace)"%sys.argv[0] , )
 
     def rename_collection(self):
-        kb = xbmc.Keyboard(unquote_plus(self.args.collect), __language__(30153), False)
+        kb = xbmc.Keyboard(self.args.collect, __language__(30153), False)
         kb.doModal()
         if (kb.isConfirmed()):
             newname = kb.getText()
         else:
-            newname = unquote_plus(self.args.collect)
-        MPDB.renCollection(unquote_plus(self.args.collect),newname)
+            newname = self.args.collect
+        MPDB.renCollection(self.args.collect,newname)
         xbmc.executebuiltin( "Container.Update(\"%s?action='showcollection'&viewmode='view'&collect=''&method='show'\" , replace)"%sys.argv[0] , )
 
     def del_pics_from_collection(self):
-        MPDB.delPicFromCollection(unquote_plus(self.args.collect),unquote_plus(self.args.path),unquote_plus(self.args.filename))
+        MPDB.delPicFromCollection(self.args.collect,self.args.path,self.args.filename)
         xbmc.executebuiltin( "Container.Update(\"%s?action='showpics'&viewmode='view'&page='1'&collect='%s'&method='collection'\" , replace)"%(sys.argv[0],self.args.collect) , )
 
     def show_diaporama(self):
@@ -1161,8 +1171,8 @@ class Main:
 
             elif self.args.period=="period":
                 picfanart = join(PIC_PATH,"fanart-period.png")
-                filelist = MPDB.search_between_dates(DateStart=(unquote_plus(self.args.datestart),formatstring),
-                                                     DateEnd=(unquote_plus(self.args.dateend),formatstring))
+                filelist = MPDB.search_between_dates(DateStart=(self.args.datestart,formatstring),
+                                                     DateEnd=(self.args.dateend,formatstring))
             else:#period not recognized, show whole pics : TODO check if useful and if it can not be optimized for something better
                 listyears=MPDB.get_years()
                 amini=min(listyears)
@@ -1174,7 +1184,7 @@ class Main:
 
         # we are showing pictures for a TAG selection
         elif self.args.method == "wizard":
-            filelist = MPDB.search_filter_tags(unquote_plus(self.args.kw).decode("utf8"), unquote_plus(self.args.nkw).decode("utf8"), self.args.matchall)
+            filelist = MPDB.search_filter_tags(self.args.kw.decode("utf8"), self.args.nkw.decode("utf8"), self.args.matchall)
 
         # we are showing pictures for a TAG selection
         elif self.args.method == "tag":
@@ -1182,7 +1192,7 @@ class Main:
             if not self.args.tag:#p_category
                 filelist = MPDB.search_tag(None)
             else:
-                filelist = MPDB.search_tag(unquote_plus(self.args.tag).decode("utf8"), unquote_plus(self.args.tagtype).decode("utf8"))
+                filelist = MPDB.search_tag(self.args.tag.decode("utf8"), self.args.tagtype.decode("utf8"))
 
 
         # we are showing pictures for a FOLDER selection
@@ -1198,11 +1208,11 @@ class Main:
 
         elif self.args.method == "collection":
             picfanart = join(PIC_PATH,"fanart-collection.png")
-            filelist = MPDB.getCollectionPics(unquote_plus(self.args.collect))
+            filelist = MPDB.getCollectionPics(self.args.collect)
 
         elif self.args.method == "search":
             picfanart = join(PIC_PATH,"fanart-collection.png")
-            filelist = MPDB.Searchfiles(unquote_plus(self.args.field),unquote_plus(self.args.searchterm),count=False)
+            filelist = MPDB.Searchfiles(self.args.field,self.args.searchterm,count=False)
 
         elif self.args.method == "lastmonth":
             #show pics taken within last month
@@ -1248,7 +1258,7 @@ class Main:
         if self.args.viewmode=="zip":
             from tarfile import open as taropen
             #TODO : enable user to select the destination
-            destination = join(DATA_PATH,unquote_plus(self.args.name).decode("utf8")+".tar.gz")
+            destination = join(DATA_PATH,self.args.name.decode("utf8")+".tar.gz")
             destination = decoder.smart_unicode(xbmc.translatePath(destination))
 
             if isfile(destination):
@@ -1403,7 +1413,7 @@ class Main:
             # - del pic from collection : seulement les images des collections
             if self.args.method=="collection":
                 context.append( ( __language__(30151),"XBMC.RunPlugin(\"%s?action='delfromcollection'&viewmode='view'&collect='%s'&path='%s'&filename='%s'\")"%(sys.argv[0],
-                                                                                                                                             self.args.collect,
+                                                                                                                                             quote_param(self.args.collect),
                                                                                                                                              quote_param(path.encode('utf-8')),
                                                                                                                                              quote_param(filename.encode('utf-8')))
                                   )
@@ -1536,7 +1546,7 @@ if __name__=="__main__":
         m.show_roots()
     elif m.args.action=='locate':
         dialog = xbmcgui.Dialog()
-        dstpath = dialog.browse(2, __language__(30071),"files" ,"", True, False, unquote_plus(m.args.filepath))
+        dstpath = dialog.browse(2, __language__(30071),"files" ,"", True, False, m.args.filepath)
     elif m.args.action=='geolocate':
         m.show_map()
     elif m.args.action=='diapo':
