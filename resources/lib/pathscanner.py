@@ -21,6 +21,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import os, urllib, re
 import xbmc, xbmcvfs
+import CharsetDecoder as decoder
 
 class Scanner(object):
 
@@ -80,6 +81,7 @@ class Scanner(object):
 
 
     def getname(self, filename):
+        filename = decoder.smart_unicode(filename)
         return os.path.basename(filename)
 
     def delete(self, filename):
@@ -87,7 +89,14 @@ class Scanner(object):
         
     def getlocalfile(self, filename):
         
-        if os.path.exists(filename):
+        filename = decoder.smart_unicode(filename)
+        
+        # Windows NEEDS unicode but OpenElec utf-8
+        try:
+            exists = os.path.exists(filename)
+        except:
+            exists = os.path.exists(decoder.smart_utf8(filename))
+        if exists:
             return filename, False
         else:
             tempdir     = xbmc.translatePath('special://temp')
@@ -95,6 +104,6 @@ class Scanner(object):
             destination = os.path.join(tempdir, basefilename)
             xbmcvfs.copy(filename, destination)
 
-            return destination, True
+            return decoder.smart_unicode(destination), True
 
         

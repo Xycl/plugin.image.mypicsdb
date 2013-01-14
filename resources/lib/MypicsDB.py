@@ -667,6 +667,7 @@ def NewCollection(Colname):
         log( """NewCollection : User did not specify a name for the collection.""")
 def delCollection(Colname):      
     """delete a collection"""
+    log("delCollection(%s)"%Colname)
     if Colname:
         RequestWithBinds( """DELETE FROM FilesInCollections WHERE idCol=(SELECT idCol FROM Collections WHERE CollectionName=?)""", (Colname,))
         RequestWithBinds( """DELETE FROM Collections WHERE CollectionName=? """,(Colname,) )
@@ -695,6 +696,7 @@ def addPicToCollection(Colname,filepath,filename):
     RequestWithBinds( """INSERT INTO FilesInCollections(idCol,idFile) VALUES ( (SELECT idCol FROM Collections WHERE CollectionName=?) , (SELECT idFile FROM files WHERE strPath=? AND strFilename=?) )""",(Colname,filepath,filename) )
 
 def delPicFromCollection(Colname,filepath,filename):
+    log("delPicFromCollection(%s, %s, %s)"%(Colname,filepath,filename))
     RequestWithBinds( """DELETE FROM FilesInCollections WHERE idCol=(SELECT idCol FROM Collections WHERE CollectionName=?) AND idFile=(SELECT idFile FROM files WHERE strPath=? AND strFilename=?)""",(Colname,filepath,filename) )
 
 ####################
@@ -813,14 +815,15 @@ def AddRoot(path,recursive,remove,exclude):
     RequestWithBinds( """INSERT INTO Rootpaths(path,recursive,remove,exclude) VALUES (?,?,?,?)""",(decoder.smart_unicode(path),recursive,remove,exclude) )
 
 def getRoot(path):
+    log( "getRoot(%s)"%decoder.smart_utf8(path))
     #print decoder.smart_utf8(path)
     return [row for row in RequestWithBinds( """SELECT path,recursive,remove,exclude FROM Rootpaths WHERE path=? """, (decoder.smart_unicode(path),) )][0]
 
 
 def RemoveRoot(path):
     "remove the given rootpath, remove pics from this path, ..."
+    log( "RemoveRoot(%s)"%decoder.smart_utf8(path))
     #first remove the path with all its pictures / subfolders / keywords / pictures in collections...
-    print "RemovePath"
     RemovePath(path)
     #then remove the rootpath itself
     print  """DELETE FROM Rootpaths WHERE path='%s' """%decoder.smart_utf8(path)
@@ -829,8 +832,7 @@ def RemoveRoot(path):
 
 def RemovePath(path):
     "remove the given rootpath, remove pics from this path, ..."
-    print "RemovePath"
-    print decoder.smart_utf8(path)
+    log( "RemovePath(%s)"%decoder.smart_utf8(path))
     #cptremoved = 0
     try:
         idpath = RequestWithBinds( """SELECT idFolder FROM folders WHERE FullPath = ?""",(decoder.smart_unicode(path),) )[0][0]
