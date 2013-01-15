@@ -12,7 +12,7 @@ TODO :
   - Les photos depuis x jours avec x configurable dans les options
 """
 
-AddonName = 'plugin.image.mypicsdb'
+__addonname__ = 'plugin.image.mypicsdb'
 
 import os, sys, time
 from os.path import join,isfile,basename,dirname,splitext
@@ -42,9 +42,9 @@ except:
    import resources.lib.storageserverdummy as StorageServer
 
 # set variables used by other modules   
-Addon = xbmcaddon.Addon(id=AddonName)
-__language__ = Addon.getLocalizedString
-home = Addon.getAddonInfo('path').decode('utf-8')
+__addon__ = xbmcaddon.Addon(id=__addonname__)
+__language__ = __addon__.getLocalizedString
+home = __addon__.getAddonInfo('path').decode('utf-8')
 sys_encoding = sys.getfilesystemencoding()
 
 if sys.modules.has_key("MypicsDB"):
@@ -58,7 +58,7 @@ import resources.lib.Viewer as Viewer
 # these few lines are taken from AppleMovieTrailers script
 # Shared resources
 BASE_RESOURCE_PATH = join( home, "resources" )
-DATA_PATH = Addon.getAddonInfo('profile')
+DATA_PATH = __addon__.getAddonInfo('profile')
 PIC_PATH = join( BASE_RESOURCE_PATH, "images")
 DB_PATH = xbmc.translatePath( "special://database/")
 
@@ -212,15 +212,15 @@ class Main:
         coords=None
         extension = splitext(picname)[1].upper()
         #is the file a video ?
-        if extension in ["."+ext.replace(".","").upper() for ext in Addon.getSetting("vidsext").split("|")]:
+        if extension in ["."+ext.replace(".","").upper() for ext in __addon__.getSetting("vidsext").split("|")]:
             infolabels = { "date": date }
             liz.setInfo( type="video", infoLabels=infolabels )
         #or is the file a picture ?
-        elif extension in ["."+ext.replace(".","").upper() for ext in Addon.getSetting("picsext").split("|")]:
+        elif extension in ["."+ext.replace(".","").upper() for ext in __addon__.getSetting("picsext").split("|")]:
             rating = MPDB.getRating(picpath,picname)
-            if int(Addon.getSetting("ratingmini"))>0:#un rating mini est configuré
+            if int(__addon__.getSetting("ratingmini"))>0:#un rating mini est configuré
                 if not rating:  return
-                if int(rating) < int(Addon.getSetting("ratingmini")): return #si on a un rating dans la photo
+                if int(rating) < int(__addon__.getSetting("ratingmini")): return #si on a un rating dans la photo
 
             coords = MPDB.getGPS(picpath,picname)
             if coords: 
@@ -291,21 +291,21 @@ class Main:
 ##                    "showpics",join(PIC_PATH,"dates.png"),
 ##                    fanart=join(PIC_PATH,"fanart-date.png"))
         MPDB.VersionTable()
-        display_all = Addon.getSetting('m_all')=='true'
+        display_all = __addon__.getSetting('m_all')=='true'
         # last scan picture added
-        if Addon.getSetting('m_1')=='true' or display_all:
-            self.addDir(unescape(__language__(30209))%Addon.getSetting("recentnbdays"),[("method","recentpicsdb"),("period",""),("value",""),("page","1"),("viewmode","view")],
+        if __addon__.getSetting('m_1')=='true' or display_all:
+            self.addDir(unescape(__language__(30209))%__addon__.getSetting("recentnbdays"),[("method","recentpicsdb"),("period",""),("value",""),("page","1"),("viewmode","view")],
                         "showpics",join(PIC_PATH,"dates.png"),
                         fanart=join(PIC_PATH,"fanart-date.png"))
 
         # Last pictures
-        if Addon.getSetting('m_2')=='true' or display_all:
-            self.addDir(unescape(__language__(30130))%Addon.getSetting("lastpicsnumber"),[("method","lastpicsshooted"),("page","1"),("viewmode","view")],
+        if __addon__.getSetting('m_2')=='true' or display_all:
+            self.addDir(unescape(__language__(30130))%__addon__.getSetting("lastpicsnumber"),[("method","lastpicsshooted"),("page","1"),("viewmode","view")],
                     "showpics",join(PIC_PATH,"dates.png"),
                     fanart=join(PIC_PATH,"fanart-date.png"))
 
         # videos
-        if Addon.getSetting('m_3')=='true' or display_all and Addon.getSetting("usevids") == "true":
+        if __addon__.getSetting('m_3')=='true' or display_all and __addon__.getSetting("usevids") == "true":
             self.addDir(unescape(__language__(30051)),[("method","videos"),("page","1"),("viewmode","view")],
                         "showpics",join(PIC_PATH,"videos.png"),
                         fanart=join(PIC_PATH,"fanart-videos.png"))
@@ -314,34 +314,34 @@ class Main:
                     join(PIC_PATH,"keywords.png"),
                     fanart=join(PIC_PATH,"fanart-keyword.png"))
         # par années
-        if Addon.getSetting('m_4')=='true' or display_all:
+        if __addon__.getSetting('m_4')=='true' or display_all:
             self.addDir(unescape(__language__(30101)),[("period","year"),("value",""),("viewmode","view")],
                     "showdate",join(PIC_PATH,"dates.png"),
                     fanart=join(PIC_PATH,"fanart-date.png") )
         # par dossiers
-        if Addon.getSetting('m_5')=='true' or display_all:
+        if __addon__.getSetting('m_5')=='true' or display_all:
             self.addDir(unescape(__language__(30102)),[("method","folders"),("folderid",""),("onlypics","non"),("viewmode","view")],
                     "showfolder",join(PIC_PATH,"folders.png"),
                     fanart=join(PIC_PATH,"fanart-folder.png"))
 
         # tags submenu
-        if Addon.getSetting('m_14')=='true' or display_all:
+        if __addon__.getSetting('m_14')=='true' or display_all:
             self.addDir(unescape(__language__(30122)),[("tags",""),("viewmode","view")],"showtagtypes",
                         join(PIC_PATH,"keywords.png"),
                         fanart=join(PIC_PATH,"fanart-keyword.png"))
 
         # période
-        if Addon.getSetting('m_10')=='true' or display_all:
+        if __addon__.getSetting('m_10')=='true' or display_all:
             self.addDir(unescape(__language__(30105)),[("period",""),("viewmode","view"),],"showperiod",
                     join(PIC_PATH,"period.png"),
                     fanart=join(PIC_PATH,"fanart-period.png"))
         # Collections
-        if Addon.getSetting('m_11')=='true' or display_all:
+        if __addon__.getSetting('m_11')=='true' or display_all:
             self.addDir(unescape(__language__(30150)),[("collect",""),("method","show"),("viewmode","view")],"showcollection",
                     join(PIC_PATH,"collection.png"),
                     fanart=join(PIC_PATH,"fanart-collection.png"))
         # recherche globale
-        if Addon.getSetting('m_12')=='true' or display_all:
+        if __addon__.getSetting('m_12')=='true' or display_all:
             self.addDir(unescape(__language__(30098)),[("searchterm",""),("viewmode","view")],"globalsearch",
                     join(PIC_PATH,"search.png"),
                     fanart=join(PIC_PATH,"fanart-search.png"))
@@ -487,7 +487,7 @@ class Main:
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
     def show_translationeditor(self):
-        ui = TranslationEditor.TranslationEditor( "TranslationEditor.xml" , Addon.getAddonInfo('path'), "Default")
+        ui = TranslationEditor.TranslationEditor( "TranslationEditor.xml" , __addon__.getAddonInfo('path'), "Default")
         ui.doModal()
         del ui
 
@@ -497,7 +497,7 @@ class Main:
     def show_wizard(self):
         global GlobalFilterTrue, GlobalFilterFalse, GlobalMatchAll
         #picfanart = join(PIC_PATH,"fanart-keyword.png")
-        ui = FilterWizard.FilterWizard( "FilterWizard.xml" , Addon.getAddonInfo('path'), "Default")
+        ui = FilterWizard.FilterWizard( "FilterWizard.xml" , __addon__.getAddonInfo('path'), "Default")
         ui.setDelegate(FilterWizardDelegate)
         ui.doModal()
         del ui
@@ -1167,7 +1167,7 @@ class Main:
             offset = -1 # SQL 'OFFSET' statement equals to -1  : return resulting rows with no offset
             page = 0
         else: #do pagination stuff
-            limit = int(Addon.getSetting("picsperpage"))
+            limit = int(__addon__.getSetting("picsperpage"))
             offset = (int(self.args.page)-1)*limit
             page = int(self.args.page)
 
@@ -1241,12 +1241,12 @@ class Main:
 
         elif self.args.method == "recentpicsdb":#pictures added to database within x last days __OK
             picfanart = join(PIC_PATH,"fanart-date.png")
-            numberofdays = Addon.getSetting("recentnbdays")
+            numberofdays = __addon__.getSetting("recentnbdays")
             filelist = [row for row in MPDB.Request( """SELECT strPath,strFilename FROM files WHERE DateAdded IN (SELECT DISTINCT DateAdded FROM files WHERE DateAdded>=datetime('now','start of day','-%s days'))  ORDER BY DateAdded ASC LIMIT %s OFFSET %s"""%(numberofdays,limit,offset))]
 
         elif self.args.method =="lastpicsshooted":#X last pictures shooted __OK
             picfanart = join(PIC_PATH,"fanart-date.png")
-            filelist = [row for row in MPDB.Request( """SELECT strPath,strFilename FROM files WHERE ImageDateTime IS NOT NULL ORDER BY ImageDateTime DESC LIMIT %s"""%Addon.getSetting('lastpicsnumber') )]
+            filelist = [row for row in MPDB.Request( """SELECT strPath,strFilename FROM files WHERE ImageDateTime IS NOT NULL ORDER BY ImageDateTime DESC LIMIT %s"""%__addon__.getSetting('lastpicsnumber') )]
 
         elif self.args.method =="videos":#show all videos __OK
             picfanart = join(PIC_PATH,"fanart-videos.png")
@@ -1475,7 +1475,7 @@ def FilterWizardDelegate(ArrayTrue, ArrayFalse, MatchAll = False):
 if __name__=="__main__":
 
     m=Main()
-    #print Addon.getSetting("ratingmini")
+    #print __addon__.getSetting("ratingmini")
     #print "Handle = " + str(sys.argv[1])
     #print "Action = " + m.args.action
 
@@ -1485,11 +1485,11 @@ if __name__=="__main__":
         # initialisation de la base :
         MPDB.pictureDB = pictureDB
         #   - efface les tables et les recréés
-        MPDB.Make_new_base(pictureDB, ecrase= Addon.getSetting("initDB") == "true")
-        if Addon.getSetting("initDB") == "true":
-            Addon.setSetting("initDB","false")
+        MPDB.Make_new_base(pictureDB, ecrase= __addon__.getSetting("initDB") == "true")
+        if __addon__.getSetting("initDB") == "true":
+            __addon__.setSetting("initDB","false")
         #scan les répertoires lors du démarrage (selon setting)
-        if Addon.getSetting('bootscan')=='true':
+        if __addon__.getSetting('bootscan')=='true':
             if not(xbmc.getInfoLabel( "Window.Property(DialogAddonScan.IsAlive)" ) == "true"):
                 #si un scan n'est pas en cours, on lance le scan
                 xbmc.executebuiltin( "RunScript(%s,--database) "%join( home, "scanpath.py") )

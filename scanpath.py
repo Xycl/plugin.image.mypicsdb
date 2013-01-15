@@ -3,9 +3,9 @@
 
 # xbmc modules
 import xbmc, xbmcaddon
-AddonName = 'plugin.image.mypicsdb'
-Addon = xbmcaddon.Addon(id=AddonName)
-__language__ = Addon.getLocalizedString
+__addonname__ = 'plugin.image.mypicsdb'
+__addon__ = xbmcaddon.Addon(id=__addonname__)
+__language__ = __addon__.getLocalizedString
 
 # python modules
 import optparse
@@ -30,18 +30,18 @@ from resources.lib.XMP import XMP_Tags
 from DialogAddonScan import AddonScan
 
 
-db_type  = 'mysql' if Addon.getSetting('mysql')=='true' else 'sqlite'
-db_name  = 'Pictures.db' if len(Addon.getSetting('db_name')) == 0 else Addon.getSetting('db_name')
+db_type  = 'mysql' if __addon__.getSetting('mysql')=='true' else 'sqlite'
+db_name  = 'Pictures.db' if len(__addon__.getSetting('db_name')) == 0 else __addon__.getSetting('db_name')
 if db_type == 'sqlite':
     db_user    = ''
     db_pass    = ''
     db_address = ''
     db_port    = ''
 else:
-    db_user    = Addon.getSetting('db_user')
-    db_pass    = Addon.getSetting('db_pass')
-    db_address = Addon.getSetting('db_address')
-    db_port    = Addon.getSetting('db_port')
+    db_user    = __addon__.getSetting('db_user')
+    db_pass    = __addon__.getSetting('db_pass')
+    db_address = __addon__.getSetting('db_address')
+    db_port    = __addon__.getSetting('db_port')
 
 
 class VFSScanner:
@@ -66,13 +66,13 @@ class VFSScanner:
             if exclude:
                 self.exclude_folders.append(smart_unicode(path[:len(path)-1]))
 
-        for ext in Addon.getSetting("picsext").split("|"):
+        for ext in __addon__.getSetting("picsext").split("|"):
             self.picture_extensions.append("." + ext.replace(".","").upper())
 
-        for ext in Addon.getSetting("vidsext").split("|"):
+        for ext in __addon__.getSetting("vidsext").split("|"):
             self.video_extensions.append("." + ext.replace(".","").upper())
 
-        self.use_videos = Addon.getSetting("usevids")
+        self.use_videos = __addon__.getSetting("usevids")
 
         self.all_extensions.extend(self.picture_extensions)
         self.all_extensions.extend(self.video_extensions)
@@ -149,6 +149,7 @@ class VFSScanner:
         """
         path = smart_unicode(path)
 
+        log("VFSScanner._addpath", "Scanning directory %s"%smart_utf8(path) )
         # Check excluded paths
         if path in self.exclude_folders:
             self.picsdeleted = self.picsdeleted + mpdb.RemovePath(path)
@@ -203,32 +204,28 @@ class VFSScanner:
                         self.filescanner.delete(localfile)
                         
                     if filename in filesfromdb:  # then it's an update
-                        #if update:
-                            sqlupdate   = True
-                            log( "VFSScanner._addpath", "Picture already exists")
-                            if mpdb.getFileSha(path,filename) != filesha:  # if sha is equal then don't scan again
-                                self.picsupdated += 1
-                                log( "VFSScanner._addpath", "Picture must be updated")
-                                filesfromdb.pop(filesfromdb.index(filename))
-                            else:
-                                filesfromdb.pop(filesfromdb.index(filename))
-                                log( "VFSScanner._addpath", "Picture not modified")
 
-                                if self.scan and self.totalfiles!=0 and self.total_root_entries!=0:
-                                    self.scan.update(int(100*float(self.picsscanned)/float(self.totalfiles)),
-                                                  int(100*float(self.current_root_entry)/float(self.total_root_entries)),
-                                                  smart_utf8(__language__(30000)+"[%s] (%0.2f%%)"%(action,100*float(self.picsscanned)/float(self.totalfiles))),#"MyPicture Database [%s] (%0.2f%%)"
-                                                  smart_utf8(filename))
-                                                
-                                continue
-                            log( "VFSScanner._addpath", "Update picture2")
-                        #else:
-                        #    filesfromdb.pop(filesfromdb.index(filename))
-                        #    continue
+                        sqlupdate   = True
+                        if mpdb.getFileSha(path,filename) != filesha:  # if sha is equal then don't scan again
+                            self.picsupdated += 1
+                            log( "VFSScanner._addpath", "Picture already exists and must be updated")
+                            filesfromdb.pop(filesfromdb.index(filename))
+                        else:
+                            filesfromdb.pop(filesfromdb.index(filename))
+                            log( "VFSScanner._addpath", "Picture already exists but not modified")
+
+                            if self.scan and self.totalfiles!=0 and self.total_root_entries!=0:
+                                self.scan.update(int(100*float(self.picsscanned)/float(self.totalfiles)),
+                                              int(100*float(self.current_root_entry)/float(self.total_root_entries)),
+                                              smart_utf8(__language__(30000)+"[%s] (%0.2f%%)"%(action,100*float(self.picsscanned)/float(self.totalfiles))),#"MyPicture Database [%s] (%0.2f%%)"
+                                              smart_utf8(filename))
+                                            
+                            continue
+
 
                     else:
                         sqlupdate  = False
-                        log( "VFSScanner._addpath", "New picture")
+                        log( "VFSScanner._addpath", "New picture will be inserted into dB")
                         self.picsadded   += 1
                         
                 # videos aren't scanned and therefore never updated
@@ -248,19 +245,12 @@ class VFSScanner:
                 else:
                     continue
 
-                
-                #log( "VFSScanner._addpath", "Vor insert")
                 mpdb.DB_file_insert(path, filename, picentry, sqlupdate, filesha)
-                #log( "VFSScanner._addpath", "Nach insert")
-                
-                #log( "VFSScanner._addpath", "picsscanned = %s"%self.picsscanned)
-                #log( "VFSScanner._addpath", "totalfiles = %s"%self.totalfiles)
-                #log( "VFSScanner._addpath", "percent = %s"%int(100*float(self.picsscanned)/float(self.totalfiles)))
-                
-                #log( "VFSScanner._addpath", "current_root_entry = %s"%self.current_root_entry)
-                #log( "VFSScanner._addpath", "total_root_entries = %s"%self.total_root_entries)
-                #log( "VFSScanner._addpath", "percent = %s"%int(100*float(self.current_root_entry)/float(self.total_root_entries)))
-                
+                if sqlupdate:
+                    log( "VFSScanner._addpath", "Picture %s updated"%smart_utf8(pic))
+                else:
+                    log( "VFSScanner._addpath", "Picture %s inserted"%smart_utf8(pic))
+
                 if self.scan and self.totalfiles!=0 and self.total_root_entries!=0:
                     self.scan.update(int(100*float(self.picsscanned)/float(self.totalfiles)),
                                   int(100*float(self.current_root_entry)/float(self.total_root_entries)),
@@ -272,6 +262,7 @@ class VFSScanner:
         if filesfromdb:
             for pic in filesfromdb:
                 mpdb.DB_del_pic(path, pic)
+                log( "VFSScanner._addpath", "Picture %s deleted from DB"%smart_utf8(pic))
                 self.picsdeleted += 1
 
         if recursive:
@@ -295,6 +286,7 @@ class VFSScanner:
                 exif = self._get_exif(fullpath)
                 picentry.update(exif)
             except Exception,msg:
+                log( "VFSScanner._get_metas()._get_exif()", "Exception", xbmc.LOGERROR)
                 print msg
 
             ###############################
@@ -304,6 +296,7 @@ class VFSScanner:
                 iptc = self._get_iptc(fullpath)
                 picentry.update(iptc)
             except Exception,msg:
+                log( "VFSScanner._get_metas()_get_iptc()", "Exception", xbmc.LOGERROR)
                 print msg
 
 
@@ -314,6 +307,7 @@ class VFSScanner:
                 xmp = self._get_xmp(fullpath)
                 picentry.update(xmp)
             except Exception,msg:
+                log( "VFSScanner._get_metas()._get_xmp()", "Exception", xbmc.LOGERROR)
                 print msg
 
 

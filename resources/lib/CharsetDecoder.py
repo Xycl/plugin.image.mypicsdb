@@ -2,7 +2,7 @@
 # -*- coding: utf8 -*-
 
 from urllib import quote_plus
-import sys
+import sys, os
 import xbmc
 
 
@@ -33,9 +33,9 @@ def smart_utf8(s):
     
 def get_crc32( parm ):
     parm = parm.lower()        
-    bytes = bytearray(parm.encode())
+    byte = bytearray(parm.encode())
     crc = 0xffffffff;
-    for b in bytes:
+    for b in byte:
         crc = crc ^ (b << 24)          
         for i in range(8):
             if (crc & 0x80000000 ):                 
@@ -58,6 +58,11 @@ def log(module, msg, level=xbmc.LOGDEBUG):
     
     if type(msg).__name__=='unicode':
         msg = msg.encode('utf-8')
-        
-    AddonName = ( sys.modules[ "__main__" ].AddonName )
-    xbmc.log(str("[%s] %s >> %s"%(AddonName, module, msg.__str__())), level)    
+
+    __filename__ = smart_utf8(os.path.basename(sys._getframe(1).f_code.co_filename))
+    #'{:<30}'.format(os.path.basename(sys._getframe(1).f_code.co_filename))
+    __lineno__   = str(sys._getframe(1).f_lineno)
+    #'{:>6}'.format( sys._getframe(1).f_lineno)
+    __addonname__    = sys.modules[ "__main__" ].__addonname__
+    xbmc.log(str("[%s] line %s in %s module %s >> %s"%(__addonname__, __lineno__, __filename__, module, msg.__str__())), level)    
+

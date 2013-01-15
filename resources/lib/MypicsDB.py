@@ -26,14 +26,14 @@ except:
     pass
 
 
-Addon = ( sys.modules[ "__main__" ].Addon )
+__addon__ = ( sys.modules[ "__main__" ].__addon__ )
 __language__ = ( sys.modules[ "__main__" ].__language__ )
-home = Addon.getAddonInfo('path').decode('utf-8')
+home = __addon__.getAddonInfo('path').decode('utf-8')
 
 #these few lines are taken from AppleMovieTrailers script
 # Shared resources
 BASE_RESOURCE_PATH = join( home, "resources" )
-DATA_PATH = Addon.getAddonInfo('profile')
+DATA_PATH = __addon__.getAddonInfo('profile')
 DB_PATH = xbmc.translatePath( "special://database/")
 sys.path.append( os.path.join( BASE_RESOURCE_PATH, "lib" ) )
 # append the proper platforms folder to our path, xbox is the same as win32
@@ -518,7 +518,7 @@ def DB_folder_insert(foldername,folderpath,parentfolderID,haspic):
     return retour
 
 def get_children(folderid):
-    print "get_children(" + str(folderid) + ")"
+    #print "get_children(" + str(folderid) + ")"
     """search all children folders ids for the given folder id"""
     childrens=[c[0] for c in RequestWithBinds("SELECT idFolder FROM folders WHERE ParentFolder=? ", (folderid,))]
     list_child=[]
@@ -543,14 +543,14 @@ def DB_del_pic(picpath,picfile=None): #TODO : revoir la vérif du dossier inutil
             else:
                 idpath = Request("""SELECT idFolder FROM folders WHERE FullPath is null""")[0][0]#le premier du tuple à un élément
 
-            print( "DB_del_pic(%s,%s)"%( decoder.smart_utf8(picpath),decoder.smart_utf8(picfile)), LOGDEBUG )
+            decoder.log( "DB_del_pic", "(%s,%s)"%( decoder.smart_utf8(picpath),decoder.smart_utf8(picfile)) )
 
             deletelist=[]#va lister les id des dossiers à supprimer
             deletelist.append(idpath)#le dossier en paramètres est aussi à supprimer
             deletelist.extend(get_children(str(idpath)))#on ajoute tous les enfants en sous enfants du dossier
 
             Request( """DELETE FROM files WHERE idFolder in ("%s")"""%""" "," """.join([str(i) for i in deletelist]) )
-            print """DELETE FROM folders WHERE idFolder in ("%s") """%""" "," """.join([str(i) for i in deletelist])
+            decoder.log( "DB_del_pic", """DELETE FROM folders WHERE idFolder in ("%s") """%""" "," """.join([str(i) for i in deletelist]))
             Request( """DELETE FROM folders WHERE idFolder in ("%s") """%""" "," """.join([str(i) for i in deletelist]) )
         except:
             pass
@@ -656,7 +656,7 @@ def addPicToCollection(Colname,filepath,filename):
     RequestWithBinds( """INSERT INTO FilesInCollections(idCol,idFile) VALUES ( (SELECT idCol FROM Collections WHERE CollectionName=?) , (SELECT idFile FROM files WHERE strPath=? AND strFilename=?) )""",(Colname,filepath,filename) )
 
 def delPicFromCollection(Colname,filepath,filename):
-    log("delPicFromCollection(%s, %s, %s)"%(Colname,filepath,filename))
+    decoder.log("delPicFromCollection(%s, %s, %s)"%(Colname,filepath,filename))
     RequestWithBinds( """DELETE FROM FilesInCollections WHERE idCol=(SELECT idCol FROM Collections WHERE CollectionName=?) AND idFile=(SELECT idFile FROM files WHERE strPath=? AND strFilename=?)""",(Colname,filepath,filename) )
 
 ####################
@@ -773,9 +773,10 @@ def AddRoot(path,recursive,remove,exclude):
     "add the path root inside the database. Recursive is 0/1 for recursive scan, remove is 0/1 for removing files that are not physically in the place"
     DB_cleanup_keywords()
     RequestWithBinds( """INSERT INTO Rootpaths(path,recursive,remove,exclude) VALUES (?,?,?,?)""",(decoder.smart_unicode(path),recursive,remove,exclude) )
+    decoder.log( "AddRoot", "%s"%decoder.smart_utf8(path))
 
 def getRoot(path):
-    decoder.log( "getRoot", "name = %s"%decoder.smart_utf8(path))
+    decoder.log( "getRoot", "%s"%decoder.smart_utf8(path))
     #print decoder.smart_utf8(path)
     return [row for row in RequestWithBinds( """SELECT path,recursive,remove,exclude FROM Rootpaths WHERE path=? """, (decoder.smart_unicode(path),) )][0]
 
@@ -786,7 +787,7 @@ def RemoveRoot(path):
     #first remove the path with all its pictures / subfolders / keywords / pictures in collections...
     RemovePath(path)
     #then remove the rootpath itself
-    print  """DELETE FROM Rootpaths WHERE path='%s' """%decoder.smart_utf8(path)
+    decoder.log( "RemoveRoot",   """DELETE FROM Rootpaths WHERE path='%s' """%decoder.smart_utf8(path))
     RequestWithBinds( """DELETE FROM Rootpaths WHERE path=? """, (decoder.smart_unicode(path),) )
 
 
@@ -796,22 +797,21 @@ def RemovePath(path):
     #cptremoved = 0
     try:
         idpath = RequestWithBinds( """SELECT idFolder FROM folders WHERE FullPath = ?""",(decoder.smart_unicode(path),) )[0][0]
-        print idpath
     except:
+        decoder.log( "RemovePath",  "Path %s not found"%path)
         return 0
 
     cptremoved = Request( """SELECT count(*) FROM files WHERE idFolder='%s'"""%idpath )[0][0]
-    print """DELETE FROM files WHERE idFolder='%s'"""%idpath
+    decoder.log( "RemovePath",  """DELETE FROM files WHERE idFolder='%s'"""%idpath)
     Request( """DELETE FROM files WHERE idFolder='%s'"""%idpath)
 
     for idchild in all_children(idpath):
-        print "Childs"
-        print idchild
+
         Request( """DELETE FROM FilesInCollections WHERE idFile in (SELECT idFile FROM files WHERE idFolder='%s')"""%idchild )
         cptremoved = cptremoved + Request( """SELECT count(*) FROM files WHERE idFolder='%s'"""%idchild)[0][0]
         Request( """DELETE FROM files WHERE idFolder='%s'"""%idchild)
         Request( """DELETE FROM folders WHERE idFolder='%s'"""%idchild)
-    print """DELETE FROM folders WHERE idFolder='%s'"""%idpath
+    decoder.log( "RemovePath",  """DELETE FROM folders WHERE idFolder='%s'"""%idpath)
     Request( """DELETE FROM folders WHERE idFolder='%s'"""%idpath)
 
     for periodname,datestart,dateend in ListPeriodes():
@@ -1279,7 +1279,7 @@ def countPicsFolder(folderid):
     return count
 
     # old part
-    log("TEST : all children of folderid %s"%folderid)
+
     children = all_children(folderid)
 
     cpt = Request("SELECT count(*) FROM files f,folders p WHERE f.idFolder=p.idFolder AND f.idFolder='%s'"%folderid)[0][0]
