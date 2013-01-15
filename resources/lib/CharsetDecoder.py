@@ -2,6 +2,9 @@
 # -*- coding: utf8 -*-
 
 from urllib import quote_plus
+import sys
+import xbmc
+
 
 def smart_unicode(s):
     """credit : sfaxman"""
@@ -48,3 +51,13 @@ def quote_param(parm):
     parm = quote_plus(parm)
     
     return parm
+    
+def log(module, msg, level=xbmc.LOGDEBUG):
+    if type(module).__name__=='unicode':
+        module = module.encode('utf-8')
+    
+    if type(msg).__name__=='unicode':
+        msg = msg.encode('utf-8')
+        
+    AddonName = ( sys.modules[ "__main__" ].AddonName )
+    xbmc.log(str("[%s] %s >> %s"%(AddonName, module, msg.__str__())), level)    

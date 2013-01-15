@@ -1,3 +1,6 @@
+2013/01/10 --> v 1.9.9
+Update: First step for enhanced logging.
+
 2013/01/10 --> v 1.9.8
 Fix:    Problem with plus sign in path names fixed.
 

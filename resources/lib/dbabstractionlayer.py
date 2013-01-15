@@ -49,6 +49,7 @@ Supported methods:
 5) request(). Does an execute() and fetchall() without the possiblity to use bind variables.
 6) request_with_binds(). Does an execute() and fetchall() with bind variables.
 """
+AddonName = ( sys.modules[ "__main__" ].AddonName )
 
 import xbmc
 import CharsetDecoder as decoder
@@ -118,16 +119,6 @@ class BaseCursor(object):
 
     DEBUGGING = True
 
-    LOGDEBUG = 0
-    LOGINFO = 1
-    LOGNOTICE = 2
-    LOGWARNING = 3
-    LOGERROR = 4
-    LOGSEVERE = 5
-    LOGFATAL = 6
-    LOGNONE = 7
-
-
     def __init__(self, cursor):
         self.cursor = cursor
 
@@ -157,23 +148,16 @@ class BaseCursor(object):
         return [row for row in self.cursor.fetchall()]
 
 
-    def log(self, msg, level=LOGDEBUG):
-        if type(msg).__name__=='unicode':
-            msg = msg.encode('utf-8')
-        if BaseCursor.DEBUGGING:
-            xbmc.log(str("MyPicsDB >> %s"%msg.__str__()), level)
-
-
     def request(self, statement):
         try:
             self.execute( statement )
             retour = self.fetchall()
             self.commit()
         except Exception,msg:
-            self.log( "The request failed :", BaseCursor.LOGERROR )
-            self.log( "%s - %s"%(Exception,msg), BaseCursor.LOGERROR )
-            self.log( "SQL Request> %s"%statement, BaseCursor.LOGERROR)
-            self.log( "---", BaseCursor.LOGERROR )
+            decoder.log("Database abstraction layer",  "The request failed :", xbmc.LOGERROR )
+            decoder.log("Database abstraction layer",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+            decoder.log("Database abstraction layer",  "SQL Request> %s"%statement, xbmc.LOGERROR)
+            decoder.log("Database abstraction layer",  "---", xbmc.LOGERROR )
             retour= []
 
         return retour
@@ -194,20 +178,20 @@ class BaseCursor(object):
 
         except Exception,msg:
             try:
-                self.log( "The request failed :", BaseCursor.LOGERROR )
-                self.log( "%s - %s"%(Exception,msg), BaseCursor.LOGERROR )
+                decoder.log("Database abstraction layer",  "The request failed :", xbmc.LOGERROR )
+                decoder.log("Database abstraction layer",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
             except:
                 pass
             try:
-                self.log( "SQL RequestWithBinds > %s"%statement, BaseCursor.LOGERROR)
+                decoder.log("Database abstraction layer",  "SQL RequestWithBinds > %s"%statement, xbmc.LOGERROR)
             except:
                 pass
             try:
                 i = 1
                 for var in binds:
-                    self.log ("SQL RequestWithBinds %d> %s"%(i,var), BaseCursor.LOGERROR)
+                    decoder.log ("SQL RequestWithBinds %d> %s"%(i,var), xbmc.LOGERROR)
                     i=i+1
-                self.log( "---", BaseCursor.LOGERROR )
+                decoder.log("Database abstraction layer",  "---", xbmc.LOGERROR )
             except:
                 pass
             retour= []
