@@ -116,6 +116,12 @@ def unquote_param(parm):
     return parm
 
 
+def unquote_unicode(text):
+    def unicode_unquoter(match):
+        return unichr(int(match.group(1),16))
+    return re.sub(r'&#([0-9])*?;',unicode_unquoter,text)
+
+
 def log(module, msg, level=xbmc.LOGDEBUG):
     if type(module).__name__=='unicode':
         module = module.encode('utf-8')
