@@ -6,7 +6,7 @@ Todo : Due to performance reasons RDF data is parsed by string functions.
 
 import re
 from os.path import join
-import CharsetDecoder as decoder
+import common
 from HTMLParser import HTMLParser
 
 tag_set = {'persons' : 'MPReg:PersonDisplayName',
@@ -73,7 +73,7 @@ class XMP_Tags(object):
             f = open(join(dirname,picfile), 'rb')
         except:
             path = join(dirname.encode('utf-8'),picfile.encode('utf-8'))
-            path = decoder.smart_unicode(path).encode('utf-8')
+            path = common.smart_unicode(path).encode('utf-8')
             f = open(path, 'rb')
         content = f.read()
         f.close()

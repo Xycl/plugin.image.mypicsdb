@@ -52,7 +52,7 @@ Supported methods:
 AddonName = ( sys.modules[ "__main__" ].AddonName )
 
 import xbmc
-import CharsetDecoder as decoder
+import common
 
 class BaseConnection(object):
 
@@ -154,10 +154,10 @@ class BaseCursor(object):
             retour = self.fetchall()
             self.commit()
         except Exception,msg:
-            decoder.log("Database abstraction layer",  "The request failed :", xbmc.LOGERROR )
-            decoder.log("Database abstraction layer",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
-            decoder.log("Database abstraction layer",  "SQL Request> %s"%statement, xbmc.LOGERROR)
-            decoder.log("Database abstraction layer",  "---", xbmc.LOGERROR )
+            common.log("Database abstraction layer",  "The request failed :", xbmc.LOGERROR )
+            common.log("Database abstraction layer",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+            common.log("Database abstraction layer",  "SQL Request> %s"%statement, xbmc.LOGERROR)
+            common.log("Database abstraction layer",  "---", xbmc.LOGERROR )
             retour= []
 
         return retour
@@ -168,7 +168,7 @@ class BaseCursor(object):
         binds = []
         for value in bindvariables:
             if type(value).__name__ == 'str':
-                binds.append(decoder.smart_unicode(value))
+                binds.append(common.smart_unicode(value))
             else:
                 binds.append(value)
         try:
@@ -178,20 +178,20 @@ class BaseCursor(object):
 
         except Exception,msg:
             try:
-                decoder.log("Database abstraction layer",  "The request failed :", xbmc.LOGERROR )
-                decoder.log("Database abstraction layer",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+                common.log("Database abstraction layer",  "The request failed :", xbmc.LOGERROR )
+                common.log("Database abstraction layer",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
             except:
                 pass
             try:
-                decoder.log("Database abstraction layer",  "SQL RequestWithBinds > %s"%statement, xbmc.LOGERROR)
+                common.log("Database abstraction layer",  "SQL RequestWithBinds > %s"%statement, xbmc.LOGERROR)
             except:
                 pass
             try:
                 i = 1
                 for var in binds:
-                    decoder.log ("SQL RequestWithBinds %d> %s"%(i,var), xbmc.LOGERROR)
+                    common.log ("SQL RequestWithBinds %d> %s"%(i,var), xbmc.LOGERROR)
                     i=i+1
-                decoder.log("Database abstraction layer",  "---", xbmc.LOGERROR )
+                common.log("Database abstraction layer",  "---", xbmc.LOGERROR )
             except:
                 pass
             retour= []

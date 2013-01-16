@@ -2,9 +2,9 @@ import sys
 import xbmc
 import xbmcgui
 import MypicsDB as MPDB
-import CharsetDecoder as decoder
+import common
 
-_ = sys.modules[ "__main__" ].__language__
+#_ = sys.modules[ "__main__" ].__language__
 
 
 STATUS_LABEL    = 100
@@ -28,9 +28,9 @@ class TranslationEditor( xbmcgui.WindowXMLDialog ):
 
     def setup_all( self ):
 
-        self.getControl( STATUS_LABEL ).setLabel( _(30620) )
-        self.getControl( STATUS_LABEL2 ).setLabel( _(30622) )
-        self.getControl( BUTTON_OK ).setLabel( _(30621) )
+        self.getControl( STATUS_LABEL ).setLabel( common.getstring(30620) )
+        self.getControl( STATUS_LABEL2 ).setLabel( common.getstring(30622) )
+        self.getControl( BUTTON_OK ).setLabel( common.getstring(30621) )
         self.getControl( TAGS_LIST ).reset()
         
         TagTypesAndTranslation =  MPDB.getTagTypesForTranslation()
@@ -64,11 +64,11 @@ class TranslationEditor( xbmcgui.WindowXMLDialog ):
                 item = self.getControl( TAGS_LIST ).getSelectedItem()
                 #pos  = self.getControl( TAGS_LIST ).getSelectedPosition()
                 
-                kb = xbmc.Keyboard(item.getLabel2(),  _(30623)%( decoder.smart_utf8(item.getLabel())), False)
+                kb = xbmc.Keyboard(item.getLabel2(),  common.getstring(30623)%( common.smart_utf8(item.getLabel())), False)
                 kb.doModal()
                 if (kb.isConfirmed()):
                     item.setLabel2(kb.getText())
-                    MPDB.setTranslatedTagType(decoder.smart_unicode(item.getLabel()), decoder.smart_unicode(item.getLabel2()))
+                    MPDB.setTranslatedTagType(common.smart_unicode(item.getLabel()), common.smart_unicode(item.getLabel2()))
                     self.getControl( TAGS_LIST ).setVisible(False)
                     self.getControl( TAGS_LIST ).setVisible(True)
 

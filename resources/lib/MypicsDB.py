@@ -13,8 +13,9 @@ from os.path import join, exists, isfile, isdir
 from traceback import print_exc
 
 import  xbmc, xbmcgui
+import common
 from XMP import XMP_Tags
-import CharsetDecoder as decoder
+
 
 from time import strftime,strptime
 
@@ -26,14 +27,12 @@ except:
     pass
 
 
-__addon__ = ( sys.modules[ "__main__" ].__addon__ )
-__language__ = ( sys.modules[ "__main__" ].__language__ )
-home = __addon__.getAddonInfo('path').decode('utf-8')
+home = common.getaddon_path()
 
 #these few lines are taken from AppleMovieTrailers script
 # Shared resources
 BASE_RESOURCE_PATH = join( home, "resources" )
-DATA_PATH = __addon__.getAddonInfo('profile')
+DATA_PATH = common.getaddon_info('profile')
 DB_PATH = xbmc.translatePath( "special://database/")
 sys.path.append( os.path.join( BASE_RESOURCE_PATH, "lib" ) )
 # append the proper platforms folder to our path, xbox is the same as win32
@@ -64,14 +63,14 @@ def VersionTable():
 
         conn.commit() 
     except Exception,msg:
-        decoder.log("MPDB.VersionTable", "In exception handler")
+        common.log("MPDB.VersionTable", "In exception handler")
         if msg.args[0].startswith("table DBVersion already exists"):
             # Test Version of DB
             strVersion = Request("Select strVersion from DBVersion")[0][0];
 
             if strVersion < '1.9.0':
                 dialog = xbmcgui.Dialog()
-                dialog.ok(__language__(30000).encode("utf8"), "Database will be updated", "Please re-scan your folders")
+                dialog.ok(getstring(30000).encode("utf8"), "Database will be updated", "Please re-scan your folders")
                 Make_new_base(pictureDB, True)
                 VersionTable()
                 
@@ -80,29 +79,29 @@ def VersionTable():
                 cn.execute("update DBVersion set strVersion = '1.9.5'")
                 conn.commit() 
                 
-            decoder.log("MPDB.VersionTable", "MyPicsDB database version is %s"%str(strVersion) ) 
+            common.log("MPDB.VersionTable", "MyPicsDB database version is %s"%str(strVersion) ) 
 
         else: 
-            decoder.log("MPDB.VersionTable", "CREATE TABLE DBVersion ...", xbmc.LOGERROR )
-            decoder.log("MPDB.VersionTable", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+            common.log("MPDB.VersionTable", "CREATE TABLE DBVersion ...", xbmc.LOGERROR )
+            common.log("MPDB.VersionTable", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
     cn.close()
 
 def Make_new_base(DBpath,ecrase=True):
 ##    if not(isfile(DBpath)):
 ##        f=open("DBpath","w")
 ##        f.close()
-    decoder.log("MPDB.Make_new_base >> Picture database", "%s"%DBpath)
+    common.log("MPDB.Make_new_base >> Picture database", "%s"%DBpath)
     conn = sqlite.connect(DBpath)
     cn=conn.cursor()
     if ecrase:
         #drop table
         for table in ['Persons', 'PersonsInFiles', 'tags', 'TagContent', 'TagContents', 'TagsInFiles', 'TagTypes',"files","keywords","folders","KeywordsInFiles","Collections","FilesInCollections","Periodes","CategoriesInFiles","Categories","SupplementalCategoriesInFiles","SupplementalCategories","CitiesInFiles","Cities","CountriesInFiles","Countries","DBVersion"]:
-            decoder.log("MPDB.Make_new_base >> Dropping table", "%s"%table)
+            common.log("MPDB.Make_new_base >> Dropping table", "%s"%table)
             try:
                 cn.execute("""DROP TABLE %s"""%table)
             except Exception,msg:
-                decoder.log("MPDB.Make_new_base", "DROP TABLE %s"%table, xbmc.LOGERROR )
-                decoder.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+                common.log("MPDB.Make_new_base", "DROP TABLE %s"%table, xbmc.LOGERROR )
+                common.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
 
 
     #table 'files'
@@ -113,8 +112,8 @@ def Make_new_base(DBpath,ecrase=True):
         if str(msg).find("already exists") > -1:
             pass
         else: #sinon on imprime l'exception levée pour la traiter
-            decoder.log("MPDB.Make_new_base", "CREATE TABLE files ...", xbmc.LOGERROR )
-            decoder.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+            common.log("MPDB.Make_new_base", "CREATE TABLE files ...", xbmc.LOGERROR )
+            common.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
 
     #table 'folders'
     try:
@@ -125,8 +124,8 @@ def Make_new_base(DBpath,ecrase=True):
             #   elle n'est pas une erreur, on la passe
             pass
         else: #sinon on imprime l'exception levée pour la traiter
-            decoder.log("MPDB.Make_new_base", "CREATE TABLE folders ...", xbmc.LOGERROR )
-            decoder.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+            common.log("MPDB.Make_new_base", "CREATE TABLE folders ...", xbmc.LOGERROR )
+            common.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
     #table 'Collections'
     try:
         cn.execute("""CREATE TABLE "Collections" ("idCol" INTEGER PRIMARY KEY, "CollectionName" TEXT UNIQUE);""")
@@ -136,8 +135,8 @@ def Make_new_base(DBpath,ecrase=True):
             #   elle n'est pas une erreur, on la passe
             pass
         else: #sinon on imprime l'exception levée pour la traiter
-            decoder.log("MPDB.Make_new_base", "CREATE TABLE Collections ...", xbmc.LOGERROR )
-            decoder.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+            common.log("MPDB.Make_new_base", "CREATE TABLE Collections ...", xbmc.LOGERROR )
+            common.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
     #table 'FilesInCollections'
     try:
         cn.execute("""CREATE TABLE "FilesInCollections" ("idCol" INTEGER NOT NULL,
@@ -150,8 +149,8 @@ def Make_new_base(DBpath,ecrase=True):
             #   elle n'est pas une erreur, on la passe
             pass
         else: #sinon on imprime l'exception levée pour la traiter
-            decoder.log("MPDB.Make_new_base", "CREATE TABLE FilesInCollections ...", xbmc.LOGERROR )
-            decoder.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+            common.log("MPDB.Make_new_base", "CREATE TABLE FilesInCollections ...", xbmc.LOGERROR )
+            common.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
     #table 'periodes'
     try:
         cn.execute("""CREATE TABLE "periodes"
@@ -167,8 +166,8 @@ def Make_new_base(DBpath,ecrase=True):
             #   elle n'est pas une erreur, on la passe
             pass
         else: #sinon on imprime l'exception levée pour la traiter
-            decoder.log("MPDB.Make_new_base", "CREATE TABLE Periods ...", xbmc.LOGERROR )
-            decoder.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+            common.log("MPDB.Make_new_base", "CREATE TABLE Periods ...", xbmc.LOGERROR )
+            common.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
     #table 'Rootpaths'
     try:
         cn.execute("""CREATE TABLE "Rootpaths"
@@ -183,8 +182,8 @@ def Make_new_base(DBpath,ecrase=True):
             #   elle n'est pas une erreur, on la passe
             pass
         else: #sinon on imprime l'exception levée pour la traiter
-            decoder.log("MPDB.Make_new_base", "CREATE TABLE RootPaths ...", xbmc.LOGERROR )
-            decoder.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+            common.log("MPDB.Make_new_base", "CREATE TABLE RootPaths ...", xbmc.LOGERROR )
+            common.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
 
 
     #table 'TagTypes'
@@ -194,8 +193,8 @@ def Make_new_base(DBpath,ecrase=True):
         if str(msg).find("already exists") > -1:
             pass
         else:
-            decoder.log("MPDB.Make_new_base", "CREATE TABLE TagTypes ...", xbmc.LOGERROR )
-            decoder.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+            common.log("MPDB.Make_new_base", "CREATE TABLE TagTypes ...", xbmc.LOGERROR )
+            common.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
 
     #table 'TagContent'
     try:
@@ -204,8 +203,8 @@ def Make_new_base(DBpath,ecrase=True):
         if str(msg).find("already exists") > -1:
             pass
         else:
-            decoder.log("MPDB.Make_new_base", "CREATE TABLE Tags ...", xbmc.LOGERROR )
-            decoder.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+            common.log("MPDB.Make_new_base", "CREATE TABLE Tags ...", xbmc.LOGERROR )
+            common.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
 
     #table 'TagsInFiles'
     try:
@@ -214,8 +213,8 @@ def Make_new_base(DBpath,ecrase=True):
         if str(msg).find("already exists") > -1:
             pass
         else:
-            decoder.log("MPDB.Make_new_base", "CREATE TABLE TagsInFiles ...", xbmc.LOGERROR )
-            decoder.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+            common.log("MPDB.Make_new_base", "CREATE TABLE TagsInFiles ...", xbmc.LOGERROR )
+            common.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
 
 
     try:
@@ -280,8 +279,8 @@ def addColumn(table,colheader,formatstring="text"):
             cn.execute("""ALTER TABLE %s ADD "%s" %s"""%(table,colheader,formatstring))
         except Exception,msg:
             if not msg.args[0].startswith("duplicate column name"):
-                decoder.log("MPDB.addColumn", 'EXCEPTION  %s,%s,%s'%(table,colheader,formatstring), xbmc.LOGERROR )
-                decoder.log("MPDB.addColumn", "\t%s - %s"%(Exception,msg), xbmc.LOGERROR )
+                common.log("MPDB.addColumn", 'EXCEPTION  %s,%s,%s'%(table,colheader,formatstring), xbmc.LOGERROR )
+                common.log("MPDB.addColumn", "\t%s - %s"%(Exception,msg), xbmc.LOGERROR )
 
         conn.commit()
         cn.close()
@@ -306,7 +305,7 @@ def DB_cleanup_keywords():
         cn.execute( "delete from TagTypes where idTagType not in (select idTagType from TagContents) and TagType = TagTranslation")
 
     except Exception,msg:
-        decoder.log("MPDB.DB_cleanup_keywords", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+        common.log("MPDB.DB_cleanup_keywords", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
         cn.close()
         raise
 
@@ -323,8 +322,8 @@ def DB_exists(picpath,picfile):
     try:
         cn.execute("""SELECT strPath, strFilename FROM "main"."files" WHERE strPath = (?) AND strFilename = (?);""",(picpath,picfile,) )
     except Exception,msg:
-        decoder.log("MPDB.DB_exists", "EXCEPTION >> DB_exists %s,%s"%(picpath,picfile), xbmc.LOGERROR )
-        decoder.log("MPDB.DB_exists", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+        common.log("MPDB.DB_exists", "EXCEPTION >> DB_exists %s,%s"%(picpath,picfile), xbmc.LOGERROR )
+        common.log("MPDB.DB_exists", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
         raise Exception, msg
     if len(cn.fetchmany())==0:
 
@@ -346,8 +345,8 @@ def DB_listdir(path):
     try:
         cn.execute( u"SELECT f.strFilename FROM files f,folders p WHERE f.idFolder=p.idFolder AND p.FullPath=(?)",(path,))
     except Exception,msg:
-        decoder.log( "DB_listdir", "path = "%path, xbmc.LOGERROR )
-        decoder.log( "DB_listdir", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+        common.log( "DB_listdir", "path = "%path, xbmc.LOGERROR )
+        common.log( "DB_listdir", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
         cn.close()
         raise
 
@@ -394,9 +393,9 @@ def DB_file_insert(path,filename,dictionnary,update=False, sha=0):
         conn.commit()
     except Exception,msg:
 
-        decoder.log("DB_file_insert", "path = %s"%decoder.smart_unicode(filename).encode('utf-8'), xbmc.LOGERROR)
-        decoder.log("DB_file_insert",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
-        decoder.log( "DB_file_insert", """INSERT INTO files('%s') values (%s)""" % ( "','".join(dictionnary.keys()) , ",".join(["?"]*len(dictionnary.values())) ), xbmc.LOGERROR )
+        common.log("DB_file_insert", "path = %s"%common.smart_unicode(filename).encode('utf-8'), xbmc.LOGERROR)
+        common.log("DB_file_insert",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+        common.log( "DB_file_insert", """INSERT INTO files('%s') values (%s)""" % ( "','".join(dictionnary.keys()) , ",".join(["?"]*len(dictionnary.values())) ), xbmc.LOGERROR )
         conn.commit()
         cn.close()
         raise MyPictureDB
@@ -437,9 +436,9 @@ def DB_file_insert(path,filename,dictionnary,update=False, sha=0):
                             if str(msg)=="column TagType is not unique":
                                 pass
                             else:
-                                decoder.log("DB_file_insert", "path = %s"%decoder.smart_unicode(filename).encode('utf-8'), xbmc.LOGERROR)
-                                decoder.log("DB_file_insert",  'tagType = %s'%tagType, xbmc.LOGERROR )
-                                decoder.log("DB_file_insert",  "\t%s - %s"%(Exception,msg), xbmc.LOGERROR )
+                                common.log("DB_file_insert", "path = %s"%common.smart_unicode(filename).encode('utf-8'), xbmc.LOGERROR)
+                                common.log("DB_file_insert",  'tagType = %s'%tagType, xbmc.LOGERROR )
+                                common.log("DB_file_insert",  "\t%s - %s"%(Exception,msg), xbmc.LOGERROR )
 
                         # select the key of the tag from table TagTypes
                         cn.execute("SELECT min(idTagType) FROM TagTypes WHERE TagType = ? ",(tagType,) )
@@ -454,11 +453,11 @@ def DB_file_insert(path,filename,dictionnary,update=False, sha=0):
                         if str(msg)=="columns idTagType, TagContent are not unique":
                             pass
                         else:
-                            decoder.log("DB_file_insert", "path = %s"%decoder.smart_unicode(filename).encode('utf-8'), xbmc.LOGERROR)
-                            decoder.log("DB_file_insert", 'EXCEPTION >> tags', xbmc.LOGERROR )
-                            decoder.log("DB_file_insert", 'tagType = %s'%tagType, xbmc.LOGERROR )
-                            decoder.log("DB_file_insert", 'tagValue = %s'%decoder.smart_utf8(value), xbmc.LOGERROR )
-                            decoder.log("DB_file_insert", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+                            common.log("DB_file_insert", "path = %s"%common.smart_unicode(filename).encode('utf-8'), xbmc.LOGERROR)
+                            common.log("DB_file_insert", 'EXCEPTION >> tags', xbmc.LOGERROR )
+                            common.log("DB_file_insert", 'tagType = %s'%tagType, xbmc.LOGERROR )
+                            common.log("DB_file_insert", 'tagValue = %s'%common.smart_utf8(value), xbmc.LOGERROR )
+                            common.log("DB_file_insert", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
 
                     # this block should be obsolet now!!!
 
@@ -476,12 +475,12 @@ def DB_file_insert(path,filename,dictionnary,update=False, sha=0):
 
                                 cn.execute(""" INSERT INTO TagsInFiles(idTagContent,idFile) SELECT t.idTagContent, %d FROM TagContents t WHERE t.idTagType=%d AND t.TagContent = ? """%(idFile,idTagType), (value,))
                             except:
-                                decoder.log("DB_file_insert", "Error while ALTER TABLE TagsInFiles ", xbmc.LOGERROR)
-                                decoder.log("DB_file_insert", "%s - %s"% (Exception,msg), xbmc.LOGERROR )
+                                common.log("DB_file_insert", "Error while ALTER TABLE TagsInFiles ", xbmc.LOGERROR)
+                                common.log("DB_file_insert", "%s - %s"% (Exception,msg), xbmc.LOGERROR )
                         else:
-                            decoder.log("DB_file_insert", "Error while adding TagsInFiles")
-                            decoder.log("DB_file_insert", "%s - %s"% (Exception,msg) )
-                            decoder.log("DB_file_insert", "%s %s - %s"%(idFile,idTagType,decoder.smart_utf8(value)))
+                            common.log("DB_file_insert", "Error while adding TagsInFiles")
+                            common.log("DB_file_insert", "%s - %s"% (Exception,msg) )
+                            common.log("DB_file_insert", "%s %s - %s"%(idFile,idTagType,common.smart_utf8(value)))
                             #print """ INSERT INTO TagsInFiles(idTagContent,idFile) SELECT t.idTagContent, %d FROM TagContents t WHERE t.idTagType=%d AND t.TagContent = '%s' """%(idFile,idTagType,value)
 
 
@@ -543,14 +542,14 @@ def DB_del_pic(picpath,picfile=None): #TODO : revoir la vérif du dossier inutil
             else:
                 idpath = Request("""SELECT idFolder FROM folders WHERE FullPath is null""")[0][0]#le premier du tuple à un élément
 
-            decoder.log( "DB_del_pic", "(%s,%s)"%( decoder.smart_utf8(picpath),decoder.smart_utf8(picfile)) )
+            common.log( "DB_del_pic", "(%s,%s)"%( common.smart_utf8(picpath),common.smart_utf8(picfile)) )
 
             deletelist=[]#va lister les id des dossiers à supprimer
             deletelist.append(idpath)#le dossier en paramètres est aussi à supprimer
             deletelist.extend(get_children(str(idpath)))#on ajoute tous les enfants en sous enfants du dossier
 
             Request( """DELETE FROM files WHERE idFolder in ("%s")"""%""" "," """.join([str(i) for i in deletelist]) )
-            decoder.log( "DB_del_pic", """DELETE FROM folders WHERE idFolder in ("%s") """%""" "," """.join([str(i) for i in deletelist]))
+            common.log( "DB_del_pic", """DELETE FROM folders WHERE idFolder in ("%s") """%""" "," """.join([str(i) for i in deletelist]))
             Request( """DELETE FROM folders WHERE idFolder in ("%s") """%""" "," """.join([str(i) for i in deletelist]) )
         except:
             pass
@@ -574,7 +573,7 @@ def fileSHA ( filepath ) :
         import md5
         digest = md5.new()    
 
-    filepath = decoder.smart_unicode(filepath)
+    filepath = common.smart_unicode(filepath)
     try:
         try:
             filehandle = open(filepath,'rb')
@@ -624,15 +623,15 @@ def NewCollection(Colname):
     if Colname :
         RequestWithBinds( "INSERT INTO Collections(CollectionName) VALUES (?) ",(Colname, ))
     else:
-        decoder.log( "NewCollection", "NewCollection : User did not specify a name for the collection.")
+        common.log( "NewCollection", "NewCollection : User did not specify a name for the collection.")
 def delCollection(Colname):      
     """delete a collection"""
-    decoder.log( "delCollection", "Name = %s"%Colname)
+    common.log( "delCollection", "Name = %s"%Colname)
     if Colname:
         RequestWithBinds( """DELETE FROM FilesInCollections WHERE idCol=(SELECT idCol FROM Collections WHERE CollectionName=?)""", (Colname,))
         RequestWithBinds( """DELETE FROM Collections WHERE CollectionName=? """,(Colname,) )
     else:
-        decoder.log( "delCollection",  "User did not specify a name for the collection" )
+        common.log( "delCollection",  "User did not specify a name for the collection" )
 
 def getCollectionPics(Colname):      
     """List all pics associated to the Collection given as Colname"""
@@ -643,7 +642,7 @@ def renCollection(Colname,newname):
     if Colname:
         RequestWithBinds( """UPDATE Collections SET CollectionName = ? WHERE CollectionName=? """, (newname,Colname) )
     else:
-        decoder.log( "renCollection",  "User did not specify a name for the collection")
+        common.log( "renCollection",  "User did not specify a name for the collection")
 
 def addPicToCollection(Colname,filepath,filename):    
 
@@ -656,7 +655,7 @@ def addPicToCollection(Colname,filepath,filename):
     RequestWithBinds( """INSERT INTO FilesInCollections(idCol,idFile) VALUES ( (SELECT idCol FROM Collections WHERE CollectionName=?) , (SELECT idFile FROM files WHERE strPath=? AND strFilename=?) )""",(Colname,filepath,filename) )
 
 def delPicFromCollection(Colname,filepath,filename):
-    decoder.log("delPicFromCollection(%s, %s, %s)"%(Colname,filepath,filename))
+    common.log("delPicFromCollection","%s, %s, %s"%(Colname,filepath,filename))
     RequestWithBinds( """DELETE FROM FilesInCollections WHERE idCol=(SELECT idCol FROM Collections WHERE CollectionName=?) AND idFile=(SELECT idFile FROM files WHERE strPath=? AND strFilename=?)""",(Colname,filepath,filename) )
 
 ####################
@@ -772,37 +771,37 @@ def RootFolders():
 def AddRoot(path,recursive,remove,exclude):
     "add the path root inside the database. Recursive is 0/1 for recursive scan, remove is 0/1 for removing files that are not physically in the place"
     DB_cleanup_keywords()
-    RequestWithBinds( """INSERT INTO Rootpaths(path,recursive,remove,exclude) VALUES (?,?,?,?)""",(decoder.smart_unicode(path),recursive,remove,exclude) )
-    decoder.log( "AddRoot", "%s"%decoder.smart_utf8(path))
+    RequestWithBinds( """INSERT INTO Rootpaths(path,recursive,remove,exclude) VALUES (?,?,?,?)""",(common.smart_unicode(path),recursive,remove,exclude) )
+    common.log( "AddRoot", "%s"%common.smart_utf8(path))
 
 def getRoot(path):
-    decoder.log( "getRoot", "%s"%decoder.smart_utf8(path))
-    #print decoder.smart_utf8(path)
-    return [row for row in RequestWithBinds( """SELECT path,recursive,remove,exclude FROM Rootpaths WHERE path=? """, (decoder.smart_unicode(path),) )][0]
+    common.log( "getRoot", "%s"%common.smart_utf8(path))
+    #print common.smart_utf8(path)
+    return [row for row in RequestWithBinds( """SELECT path,recursive,remove,exclude FROM Rootpaths WHERE path=? """, (common.smart_unicode(path),) )][0]
 
 
 def RemoveRoot(path):
     "remove the given rootpath, remove pics from this path, ..."
-    decoder.log( "RemoveRoot", "name = %s"%decoder.smart_utf8(path))
+    common.log( "RemoveRoot", "name = %s"%common.smart_utf8(path))
     #first remove the path with all its pictures / subfolders / keywords / pictures in collections...
     RemovePath(path)
     #then remove the rootpath itself
-    decoder.log( "RemoveRoot",   """DELETE FROM Rootpaths WHERE path='%s' """%decoder.smart_utf8(path))
-    RequestWithBinds( """DELETE FROM Rootpaths WHERE path=? """, (decoder.smart_unicode(path),) )
+    common.log( "RemoveRoot",   """DELETE FROM Rootpaths WHERE path='%s' """%common.smart_utf8(path))
+    RequestWithBinds( """DELETE FROM Rootpaths WHERE path=? """, (common.smart_unicode(path),) )
 
 
 def RemovePath(path):
     "remove the given rootpath, remove pics from this path, ..."
-    decoder.log( "RemovePath", "name = %s"%decoder.smart_utf8(path))
+    common.log( "RemovePath", "name = %s"%common.smart_utf8(path))
     #cptremoved = 0
     try:
-        idpath = RequestWithBinds( """SELECT idFolder FROM folders WHERE FullPath = ?""",(decoder.smart_unicode(path),) )[0][0]
+        idpath = RequestWithBinds( """SELECT idFolder FROM folders WHERE FullPath = ?""",(common.smart_unicode(path),) )[0][0]
     except:
-        decoder.log( "RemovePath",  "Path %s not found"%path)
+        common.log( "RemovePath",  "Path %s not found"%path)
         return 0
 
     cptremoved = Request( """SELECT count(*) FROM files WHERE idFolder='%s'"""%idpath )[0][0]
-    decoder.log( "RemovePath",  """DELETE FROM files WHERE idFolder='%s'"""%idpath)
+    common.log( "RemovePath",  """DELETE FROM files WHERE idFolder='%s'"""%idpath)
     Request( """DELETE FROM files WHERE idFolder='%s'"""%idpath)
 
     for idchild in all_children(idpath):
@@ -811,7 +810,7 @@ def RemovePath(path):
         cptremoved = cptremoved + Request( """SELECT count(*) FROM files WHERE idFolder='%s'"""%idchild)[0][0]
         Request( """DELETE FROM files WHERE idFolder='%s'"""%idchild)
         Request( """DELETE FROM folders WHERE idFolder='%s'"""%idchild)
-    decoder.log( "RemovePath",  """DELETE FROM folders WHERE idFolder='%s'"""%idpath)
+    common.log( "RemovePath",  """DELETE FROM folders WHERE idFolder='%s'"""%idpath)
     Request( """DELETE FROM folders WHERE idFolder='%s'"""%idpath)
 
     for periodname,datestart,dateend in ListPeriodes():
@@ -877,9 +876,9 @@ def get_exif(picfile):
                         tagvalue = strftime("%Y-%m-%d %H:%M:%S",strptime(tags[tag].__str__(),datetimeformat))
                         break
                     except:
-                        decoder.log("get_exif", "Datetime (%s) did not match for '%s' format... trying an other one..."%(tags[tag].__str__(),datetimeformat), xbmc.LOGERROR )
+                        common.log("get_exif", "Datetime (%s) did not match for '%s' format... trying an other one..."%(tags[tag].__str__(),datetimeformat), xbmc.LOGERROR )
                 if not tagvalue:
-                    decoder.log("get_exif", "ERROR : the datetime format is not recognize (%s)"%tags[tag].__str__(), xbmc.LOGERROR )
+                    common.log("get_exif", "ERROR : the datetime format is not recognize (%s)"%tags[tag].__str__(), xbmc.LOGERROR )
 
             else:
                 tagvalue = tags[tag].__str__()
@@ -891,8 +890,8 @@ def get_exif(picfile):
                     addColumn("files",tag)
                 picentry[tag]=tagvalue
             except Exception, msg:
-                decoder.log("get_exif", "pic = %s"%picfile , xbmc.LOGERROR)
-                decoder.log("get_exif", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+                common.log("get_exif", "pic = %s"%picfile , xbmc.LOGERROR)
+                common.log("get_exif", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
     return picentry
 
 
@@ -939,12 +938,12 @@ def get_iptc(path,filename):
                 #print "No IPTC data found."
                 return {}
             else:
-                decoder.log("get_iptc", "EXCEPTION 1 >> get_iptc %s"%join(path,filename), LOGDEBUG )
-                decoder.log("get_iptc", "%s - %s"%(Exception,msg), LOGDEBUG )
+                common.log("get_iptc", "EXCEPTION 1 >> get_iptc %s"%join(path,filename), LOGDEBUG )
+                common.log("get_iptc", "%s - %s"%(Exception,msg), LOGDEBUG )
                 return {}
         else:
-            decoder.log("get_iptc", "EXCEPTION 2>> get_iptc %s"%join(path,filename), LOGDEBUG )
-            decoder.log("get_iptc", "%s - %s"%(Exception,msg), LOGDEBUG )
+            common.log("get_iptc", "EXCEPTION 2>> get_iptc %s"%join(path,filename), LOGDEBUG )
+            common.log("get_iptc", "%s - %s"%(Exception,msg), LOGDEBUG )
             return {}
     iptc = {}
 
@@ -975,17 +974,17 @@ def get_iptc(path,filename):
                 iptc[IPTC_FIELDS[k]] = info.data[k].decode("utf8")
             else:
 
-                decoder.log("get_iptc", "%s,%s"%(path,filename) )
-                decoder.log("get_iptc", "WARNING : type returned by iptc field is not handled :" )
-                decoder.log("get_iptc", repr(type(info.data[k])) )
+                common.log("get_iptc", "%s,%s"%(path,filename) )
+                common.log("get_iptc", "WARNING : type returned by iptc field is not handled :" )
+                common.log("get_iptc", repr(type(info.data[k])) )
 
         else:
-            decoder.log("get_iptc", "IPTC problem with file: %s"%join(path,filename), xbmc.LOGERROR)
+            common.log("get_iptc", "IPTC problem with file: %s"%join(path,filename), xbmc.LOGERROR)
             try:
-                decoder.log("get_iptc", " '%s' IPTC field is not handled. Data for this field : \n%s"%(k,info.data[k][:80]) , xbmc.LOGERROR)
+                common.log("get_iptc", " '%s' IPTC field is not handled. Data for this field : \n%s"%(k,info.data[k][:80]) , xbmc.LOGERROR)
             except:
-                decoder.log("get_iptc", " '%s' IPTC field is not handled (unreadable data for this field)"%k , xbmc.LOGERROR)
-            decoder.log("get_iptc", "IPTC data for picture %s will be ignored"%filename , xbmc.LOGERROR)
+                common.log("get_iptc", " '%s' IPTC field is not handled (unreadable data for this field)"%k , xbmc.LOGERROR)
+            common.log("get_iptc", "IPTC data for picture %s will be ignored"%filename , xbmc.LOGERROR)
             ipt = {}
             return ipt
 
@@ -1010,9 +1009,9 @@ def Request(SQLrequest):
         if msg.args[0].startswith("no such column: files.GPS GPSLatitudeRef"):
             pass
         else:
-            decoder.log( "Request", "The request failed :", xbmc.LOGERROR )
-            decoder.log( "Request", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
-            decoder.log( "Request", "SQL statement> %s"%SQLrequest, xbmc.LOGERROR)
+            common.log( "Request", "The request failed :", xbmc.LOGERROR )
+            common.log( "Request", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+            common.log( "Request", "SQL statement> %s"%SQLrequest, xbmc.LOGERROR)
 
         retour= []
     cn.close()
@@ -1026,7 +1025,7 @@ def RequestWithBinds(SQLrequest, bindVariablesOrg):
     bindVariables = []
     for value in bindVariablesOrg:
         if type(value) == type('str'):
-            bindVariables.append(decoder.smart_unicode(value))
+            bindVariables.append(common.smart_unicode(value))
         else:
             bindVariables.append(value)
     try:
@@ -1038,12 +1037,12 @@ def RequestWithBinds(SQLrequest, bindVariablesOrg):
             pass
         else:
             try:
-                decoder.log( "RequestWithBinds", "The request failed :", xbmc.LOGERROR )
-                decoder.log( "RequestWithBinds", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
-                decoder.log( "RequestWithBinds",  "SQL RequestWithBinds > %s"%SQLrequest, xbmc.LOGERROR)
+                common.log( "RequestWithBinds", "The request failed :", xbmc.LOGERROR )
+                common.log( "RequestWithBinds", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+                common.log( "RequestWithBinds",  "SQL RequestWithBinds > %s"%SQLrequest, xbmc.LOGERROR)
                 i = 1
                 for var in bindVariables:
-                    decoder.log( "RequestWithBinds", "SQL RequestWithBinds %d> %s"%(i,var), xbmc.LOGERROR)
+                    common.log( "RequestWithBinds", "SQL RequestWithBinds %d> %s"%(i,var), xbmc.LOGERROR)
                     i=i+1
             except:
                 pass
@@ -1343,8 +1342,8 @@ def all_children(rootid):
 #def search_between_dates(datestart='2007-01-01 00:00:01',dateend='2008-01-01 00:00:01'):
 def search_between_dates(DateStart=("2007","%Y"),DateEnd=("2008","%Y")):
     """Cherche les photos qui ont été prises entre 'datestart' et 'dateend'."""
-    decoder.log( "search_between_dates", DateStart)
-    decoder.log( "search_between_dates", DateEnd)
+    common.log( "search_between_dates", DateStart)
+    common.log( "search_between_dates", DateEnd)
     DS = strftime("%Y-%m-%d %H:%M:%S",strptime(DateStart[0],DateStart[1]))
     DE = strftime("%Y-%m-%d %H:%M:%S",strptime(DateEnd[0],DateEnd[1]))
     if DateEnd[1]=="%Y-%m-%d":

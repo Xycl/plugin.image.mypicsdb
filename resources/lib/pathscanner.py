@@ -21,7 +21,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import os, urllib, re
 import xbmc, xbmcvfs
-import CharsetDecoder as decoder
+import common
 
 class Scanner(object):
 
@@ -33,6 +33,7 @@ class Scanner(object):
             path = path.encode('utf-8')
             
         if path.startswith('multipath://'):
+            common.log("Scanner.walk", 'multipath "%s"'%path)
             dirs = path[12:-1].split('/')
             for item in dirs:
                 dirnames1, filenames1 = self._walk(urllib.unquote_plus(item), recursive, types)
@@ -43,6 +44,7 @@ class Scanner(object):
                     filenames.append(filename)               
                
         else:
+            common.log("Scanner.walk", 'path "%s"'%path)
             dirnames, filenames = self._walk(path, recursive, types)
 
                     
@@ -55,7 +57,7 @@ class Scanner(object):
         files     = []
 
         path = xbmc.translatePath(path)
-
+        common.log("Scanner._walk",'"%s"'%path)
         if xbmcvfs.exists(xbmc.translatePath(path)) or re.match(r"[a-zA-Z]:\\", path) is not None:
             subdirs, files = xbmcvfs.listdir(path)
             for subdir in subdirs:
@@ -65,6 +67,8 @@ class Scanner(object):
                 if types is not None:
                     if os.path.splitext(filename)[1].upper() in types or os.path.splitext(filename)[1].lower() in types :
                         filenames.append(os.path.join(path, filename))
+                    else:
+                        common.log("Scanner:_walk", 'Found file "%s" is excluded'%os.path.join(path, filename))
                 else:              
                     filenames.append(os.path.join(path, filename))
 
@@ -81,7 +85,7 @@ class Scanner(object):
 
 
     def getname(self, filename):
-        filename = decoder.smart_unicode(filename)
+        filename = common.smart_unicode(filename)
         return os.path.basename(filename)
 
     def delete(self, filename):
@@ -89,13 +93,13 @@ class Scanner(object):
         
     def getlocalfile(self, filename):
         
-        filename = decoder.smart_unicode(filename)
+        filename = common.smart_unicode(filename)
         
         # Windows NEEDS unicode but OpenElec utf-8
         try:
             exists = os.path.exists(filename)
         except:
-            exists = os.path.exists(decoder.smart_utf8(filename))
+            exists = os.path.exists(common.smart_utf8(filename))
         if exists:
             return filename, False
         else:
@@ -104,6 +108,6 @@ class Scanner(object):
             destination = os.path.join(tempdir, basefilename)
             xbmcvfs.copy(filename, destination)
 
-            return decoder.smart_unicode(destination), True
+            return common.smart_unicode(destination), True
 
         
