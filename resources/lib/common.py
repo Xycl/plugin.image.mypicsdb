@@ -61,7 +61,7 @@ def show_notification(title, message, timeout=2000, image=""):
     if image == "":
         command = 'Notification(%s,%s,%s)' % (smart_utf8(title), smart_utf8(message), timeout)
     else:
-        command = 'Notification(%s,%s,%s,%s)' % (smart_utf8(title), smart_utf8(message), timeout, image)
+        command = 'Notification(%s,%s,%s,%s)' % (smart_utf8(title), smart_utf8(message), timeout, smart_utf8(image))
     xbmc.executebuiltin(command)
 
 
