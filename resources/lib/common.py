@@ -68,16 +68,13 @@ def show_notification(title, message, timeout=2000, image=""):
 def run_plugin(plugin, params=""):
     if params != "":
         quoted_params = [ name+"="+quote_param(value)+"&" for (name, value) in params][:-1]
-        xbmc.executebuiltin('XBMC.RunPlugin(%s?%s)'%(plugin, quoted_params))
+        xbmc.executebuiltin('XBMC.RunPlugin(%s?%s)'%(smart_utf8(plugin), smart_utf8(quoted_params)))
     else:
-        xbmc.executebuiltin('XBMC.RunPlugin(%s)'%plugin)
+        xbmc.executebuiltin('XBMC.RunPlugin(%s)'%smart_utf8(plugin))
 
 
-def run_script(script, args=""):
-    if args == "":
-        xbmc.executebuiltin('XBMC.RunScript(%s)'%script)    
-    else:
-        xbmc.executebuiltin('XBMC.RunScript(%s,%s)'%(script, args))    
+def run_script(script):
+    xbmc.executebuiltin('XBMC.RunScript(%s)'%smart_utf8(script))
 
 
 def smart_unicode(s):
