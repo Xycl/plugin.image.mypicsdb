@@ -22,7 +22,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 __addonname__ = 'plugin.image.mypicsdb'
 
 # xbmc modules
-import xbmc, xbmcaddon
+import xbmc
 import resources.lib.common as common
 
 # python modules
@@ -80,7 +80,7 @@ class VFSScanner:
         self.total_root_entries = 0
         self.totalfiles  = 0
 
-        for path,recursive,update,exclude in mpdb.RootFolders():
+        for path,_,_,exclude in mpdb.RootFolders():
             if exclude:
                 common.log("", 'Exclude path "%s" found '%common.smart_unicode(path[:len(path)-1]))
                 self.exclude_folders.append(common.smart_unicode(path[:len(path)-1]))

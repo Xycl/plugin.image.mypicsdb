@@ -945,7 +945,7 @@ class Main:
         filename = common.smart_unicode(self.args.filename)
 
         MPDB.addPicToCollection( namecollection, path, filename )
-        common.show_notification(common.getstring(30000),common.getstring(30154),namecollection),3000,join(home,"icon.png"))
+        common.show_notification(common.getstring(30000),common.getstring(30154),namecollection,3000,join(home,"icon.png"))
         #xbmc.executebuiltin( "Notification(%s,%s %s,%s,%s)"%(common.getstring(30000).encode('utf-8'),common.getstring(30154).encode('utf-8'),namecollection.encode('utf-8'),3000,join(home,"icon.png").encode('utf-8')))
 
 

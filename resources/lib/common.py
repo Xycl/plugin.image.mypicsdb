@@ -110,7 +110,7 @@ def get_crc32( parm ):
     crc = 0xffffffff;
     for b in byte:
         crc = crc ^ (b << 24)          
-        for i in range(8):
+        for _ in range(8):
             if (crc & 0x80000000 ):                 
                 crc = (crc << 1) ^ 0x04C11DB7                
             else:
@@ -132,12 +132,6 @@ def unquote_param(parm):
     parm = smart_utf8( parm.replace ('\\"', '"').replace ("\\'", "'").replace("\\\\\\\\", "\\") )
 
     return parm
-
-
-def unquote_unicode(text):
-    def unicode_unquoter(match):
-        return unichr(int(match.group(1),16))
-    return re.sub(r'&#([0-9])*?;',unicode_unquoter,text)
 
 
 def log(module, msg, level=xbmc.LOGDEBUG):
