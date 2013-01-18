@@ -53,6 +53,30 @@ Supported methods:
 import xbmc
 import CharsetDecoder as decoder
 
+
+database=''
+
+def DBFactory(backend, db_name, *args):
+    global database
+    
+    backends = {'mysql':MysqlConnection, 'sqlite':SqliteConnection}
+
+    if backend.lower() == 'mysql':
+        print "mysql"
+        import mysql.connector as database
+            
+    # default is to use Sqlite
+    else:
+        print "Sqlite"
+        try:
+            from sqlite3 import dbapi2 as database
+        except:
+            from pysqlite2 import dbapi2 as database        
+                
+    return backends[backend](db_name, *args)
+    
+
+
 class BaseConnection(object):
 
     def connect(self):
@@ -260,24 +284,3 @@ class SqliteCursor(BaseCursor):
         return [row for row in self.cursor]
 """
 
-#database=''
-
-def DBFactory(backend, db_name, *args):
-    #global database
-    
-    backends = {'mysql':MysqlConnection, 'sqlite':SqliteConnection}
-
-    if backend.lower() == 'mysql':
-        print "mysql"
-        import mysql.connector as database
-            
-    # default is to use Sqlite
-    else:
-        print "Sqlite"
-        try:
-            from sqlite3 import dbapi2 as database
-        except:
-            from pysqlite2 import dbapi2 as database        
-                
-    return backends[backend](db_name, *args)
-    
