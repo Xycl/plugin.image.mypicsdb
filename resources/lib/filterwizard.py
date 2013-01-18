@@ -4,9 +4,9 @@
 import sys
 import xbmcgui
 import MypicsDB as MPDB
-import CharsetDecoder as decoder
+import common
 
-_ = sys.modules[ "__main__" ].__language__
+#_ = sys.modules[ "__main__" ].__language__
 
 
 STATUS_LABEL       = 100
@@ -37,12 +37,12 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
         self.setup_all()
 
     def setup_all( self ):
-        self.getControl( STATUS_LABEL ).setLabel( _(30610) )
-        self.getControl( TAGS_COLUMN ).setLabel(  _(30601) )        
-        self.getControl( CONTENT_COLUMN ).setLabel( _(30602) )        
-        self.getControl( BUTTON_OK ).setLabel( _(30613) )
-        self.getControl( BUTTON_CANCEL ).setLabel( _(30614) )
-        self.getControl( BUTTON_MATCHALL ).setLabel( _(30615) )
+        self.getControl( STATUS_LABEL ).setLabel( common.getstring(30610) )
+        self.getControl( TAGS_COLUMN ).setLabel(  common.getstring(30601) )        
+        self.getControl( CONTENT_COLUMN ).setLabel( common.getstring(30602) )        
+        self.getControl( BUTTON_OK ).setLabel( common.getstring(30613) )
+        self.getControl( BUTTON_CANCEL ).setLabel( common.getstring(30614) )
+        self.getControl( BUTTON_MATCHALL ).setLabel( common.getstring(30615) )
         self.getControl( TAGS_LIST ).reset()
 
         
@@ -53,9 +53,9 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
         self.CheckTagNames = {}
         
         if self.checkedTags == 1:
-            self.getControl( CHECKED_LABEL ).setLabel(  _(30611) )
+            self.getControl( CHECKED_LABEL ).setLabel(  common.getstring(30611) )
         else:
-            self.getControl( CHECKED_LABEL ).setLabel(  _(30612)% (self.checkedTags) )
+            self.getControl( CHECKED_LABEL ).setLabel(  common.getstring(30612)% (self.checkedTags) )
         
 
         i = 0
@@ -74,7 +74,7 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
 
      
     def isContentChecked(self, tagType, tagContent):
-        key = decoder.smart_unicode(tagType) + '||' + decoder.smart_unicode(tagContent)
+        key = common.smart_unicode(tagType) + '||' + common.smart_unicode(tagContent)
         if key in self.CheckTagNames :
             checked = self.CheckTagNames[ key ]    
         else :
@@ -167,7 +167,7 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
                 pos  = self.getControl( TAGS_CONTENT_LIST ).getSelectedPosition()
                 if pos != -1 and item != None:
                     checked = item.getProperty("checked")
-                    key = decoder.smart_unicode(self.CurrentlySelectedTagType) + '||' + decoder.smart_unicode(item.getLabel2())
+                    key = common.smart_unicode(self.CurrentlySelectedTagType) + '||' + common.smart_unicode(item.getLabel2())
                     
                     if checked == "checkbutton.png":
                         self.checkGUITagContent(item, -1)
@@ -182,9 +182,9 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
                     
 
                     if self.checkedTags == 1:
-                        self.getControl( CHECKED_LABEL ).setLabel(  _(30611) )
+                        self.getControl( CHECKED_LABEL ).setLabel(  common.getstring(30611) )
                     else:
-                        self.getControl( CHECKED_LABEL ).setLabel(  _(30612)% (self.checkedTags) )
+                        self.getControl( CHECKED_LABEL ).setLabel(  common.getstring(30612)% (self.checkedTags) )
                     self.getControl( CHECKED_LABEL ).setVisible(False)
                     self.getControl( CHECKED_LABEL ).setVisible(True)
 
