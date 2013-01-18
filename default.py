@@ -24,7 +24,7 @@ from urllib import unquote_plus
 from time import strftime,strptime
 from traceback import print_exc
 
-import xbmc, xbmcaddon, xbmcplugin,xbmcgui
+import xbmc, xbmcplugin,xbmcgui
 
 #from xbmcgui import Window
 
@@ -674,7 +674,7 @@ class Main:
 
         listtags = [k for k in MPDB.list_TagTypesAndCount()]
         result = False
-        for tag, nb in listtags:            
+        for tag, _ in listtags:            
             compte = MPDB.Searchfiles(tag, motrecherche, count=True)
             if compte:
                 result = True

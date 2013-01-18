@@ -70,7 +70,7 @@ def VersionTable():
 
             if strVersion < '1.9.0':
                 dialog = xbmcgui.Dialog()
-                dialog.ok(getstring(30000).encode("utf8"), "Database will be updated", "Please re-scan your folders")
+                dialog.ok(common.getstring(30000).encode("utf8"), "Database will be updated", "Please re-scan your folders")
                 Make_new_base(pictureDB, True)
                 VersionTable()
                 
@@ -938,12 +938,12 @@ def get_iptc(path,filename):
                 #print "No IPTC data found."
                 return {}
             else:
-                common.log("get_iptc", "EXCEPTION 1 >> get_iptc %s"%join(path,filename), LOGDEBUG )
-                common.log("get_iptc", "%s - %s"%(Exception,msg), LOGDEBUG )
+                common.log("get_iptc", "EXCEPTION 1 >> get_iptc %s"%join(path,filename), xbmc.LOGDEBUG )
+                common.log("get_iptc", "%s - %s"%(Exception,msg), xbmc.LOGDEBUG )
                 return {}
         else:
-            common.log("get_iptc", "EXCEPTION 2>> get_iptc %s"%join(path,filename), LOGDEBUG )
-            common.log("get_iptc", "%s - %s"%(Exception,msg), LOGDEBUG )
+            common.log("get_iptc", "EXCEPTION 2>> get_iptc %s"%join(path,filename), xbmc.LOGDEBUG )
+            common.log("get_iptc", "%s - %s"%(Exception,msg), xbmc.LOGDEBUG )
             return {}
     iptc = {}
 

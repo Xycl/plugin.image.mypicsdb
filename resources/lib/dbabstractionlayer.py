@@ -50,11 +50,12 @@ Supported methods:
 5) request(). Does an execute() and fetchall() without the possiblity to use bind variables.
 6) request_with_binds(). Does an execute() and fetchall() with bind variables.
 """
-AddonName = ( sys.modules[ "__main__" ].AddonName )
 
-import xbmc
+
+import xbmc, sys
 import common
 
+AddonName = ( sys.modules[ "__main__" ].AddonName )
 
 database=''
 
