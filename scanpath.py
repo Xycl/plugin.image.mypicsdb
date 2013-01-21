@@ -48,19 +48,6 @@ from resources.lib.XMP import XMP_Tags
 from DialogAddonScan import AddonScan
 
 
-db_type  = 'mysql' if common.getaddon_setting('mysql')=='true' else 'sqlite'
-db_name  = 'Pictures.db' if len(common.getaddon_setting('db_name')) == 0 else common.getaddon_setting('db_name')
-if db_type == 'sqlite':
-    db_user    = ''
-    db_pass    = ''
-    db_address = ''
-    db_port    = ''
-else:
-    db_user    = common.getaddon_setting('db_user')
-    db_pass    = common.getaddon_setting('db_pass')
-    db_address = common.getaddon_setting('db_address')
-    db_port    = common.getaddon_setting('db_port')
-
 
 class VFSScanner:
 
@@ -147,7 +134,10 @@ class VFSScanner:
                             print_exc()
 
                 self.scan.close()
-
+                
+        # Set default translation for tag types
+        mpdb.DefaultTagTypesTranslation()
+        
         xbmc.executebuiltin( "Notification(%s,%s)"%(common.getstring(30000).encode("utf8"),
                                                     common.getstring(30248).encode("utf8")%(self.picsscanned,self.picsadded,self.picsdeleted,self.picsupdated)
                                                     )
@@ -299,6 +289,8 @@ class VFSScanner:
         if recursive:
             for dirname in dirnames:
                 self._addpath(dirname, folderid, True, update)
+                
+    
         """
         except Exception,msg:
             print_exc
@@ -415,21 +407,9 @@ class VFSScanner:
 
             tags = xmpclass.get_xmp(os.path.dirname(fullpath), os.path.basename(fullpath))
 
-            for tagname in tags:
-
-                if tagname == 'Iptc4xmpExt:PersonInImage':
-                    key = 'persons'
-
-                    if tags.has_key(key):
-                        tags[key] += '||' + tags[tagname]
-                    else:
-                        tags[key] = tags[tagname]
-
-            if tags.has_key('Iptc4xmpExt:PersonInImage'):
-                del(tags['Iptc4xmpExt:PersonInImage'])
-
-        except:
+        except Exception, msg:
             common.log("VFSScanner._get_xmp", 'Error reading XMP tags for "%s"'%(fullpath), xbmc.LOGERROR)
+            common.log("VFSScanner._get_xmp",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
         
         return tags
 

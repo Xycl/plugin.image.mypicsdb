@@ -29,13 +29,17 @@ __language__ = __settings__.getLocalizedString
 __homepath__ = __settings__.getAddonInfo('path').decode('utf-8')
 __sys_file_encoding__ = sys.getfilesystemencoding()
 
+
 def getaddon_path():
     return __homepath__
 
+
 def getaddon_name():
     __settings__.getAddonInfo('name')
+
     
 def getaddon_info(parm):
+    # author, changelog, description, disclaimer, fanart. icon, id, name, path, profile, stars, summary, type, version
     return __settings__.getAddonInfo(parm)
 
 
@@ -46,6 +50,10 @@ def getstring(num):
 # taken from: http://wiki.xbmc.org/index.php?title=Xbmcaddon_module
 def openaddon_settings():
     __settings__.openSettings()
+
+
+def getxbmc_version():    
+    xbmc.getInfoLabel('System.BuildVersion')
 
 
 def getaddon_setting(name):
@@ -140,6 +148,9 @@ def log(module, msg, level=xbmc.LOGDEBUG):
 
     if type(msg).__name__=='unicode':
         msg = msg.encode('utf-8')
+        
+    if getaddon_setting("debugging") == "true" and xbmc.LOGERROR != level:
+        level = xbmc.LOGNOTICE
 
     filename = smart_utf8(os.path.basename(sys._getframe(1).f_code.co_filename))
     lineno  = str(sys._getframe(1).f_lineno)

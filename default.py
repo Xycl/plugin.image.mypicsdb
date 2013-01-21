@@ -1447,7 +1447,7 @@ if __name__=="__main__":
         #   - efface les tables et les recréés
         if common.getaddon_setting("initDB") == "true":
             MPDB.Make_new_base(pictureDB, ecrase= common.getaddon_setting("initDB") == "true")
-            common.getaddon_setting("initDB","false")
+            common.setaddon_setting("initDB","false")
         else:
             MPDB.VersionTable()
         #scan les répertoires lors du démarrage (selon setting)
@@ -1486,21 +1486,6 @@ if __name__=="__main__":
         m.show_tagtypes()
     elif m.args.action=='showtags':
         m.show_tags()
-    # browse by person
-    elif m.args.action=='showperson':
-        m.show_person()
-    # browse by category
-    elif m.args.action=='showcategory':
-        m.show_category()
-    # browse by supplementalcategory
-    elif m.args.action=='showsupplementalcategory':
-        m.show_supplementalcategory()
-    # browse by country
-    elif m.args.action=='showcountry':
-        m.show_country()
-    # browse by city
-    elif m.args.action=='showcity':
-        m.show_city()
     #   Affiche les images
     elif m.args.action=='showpics':
         m.show_pics()

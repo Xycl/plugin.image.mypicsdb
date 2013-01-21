@@ -49,6 +49,23 @@ Supported methods:
 4) fetchall(). Fetches all rows.
 5) request(). Does an execute() and fetchall() without the possiblity to use bind variables.
 6) request_with_binds(). Does an execute() and fetchall() with bind variables.
+
+
+Example
+
+db_type  = 'mysql' if common.getaddon_setting('mysql')=='true' else 'sqlite'
+db_name  = 'Pictures.db' if len(common.getaddon_setting('db_name')) == 0 else common.getaddon_setting('db_name')
+if db_type == 'sqlite':
+    db_user    = ''
+    db_pass    = ''
+    db_address = ''
+    db_port    = ''
+else:
+    db_user    = common.getaddon_setting('db_user')
+    db_pass    = common.getaddon_setting('db_pass')
+    db_address = common.getaddon_setting('db_address')
+    db_port    = common.getaddon_setting('db_port')
+
 """
 
 

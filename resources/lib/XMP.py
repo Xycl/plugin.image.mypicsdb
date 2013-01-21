@@ -9,8 +9,7 @@ from os.path import join
 import common
 from HTMLParser import HTMLParser
 
-tag_set = {'persons' : 'MPReg:PersonDisplayName',
-
+tag_set = {'MPReg:PersonDisplayName' : 'MPReg:PersonDisplayName',
            'Iptc4xmpExt:PersonInImage' : 'Iptc4xmpExt:PersonInImage', 
            'Iptc4xmpExt:City' : 'Iptc4xmpExt:City', 
            'Iptc4xmpExt:CountryName' : 'Iptc4xmpExt:CountryName', 
@@ -82,18 +81,7 @@ class XMP_Tags(object):
         end   = content.rfind("</" + xmptag) + 4 + len(xmptag)
         inner = content[start:end]
         self.get_xmp_inner = inner
-        """   
-        if start != -1:
-            end   = content.rfind("</" + xmptag) + 4 + len(xmptag)
-            inner = content[start:end]
-            self.get_xmp_inner = inner
-        else:
-            xmptag = 'x:xapmeta'
-            start = content.find("<" + xmptag)
-            end   = content.rfind("</" + xmptag) + 4 + len(xmptag)
-            inner = content[start:end]
-            self.get_xmp_inner = inner
-         """
+
 
             
     def get_xmp(self, dirname, picfile):
