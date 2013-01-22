@@ -56,23 +56,22 @@ def VersionTable():
     conn = sqlite.connect(pictureDB)
     conn.text_factory = unicode #sqlite.OptimizedUnicode
     cn=conn.cursor()
+    
+    # Test Version of DB
+    strVersion = '1.0.0'
+    try:
+        strVersion = Request("Select strVersion from DBVersion")[0][0]
+    except:
+        Make_new_base(pictureDB, True)    
+        strVersion = '1.9.12'
 
-    try:    
-        cn.execute("CREATE TABLE DBVersion ( strVersion text primary key  )")
-        cn.execute("insert into DBVersion (strVersion) values('1.9.12')")
-
-        conn.commit() 
-    except Exception,msg:
-        # Test Version of DB
-        strVersion = Request("Select strVersion from DBVersion")[0][0];
-
-        if strVersion != '1.9.12':
-            dialog = xbmcgui.Dialog()
-            dialog.ok(common.getstring(30000).encode("utf8"), "Database will be updated", "You must re-scan your folders")
-            Make_new_base(pictureDB, True)
-            VersionTable()
-            
-        common.log("MPDB.VersionTable", "MyPicsDB database version is %s"%str(strVersion) ) 
+    if strVersion != '1.9.12':
+        dialog = xbmcgui.Dialog()
+        dialog.ok(common.getstring(30000).encode("utf8"), "Database will be updated", "You must re-scan your folders")
+        Make_new_base(pictureDB, True)
+        #VersionTable()
+        
+    common.log("MPDB.VersionTable", "MyPicsDB database version is %s"%str(strVersion) ) 
 
     cn.close()
 
@@ -93,11 +92,25 @@ def Make_new_base(DBpath,ecrase=True):
                 common.log("MPDB.Make_new_base", "DROP TABLE %s"%table, xbmc.LOGERROR )
                 common.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
 
+    # table: version
+    try:
+        cn.execute("""CREATE TABLE DBVersion ( strVersion text)""")
+    except Exception,msg:
+        if str(msg).find("already exists") > -1:
+            pass
+        else: #sinon on imprime l'exception levée pour la traiter
+            common.log("MPDB.Make_new_base", "CREATE TABLE files ...", xbmc.LOGERROR )
+            common.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )    
 
+    try:
+        cn.execute("insert into DBVersion values('1.9.12')")
+        conn.commit()
+    except:
+        pass
+        
     #table 'files'
     try:
-        cn.execute("""CREATE TABLE files ( idFile integer primary key, idFolder integer, strPath text, strFilename text, ftype text, DateAdded DATETIME, Thumb text,  ImageRating text, ImageDateTime DATETIME, Sha text,
-                    CONSTRAINT UNI_FILE UNIQUE (strPath,strFilename))""")
+        cn.execute("""CREATE TABLE files ( idFile integer primary key, idFolder integer, strPath text, strFilename text, ftype text, DateAdded DATETIME, Thumb text,  ImageRating text, ImageDateTime DATETIME, Sha text, CONSTRAINT UNI_FILE UNIQUE (strPath,strFilename))""")
     except Exception,msg:
         if str(msg).find("already exists") > -1:
             pass
@@ -107,7 +120,7 @@ def Make_new_base(DBpath,ecrase=True):
 
     #table 'folders'
     try:
-        cn.execute("""CREATE TABLE "folders" ("idFolder" INTEGER  primary key not null, "FolderName" TEXT, "ParentFolder" INTEGER, "FullPath" TEXT UNIQUE,"HasPics" INTEGER);""")
+        cn.execute("""CREATE TABLE folders (idFolder INTEGER primary key not null, FolderName TEXT, ParentFolder INTEGER, FullPath TEXT UNIQUE, HasPics INTEGER)""")
     except Exception,msg:
         if str(msg).find("already exists") > -1:
             #cette exception survient lorsque la table existe déjà.
@@ -118,7 +131,7 @@ def Make_new_base(DBpath,ecrase=True):
             common.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
     #table 'Collections'
     try:
-        cn.execute("""CREATE TABLE "Collections" ("idCol" INTEGER PRIMARY KEY, "CollectionName" TEXT UNIQUE);""")
+        cn.execute("""CREATE TABLE Collections (idCol INTEGER PRIMARY KEY, CollectionName TEXT UNIQUE)""")
     except Exception,msg:
         if str(msg).find("already exists") > -1:
             #cette exception survient lorsque la table existe déjà.
@@ -129,10 +142,7 @@ def Make_new_base(DBpath,ecrase=True):
             common.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
     #table 'FilesInCollections'
     try:
-        cn.execute("""CREATE TABLE "FilesInCollections" ("idCol" INTEGER NOT NULL,
-                                   "idFile" INTEGER NOT NULL,
-                                   CONSTRAINT UNI_COLLECTION UNIQUE ("idCol","idFile")
-                                   );""")
+        cn.execute("""CREATE TABLE FilesInCollections (idCol INTEGER NOT NULL, idFile INTEGER NOT NULL, UNI_COLLECTION UNIQUE (idCol,idFile))""")
     except Exception,msg:
         if str(msg).find("already exists") > -1:
             #cette exception survient lorsque la table existe déjà.
@@ -143,13 +153,7 @@ def Make_new_base(DBpath,ecrase=True):
             common.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
     #table 'periodes'
     try:
-        cn.execute("""CREATE TABLE "periodes"
-  ("idPeriode" INTEGER  PRIMARY KEY NOT NULL,
-   "PeriodeName" TEXT UNIQUE NOT NULL,
-   "DateStart" DATETIME NOT NULL,
-   "DateEnd" DATETIME NOT NULL,
-   CONSTRAINT UNI_PERIODE UNIQUE ("PeriodeName","DateStart","DateEnd")
-   )""")
+        cn.execute("""CREATE TABLE periodes(idPeriode INTEGER  PRIMARY KEY NOT NULL, PeriodeName TEXT UNIQUE NOT NULL, DateStart DATETIME NOT NULL, DateEnd DATETIME NOT NULL, CONSTRAINT UNI_PERIODE UNIQUE (PeriodeName,DateStart,DateEnd) )""")
     except Exception,msg:
         if str(msg).find("already exists") > -1:
             #cette exception survient lorsque la table existe déjà.
@@ -160,12 +164,7 @@ def Make_new_base(DBpath,ecrase=True):
             common.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
     #table 'Rootpaths'
     try:
-        cn.execute("""CREATE TABLE "Rootpaths"
-  ("idRoot" INTEGER  PRIMARY KEY NOT NULL,
-   "path" TEXT UNIQUE NOT NULL,
-   "recursive" INTEGER NOT NULL,
-   "remove" INTEGER NOT NULL,
-   "exclude" INTEGER DEFAULT 0)""")
+        cn.execute("""CREATE TABLE Rootpaths (idRoot INTEGER PRIMARY KEY NOT NULL, Path TEXT UNIQUE NOT NULL, Recursive INTEGER NOT NULL, Remove INTEGER NOT NULL, Exclude INTEGER DEFAULT 0)""")
     except Exception,msg:
         if str(msg).find("already exists") > -1:
             #cette exception survient lorsque la table existe déjà.
@@ -178,7 +177,7 @@ def Make_new_base(DBpath,ecrase=True):
 
     #table 'TagTypes'
     try:
-        cn.execute("""CREATE TABLE "TagTypes" ("idTagType" INTEGER NOT NULL primary key, "TagType" TEXT, "TagTranslation" TEXT, CONSTRAINT UNI_TAG UNIQUE("TagType") )""")
+        cn.execute("""CREATE TABLE TagTypes (idTagType INTEGER NOT NULL primary key, TagType TEXT, TagTranslation TEXT, CONSTRAINT UNI_TAG UNIQUE(TagType) )""")
     except Exception,msg:
         if str(msg).find("already exists") > -1:
             pass
@@ -188,7 +187,7 @@ def Make_new_base(DBpath,ecrase=True):
 
     #table 'TagContent'
     try:
-        cn.execute("""CREATE TABLE "TagContents" ("idTagContent" INTEGER NOT NULL primary key, "idTagType" INTEGER, "TagContent" TEXT, CONSTRAINT UNI_TAG UNIQUE("idTagType", "TagContent") )""")
+        cn.execute("""CREATE TABLE TagContents (idTagContent INTEGER NOT NULL primary key, idTagType INTEGER, TagContent TEXT, CONSTRAINT UNI_TAG UNIQUE(idTagType, TagContent) )""")
     except Exception,msg:
         if str(msg).find("already exists") > -1:
             pass
@@ -198,7 +197,7 @@ def Make_new_base(DBpath,ecrase=True):
 
     #table 'TagsInFiles'
     try:
-        cn.execute("""CREATE TABLE "TagsInFiles" ("idTagContent" INTEGER NOT NULL, "idFile" INTEGER NOT NULL)""")
+        cn.execute("""CREATE TABLE TagsInFiles (idTagContent INTEGER NOT NULL, idFile INTEGER NOT NULL)""")
     except Exception,msg:
         if str(msg).find("already exists") > -1:
             pass

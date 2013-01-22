@@ -1446,10 +1446,11 @@ if __name__=="__main__":
         MPDB.pictureDB = pictureDB
         #   - efface les tables et les recréés
         if common.getaddon_setting("initDB") == "true":
-            MPDB.Make_new_base(pictureDB, ecrase= common.getaddon_setting("initDB") == "true")
+            MPDB.Make_new_base(pictureDB, True)
             common.setaddon_setting("initDB","false")
         else:
             MPDB.VersionTable()
+            #MPDB.Make_new_base(pictureDB, False)
         #scan les répertoires lors du démarrage (selon setting)
         if common.getaddon_setting('bootscan')=='true':
             if not(xbmc.getInfoLabel( "Window.Property(DialogAddonScan.IsAlive)" ) == "true"):
