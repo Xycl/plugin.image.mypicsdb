@@ -22,6 +22,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 import os, urllib, re
 import xbmc, xbmcvfs
 import common
+import json
 
 class Scanner(object):
 
@@ -58,28 +59,28 @@ class Scanner(object):
 
         path = xbmc.translatePath(path)
         common.log("Scanner._walk",'"%s"'%path)
-        if xbmcvfs.exists(xbmc.translatePath(path)) or re.match(r"[a-zA-Z]:\\", path) is not None:
-            subdirs, files = xbmcvfs.listdir(path)
-            for subdir in subdirs:
-                dirnames.append(os.path.join(path, subdir))
+        #if xbmcvfs.exists(xbmc.translatePath(path)) or re.match(r"[a-zA-Z]:\\", path) is not None:
+        subdirs, files = self.listdir(path)
+        for subdir in subdirs:
+            dirnames.append(os.path.join(path, subdir))
 
-            for filename in files:
-                if types is not None:
-                    if os.path.splitext(filename)[1].upper() in types or os.path.splitext(filename)[1].lower() in types :
-                        filenames.append(os.path.join(path, filename))
-                    else:
-                        common.log("Scanner:_walk", 'Found file "%s" is excluded'%os.path.join(path, filename))
-                else:              
+        for filename in files:
+            if types is not None:
+                if os.path.splitext(filename)[1].upper() in types or os.path.splitext(filename)[1].lower() in types :
                     filenames.append(os.path.join(path, filename))
+                else:
+                    common.log("Scanner:_walk", 'Found file "%s" is excluded'%os.path.join(path, filename))
+            else:              
+                filenames.append(os.path.join(path, filename))
 
 
-            if recursive:
-                for item in subdirs:
-                    dirnames1, filenames1 = self._walk(os.path.join(path, item), recursive, types)
-                    for item in dirnames1:
-                        dirnames.append(item)
-                    for item in filenames1:
-                        filenames.append(item)
+        if recursive:
+            for item in subdirs:
+                dirnames1, filenames1 = self._walk(os.path.join(path, item), recursive, types)
+                for item in dirnames1:
+                    dirnames.append(item)
+                for item in filenames1:
+                    filenames.append(item)
         
         return dirnames, filenames
 
@@ -103,11 +104,37 @@ class Scanner(object):
         if exists:
             return filename, False
         else:
-            tempdir     = xbmc.translatePath('special://temp')
+            tempdir     = xbmc.translatePath('special://temp').decode('utf-8')
             basefilename    = self.getname(filename)
             destination = os.path.join(tempdir, basefilename)
             xbmcvfs.copy(filename, destination)
 
             return common.smart_unicode(destination), True
 
-        
+            
+    def listdir(self, path):
+
+        try:
+            return xbmcvfs.listdir(path)
+        except:
+            file_list = []
+            dir_list  = []
+            json_response = xbmc.executeJSONRPC('{ "jsonrpc" : "2.0" , "method" : "Files.GetDirectory" , "params" : { "directory" : "%s" , "sort" : { "method" : "file" } } , "id" : 1 }' % common.smart_utf8(path.replace('\\', '\\\\')))
+            jsonobject = json.loads(json_response)
+
+            try:
+                if jsonobject['result']['files']:
+
+                    for item in jsonobject['result']['files']:
+
+                        filename = common.smart_utf8(item['label'])
+                        if item['filetype'] == 'directory':
+                            dir_list.append(filename)
+                        else:
+                            file_list.append(filename)
+                            
+            except Exception,msg:
+                common.log("Scanner.listdir", 'Path "%s"'%path, xbmc.LOGERROR )
+                common.log("Scanner.listdir", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+                
+            return dir_list, file_list

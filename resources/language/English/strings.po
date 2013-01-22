@@ -824,11 +824,6 @@ msgid "Supplemental Category"
 msgstr ""
 
 # tag type translation
-msgctxt "#30719"
-msgid "Supplemental Category"
-msgstr ""
-
-# tag type translation
 msgctxt "#30720"
 msgid "Person"
 msgstr ""

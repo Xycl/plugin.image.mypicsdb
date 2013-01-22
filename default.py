@@ -116,10 +116,11 @@ class Main:
         
         in_apostrophe=False
         prev_char = ""
+        prevprev_char = ""
         output=""
         
         for char in parm:
-            if char == "'" and prev_char != "\\":
+            if char == "'" and prev_char != "\\" or char == "'" and prev_char =="\\" and prevprev_char == "\\":
                 if not in_apostrophe:
                     in_apostrophe = True
                 else:
@@ -128,8 +129,13 @@ class Main:
                     char = ","
                 
             output += char
-            prev_char = char
             
+            prevprev_char = prev_char
+            prev_char = char
+            if prevprev_char == "\\" and prev_char == "\\" :
+                prev_char = ""
+                prevprev_char = ""
+                
         return output
         
     def Title(self,title):
