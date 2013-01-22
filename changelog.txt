@@ -1,4 +1,7 @@
-2013/01/22 --> v 1.9.12
+2013/01/22 --> v 1.9.13
+Fix:    Error in parameters parsing corrected
+
+2013/01/21 --> v 1.9.12
 ATTENTION: Database update forces a re-scan of all pictures!
 Update: Tag translations are now part of the Transifex translations
 Update: Language files from Transifex
