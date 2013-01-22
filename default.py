@@ -99,16 +99,12 @@ class Main:
         common.log("Main.get_args", "sys.argv[0] = %s"%sys.argv[0], xbmc.LOGNOTICE)
         common.log("Main.get_args", "sys.argv[2] = %s"%sys.argv[2], xbmc.LOGNOTICE)
 
-        #sys.argv[2] = ?action=%27showpics%27&method=%27tag%27&name=%27%c3%b6%c3%a4%c3%bc%5c%27%2b%c2%b4%60%20(1%20Bilder)%27&page=%271%27&tag=%27%c3%b6%c3%a4%c3%bc%5c%27%2b%c2%b4%60%27&tagtype=%27Title%27&viewmode=%27view%27
-        #self.args = _Info(action='showpics',method='tag',name='\xc3\xb6\xc3\xa4\xc3\xbc\\'+\xc2\xb4` (1 Bilder)'&page='1'&tag='\xc3\xb6\xc3\xa4\xc3\xbc\\'+\xc2\xb4`',tagtype='Title',viewmode='view')
-
-        
         self.parm = common.smart_utf8(unquote_plus(sys.argv[2])).replace("\\\\", "\\")
-        common.log("", self.parm, xbmc.LOGNOTICE)
+        #common.log("", self.parm, xbmc.LOGNOTICE)
         
         sys.argv[2] = self.parm
         parm = self.cleanup(self.parm[ 1 : ])
-        common.log("", parm, xbmc.LOGNOTICE)
+        common.log("Main.get_args", parm)
         
         #args= "self.args = _Info(%s)" % ( self.parm[ 1 : ].replace( "&", ", " ), )
         args= "self.args = _Info(%s)" % ( parm )
@@ -123,15 +119,11 @@ class Main:
         output=""
         
         for char in parm:
-            print char
-
             if char == "'" and prev_char != "\\":
                 if not in_apostrophe:
                     in_apostrophe = True
-                    print "in_apostrophe = True"
                 else:
                     in_apostrophe = False
-                    print "in_apostrophe = False"
             if char == "&" and not in_apostrophe:
                     char = ","
                 

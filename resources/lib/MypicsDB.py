@@ -1036,15 +1036,15 @@ def DefaultTagTypesTranslation():
 
 
 def list_TagTypes():
-    DefaultTagTypesTranslation()
+
     return [row for (row,) in Request( """SELECT distinct tt.TagTranslation FROM TagTypes tt, TagContents tc, TagsInFiles tif 
 where length(trim(TagTranslation))>0 
 and tt.idTagType = tc.idTagType
 and tc.idTagContent = tif.idTagContent
-ORDER BY LOWER(TagTranslation) ASC""" )]
+ORDER BY TagTranslation ASC""" )]
 
 def list_TagTypesAndCount():
-    DefaultTagTypesTranslation()
+
     return [row for row in Request( """
 SELECT tt.TagTranslation, count(distinct tagcontent)
   FROM TagTypes tt, TagContents tc
@@ -1071,12 +1071,12 @@ def list_Tags(tagType):
 def list_TagsAndCount(tagType):
     """Return a list of all tags in database"""
     return [row for row in RequestWithBinds( """
-    select TagContent, count(distinct idfile) 
+    select TagContent, count(distinct idFile) 
   from TagContents tc, TagsInFiles tif, TagTypes tt  
  where tc.idTagContent = tif.idTagContent
    and tc.idTagType = tt.idTagType 
    and tt.TagTranslation=? 
-group BY LOWER(TagContent)""",(tagType.encode("utf8"),) )]
+group BY TagContent""",(tagType.encode("utf8"),) )]
 
 def countTags(kw,tagType, limit=-1,offset=-1):
     if kw is not None:
