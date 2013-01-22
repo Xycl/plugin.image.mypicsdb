@@ -1,3 +1,10 @@
+2013/01/22 --> v 1.3.0
+Update: scanpaths.py now supports remote shares
+Update: default.py now supports multi paths
+Update: Scanning can be cancelled by clicking on the close button of the scan dialog
+Fix:    Problem with plus sign in path names fixed.
+Fix:    Problem with "&" in tags fixed.
+
 2012/12/12 --> v 1.2.11
 Fix:    Changed all files to Unix style line break
 Update: New EXIF parser

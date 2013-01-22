@@ -4,13 +4,12 @@ Todo : Due to performance reasons RDF data is parsed by string functions.
        Perhaps there is a fast xml parser library?
 """
 
-import os,sys,re
+import re
 from os.path import join
-import CharsetDecoder as decoder
+import common
 from HTMLParser import HTMLParser
 
-tag_set = {'persons' : 'MPReg:PersonDisplayName',
-
+tag_set = {'MPReg:PersonDisplayName' : 'MPReg:PersonDisplayName',
            'Iptc4xmpExt:PersonInImage' : 'Iptc4xmpExt:PersonInImage', 
            'Iptc4xmpExt:City' : 'Iptc4xmpExt:City', 
            'Iptc4xmpExt:CountryName' : 'Iptc4xmpExt:CountryName', 
@@ -73,7 +72,7 @@ class XMP_Tags(object):
             f = open(join(dirname,picfile), 'rb')
         except:
             path = join(dirname.encode('utf-8'),picfile.encode('utf-8'))
-            path = decoder.smart_unicode(path).encode('utf-8')
+            path = common.smart_unicode(path).encode('utf-8')
             f = open(path, 'rb')
         content = f.read()
         f.close()
@@ -82,18 +81,7 @@ class XMP_Tags(object):
         end   = content.rfind("</" + xmptag) + 4 + len(xmptag)
         inner = content[start:end]
         self.get_xmp_inner = inner
-        """   
-        if start != -1:
-            end   = content.rfind("</" + xmptag) + 4 + len(xmptag)
-            inner = content[start:end]
-            self.get_xmp_inner = inner
-        else:
-            xmptag = 'x:xapmeta'
-            start = content.find("<" + xmptag)
-            end   = content.rfind("</" + xmptag) + 4 + len(xmptag)
-            inner = content[start:end]
-            self.get_xmp_inner = inner
-         """
+
 
             
     def get_xmp(self, dirname, picfile):
