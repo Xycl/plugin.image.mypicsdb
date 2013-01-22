@@ -1,3 +1,6 @@
+2013/01/22 --> v 1.9.14
+Fix:    Fixed unicode error in pathscanner.py
+
 2013/01/22 --> v 1.9.13
 Fix:    Error in parameters parsing corrected
 Fix:    English language file corrected
