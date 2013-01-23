@@ -137,7 +137,7 @@ def quote_param(parm):
 
 def unquote_param(parm):
     parm = urllib.unquote_plus(parm)
-    parm = smart_utf8( parm.replace ('\\"', '"').replace ("\\'", "'").replace("\\\\\\\\", "\\") )
+    parm = smart_unicode( parm.replace ('\\"', '"').replace ("\\'", "'").replace("\\\\\\\\", "\\") )
 
     return parm
 
