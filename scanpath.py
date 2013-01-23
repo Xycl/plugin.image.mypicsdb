@@ -120,6 +120,7 @@ class VFSScanner:
                 self.scan.update(0,0,
                             common.getstring(30000)+" ["+common.getstring(30241)+"]",#MyPicture Database [preparing]
                             common.getstring(30247))#please wait...
+                print paths
                 for path,recursive,update,exclude in paths:
                     if exclude==0:
                         self.total_root_entries += 1
@@ -190,7 +191,8 @@ class VFSScanner:
                     return
                     
                 self.picsscanned += 1
-                filename = common.smart_unicode(os.path.basename(pic))
+                #filename = common.smart_unicode(os.path.basename(pic))
+                filename = os.path.basename(pic)
                 extension = os.path.splitext(pic)[1].upper()
                     
                 picentry = { "idFolder": folderid,

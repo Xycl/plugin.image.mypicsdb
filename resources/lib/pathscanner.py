@@ -29,6 +29,8 @@ class Scanner(object):
     def walk(self, path, recursive = False, types = None):
         filenames = []
         dirnames  = []
+        files_to_return = []
+        dirs_to_return = []
 
         if type(path).__name__=='unicode':
             path = path.encode('utf-8')
@@ -48,8 +50,13 @@ class Scanner(object):
             common.log("Scanner.walk", 'path "%s"'%path)
             dirnames, filenames = self._walk(path, recursive, types)
 
-                    
-        return dirnames, filenames
+        # Make sure everything is a unicode
+        for filename in filenames:
+            files_to_return.append(common.smart_unicode(filename))
+        for dirname in dirnames:
+            dirs_to_return.append(common.smart_unicode(dirname))
+
+        return dirs_to_return, files_to_return
 
 
     def _walk(self, path, recursive, types):
@@ -60,7 +67,7 @@ class Scanner(object):
         path = xbmc.translatePath(path)
         common.log("Scanner._walk",'"%s"'%path)
         #if xbmcvfs.exists(xbmc.translatePath(path)) or re.match(r"[a-zA-Z]:\\", path) is not None:
-        subdirs, files = self.listdir(path)
+        subdirs, files = self._listdir(path)
         for subdir in subdirs:
             dirnames.append(os.path.join(path, subdir))
 
@@ -112,7 +119,7 @@ class Scanner(object):
             return common.smart_unicode(destination), True
 
             
-    def listdir(self, path):
+    def _listdir(self, path):
 
         try:
             return xbmcvfs.listdir(path)

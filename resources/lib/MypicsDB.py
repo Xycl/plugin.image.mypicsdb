@@ -142,7 +142,7 @@ def Make_new_base(DBpath,ecrase=True):
             common.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
     #table 'FilesInCollections'
     try:
-        cn.execute("""CREATE TABLE FilesInCollections (idCol INTEGER NOT NULL, idFile INTEGER NOT NULL, UNI_COLLECTION UNIQUE (idCol,idFile))""")
+        cn.execute("""CREATE TABLE FilesInCollections (idCol INTEGER NOT NULL, idFile INTEGER NOT NULL, Constraint UNI_COLLECTION UNIQUE (idCol,idFile))""")
     except Exception,msg:
         if str(msg).find("already exists") > -1:
             #cette exception survient lorsque la table existe déjà.
