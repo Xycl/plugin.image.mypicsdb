@@ -100,13 +100,11 @@ class Main:
         common.log("Main.get_args", "sys.argv[2] = %s"%sys.argv[2], xbmc.LOGNOTICE)
 
         self.parm = common.smart_utf8(unquote_plus(sys.argv[2])).replace("\\\\", "\\")
-        #common.log("", self.parm, xbmc.LOGNOTICE)
         
         sys.argv[2] = self.parm
         parm = self.cleanup(self.parm[ 1 : ])
         common.log("Main.get_args", parm)
         
-        #args= "self.args = _Info(%s)" % ( self.parm[ 1 : ].replace( "&", ", " ), )
         args= "self.args = _Info(%s)" % ( parm )
         exec args
         if not hasattr(self.args, 'page'):
@@ -954,7 +952,7 @@ class Main:
         filename = common.smart_unicode(self.args.filename)
 
         MPDB.addPicToCollection( namecollection, path, filename )
-        common.show_notification(common.getstring(30000),common.getstring(30154),namecollection,3000,join(home,"icon.png"))
+        common.show_notification(common.getstring(30000), common.getstring(30154)+ ' ' + namecollection,3000,join(home,"icon.png"))
         #xbmc.executebuiltin( "Notification(%s,%s %s,%s,%s)"%(common.getstring(30000).encode('utf-8'),common.getstring(30154).encode('utf-8'),namecollection.encode('utf-8'),3000,join(home,"icon.png").encode('utf-8')))
 
 
@@ -984,7 +982,7 @@ class Main:
             path           = common.smart_unicode(path)
             filename       = common.smart_unicode(filename)
             MPDB.addPicToCollection( namecollection,path,filename )
-        common.show_notification(common.getstring(30000),common.getstring(30161)%len(filelist),namecollection,3000,join(home,"icon.png"))
+        common.show_notification(common.getstring(30000), common.getstring(30161)%len(filelist)+' '+namecollection,3000,join(home,"icon.png"))
         #xbmc.executebuiltin( "Notification(%s,%s %s,%s,%s)"%(common.getstring(30000).encode("utf8"), common.getstring(30161).encode("utf8")%len(filelist),namecollection.encode("utf8"), 3000,join(home,"icon.png").encode("utf8")) )
 
     def remove_collection(self):
