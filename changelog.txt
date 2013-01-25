@@ -1,3 +1,6 @@
+2013/01/25 --> v 1.3.1
+Fix:    DB initialization fixed.
+
 2013/01/22 --> v 1.3.0
 Update: scanpaths.py now supports remote shares
 Update: default.py now supports multi paths
