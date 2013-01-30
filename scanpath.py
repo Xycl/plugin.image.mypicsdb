@@ -150,15 +150,14 @@ class VFSScanner:
             self.totalfiles = 0
         
         common.log("VFSScanner._countfiles", 'path "%s"'%path)
-        (dirs, files) = self.filescanner.walk(path, recursive, self.picture_extensions if self.use_videos == "false" else self.all_extensions)
+        (_, files) = self.filescanner.walk(path, recursive, self.picture_extensions if self.use_videos == "false" else self.all_extensions)
         self.totalfiles += len(files)
 
         return self.totalfiles
 
 
     def _addpath(self, path, parentfolderid, recursive, update):
-        dirnames        = []
-        filenames       = []
+
         """
         try:
         """
@@ -267,6 +266,7 @@ class VFSScanner:
                     mpdb.DB_file_insert(path, filename, picentry, sqlupdate, filesha)
                 except Exception, msg:
                     common.log("VFSScanner._addpath", 'Unable to insert picture "%s"'%pic, xbmc.LOGERROR)
+                    common.log("VFSScanner._addpath", '"%s" - "%s"'%(Exception, msg), xbmc.LOGERROR)
                     continue
                     
                 if sqlupdate:

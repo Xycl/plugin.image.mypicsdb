@@ -8,13 +8,12 @@ Todo :
 
 """
 import os,sys #,re
-from os.path import join, exists, isfile, isdir
+from os.path import join
 #from urllib import unquote_plus
 from traceback import print_exc
 
 import  xbmc, xbmcgui
 import common
-from XMP import XMP_Tags
 
 
 from time import strftime,strptime
@@ -273,7 +272,7 @@ def DB_cleanup_keywords():
 
     try:
         # in old version something went wrong with deleteing old unused folders
-        for i in range(1,10):
+        for _ in range(1,10):
             cn.execute('delete from folders where ParentFolder not in (select idFolder from folders) and ParentFolder is not null')
 
         cn.execute('delete from files where idFolder not in( select idFolder from folders)')
@@ -800,10 +799,6 @@ def RemovePath(path):
 
 def MakeRequest(field,comparator,value):
     return Request( """SELECT p.FullPath,f.strFilename FROM files f,folders p WHERE f.idFolder=p.idFolder AND %s %s %s """%(field,comparator,value))
-
-def get_fields(table="files"):
-    tableinfo = Request( """pragma table_info("%s")"""%table)
-    return [(name,typ) for cid,name,typ,notnull,dflt_value,pk in tableinfo]
 
 def Request(SQLrequest):
     conn = sqlite.connect(pictureDB)
