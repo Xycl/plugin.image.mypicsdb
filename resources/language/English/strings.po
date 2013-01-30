@@ -845,5 +845,5 @@ msgstr ""
 
 # tag type translation
 msgctxt "#30724"
-msgid "Flash
+msgid "Flash"
 msgstr ""
