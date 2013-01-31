@@ -155,8 +155,6 @@ def log(module, msg, level=xbmc.LOGDEBUG):
     filename = smart_utf8(os.path.basename(sys._getframe(1).f_code.co_filename))
     lineno  = str(sys._getframe(1).f_lineno)
 
-    #print sys._getframe(1).f_globals
-    
     if len(module.strip()) == 0:
         try:
             module = "function " + sys._getframe(1).f_code.co_name
@@ -167,3 +165,22 @@ def log(module, msg, level=xbmc.LOGDEBUG):
         module = 'object ' + module
     xbmc.log(str("[%s] line %5d in %s %s >> %s"%(__addonname__, int(lineno), filename, module, msg.__str__())), level)    
 
+
+# version is a string like 'x.y.z'
+# if first version is greater then -1 is returned. if equal then 0 is returned.
+def check_version(first, second):
+    a = first.split('.')
+    b = second.split('.')
+    
+    for i in range(len(a)):
+        # if we're here and there is no element left in b then a is greater than b
+        if len(b)<i:
+            return -1
+        
+        if int(a[i]) != int(b[i]):
+            return int(b[i]) - int(a[i])
+    # if we're here and a was equal to b, but b is longer than a then b must be greater  
+    if len(b)>len(a):
+        return 1
+            
+    return 0

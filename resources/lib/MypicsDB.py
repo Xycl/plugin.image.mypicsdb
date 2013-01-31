@@ -39,6 +39,7 @@ env = ( os.environ.get( "OS", "win32" ), "win32", )[ os.environ.get( "OS", "win3
 sys.path.append( os.path.join( BASE_RESOURCE_PATH, "platform_libraries", env ) )
 
 DEBUGGING = True
+DB_VERSION = '1.9.12'
 
 global pictureDB
 pictureDB = join(DB_PATH,"MyPictures.db")
@@ -57,21 +58,22 @@ def VersionTable():
     cn=conn.cursor()
     
     # Test Version of DB
-    strVersion = '1.0.0'
     try:
         strVersion = Request("Select strVersion from DBVersion")[0][0]
     except:
-        Make_new_base(pictureDB, True)    
-        strVersion = '1.9.12'
+        strVersion = '1.0.0'
+        #Make_new_base(pictureDB, True)    
+        #strVersion = DB_VERSION
 
-    if strVersion != '1.9.12':
+    common.log("MPDB.VersionTable", "MyPicsDB database version is %s"%str(strVersion) ) 
+
+    if common.check_version(strVersion, DB_VERSION)<0:
         dialog = xbmcgui.Dialog()
         dialog.ok(common.getstring(30000).encode("utf8"), "Database will be updated", "You must re-scan your folders")
+        common.log("MPDB.VersionTable", "MyPicsDB database will be updated" )
         Make_new_base(pictureDB, True)
         #VersionTable()
         
-    common.log("MPDB.VersionTable", "MyPicsDB database version is %s"%str(strVersion) ) 
-
     cn.close()
 
 def Make_new_base(DBpath,ecrase=True):
@@ -102,7 +104,7 @@ def Make_new_base(DBpath,ecrase=True):
             common.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )    
 
     try:
-        cn.execute("insert into DBVersion values('1.9.12')")
+        cn.execute("insert into DBVersion values('"+DB_VERSION+"')")
         conn.commit()
     except:
         pass
