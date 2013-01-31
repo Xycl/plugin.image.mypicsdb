@@ -234,5 +234,7 @@
     <string id="30722">Image Length</string>
     <string id="30723">Orientation</string>
     <string id="30724">Flash</string>
+    <string id="30725">Image Model</string>
+    <string id="30726">Image Make</string>
 
 </strings>
