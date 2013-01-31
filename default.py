@@ -869,7 +869,7 @@ class Main:
     def show_map(self):
         """get a google map for the given place (place is a string for an address, or a couple of gps lat/lon datas"""
         import geomaps
-
+        
         try:
             path = common.smart_unicode(self.args.path)
             filename = common.smart_unicode(self.args.filename)

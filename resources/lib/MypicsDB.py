@@ -39,6 +39,7 @@ env = ( os.environ.get( "OS", "win32" ), "win32", )[ os.environ.get( "OS", "win3
 sys.path.append( os.path.join( BASE_RESOURCE_PATH, "platform_libraries", env ) )
 
 DEBUGGING = True
+DB_VERSION = '1.9.12'
 
 global pictureDB
 pictureDB = join(DB_PATH,"MyPictures.db")
@@ -57,21 +58,22 @@ def VersionTable():
     cn=conn.cursor()
     
     # Test Version of DB
-    strVersion = '1.0.0'
     try:
         strVersion = Request("Select strVersion from DBVersion")[0][0]
     except:
-        Make_new_base(pictureDB, True)    
-        strVersion = '1.9.12'
+        strVersion = '1.0.0'
+        #Make_new_base(pictureDB, True)    
+        #strVersion = DB_VERSION
 
-    if strVersion != '1.9.12':
+    common.log("MPDB.VersionTable", "MyPicsDB database version is %s"%str(strVersion) ) 
+
+    if common.check_version(strVersion, DB_VERSION)<0:
         dialog = xbmcgui.Dialog()
         dialog.ok(common.getstring(30000).encode("utf8"), "Database will be updated", "You must re-scan your folders")
+        common.log("MPDB.VersionTable", "MyPicsDB database will be updated" )
         Make_new_base(pictureDB, True)
         #VersionTable()
         
-    common.log("MPDB.VersionTable", "MyPicsDB database version is %s"%str(strVersion) ) 
-
     cn.close()
 
 def Make_new_base(DBpath,ecrase=True):
@@ -102,7 +104,7 @@ def Make_new_base(DBpath,ecrase=True):
             common.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )    
 
     try:
-        cn.execute("insert into DBVersion values('1.9.12')")
+        cn.execute("insert into DBVersion values('"+DB_VERSION+"')")
         conn.commit()
     except:
         pass
@@ -996,6 +998,7 @@ def DefaultTagTypesTranslation():
     RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'MicrosoftPhoto:LastKeywordXMP'", (common.getstring(30717),))
     RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Dc:subject'", (common.getstring(30717),))
     RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpCore:Keywords'", (common.getstring(30717),))
+    RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Keywords'", (common.getstring(30717),))
 
     RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Category'", (common.getstring(30718),))
     RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Photoshop:Category'", (common.getstring(30718),))
@@ -1005,11 +1008,15 @@ def DefaultTagTypesTranslation():
 
     RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'MPReg:PersonDisplayName'", (common.getstring(30720),))
     RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpExt:PersonInImage'", (common.getstring(30720),))
+    RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Mwg-rs:RegionList:Face'", (common.getstring(30720),))
 
     RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'EXIF ExifImageWidth'", (common.getstring(30721),))
     RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'EXIF ExifImageLength'", (common.getstring(30722),))
     RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'EXIF SceneCaptureType'", (common.getstring(30723),))
-    RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'EXIF Flash'", (common.getstring(30723),))
+    RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'EXIF Flash'", (common.getstring(30724),))
+
+    RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Image Model'", (common.getstring(30725),))
+    RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Image Make'", (common.getstring(30726),))
 
     # default to not visible
     Request("update TagTypes set TagTranslation = '' where TagTranslation =  'EXIF DateTimeDigitized'")
