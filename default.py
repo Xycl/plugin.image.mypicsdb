@@ -868,8 +868,12 @@ class Main:
 
     def show_map(self):
         """get a google map for the given place (place is a string for an address, or a couple of gps lat/lon datas"""
+        dialog = xbmcgui.Dialog()
+        dialog.ok(common.getstring(30000).encode("utf8"), "Due to a bug in Frodo this feature was decommissioned.")
+        
+        """
         import geomaps
-
+        
         try:
             path = common.smart_unicode(self.args.path)
             filename = common.smart_unicode(self.args.filename)
@@ -886,7 +890,7 @@ class Main:
 
         showmap.doModal()
         del showmap
-
+        """
 
     def prettydate(self,dateformat,datetuple):
         "Replace %a %A %b %B date string formater (see strftime format) by the day/month names for the given date tuple given"

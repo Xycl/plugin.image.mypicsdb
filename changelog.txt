@@ -1,4 +1,5 @@
 2013/01/25 --> v 1.9.18
+Fix:    Geo-Location decommissioned due to bug in Frodo
 Update: XMP mwg-rs:RegionList Face recognition tags now supported
 Update: Language files from Transifex
 

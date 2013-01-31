@@ -1013,7 +1013,10 @@ def DefaultTagTypesTranslation():
     RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'EXIF ExifImageWidth'", (common.getstring(30721),))
     RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'EXIF ExifImageLength'", (common.getstring(30722),))
     RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'EXIF SceneCaptureType'", (common.getstring(30723),))
-    RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'EXIF Flash'", (common.getstring(30723),))
+    RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'EXIF Flash'", (common.getstring(30724),))
+
+    RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Image Model'", (common.getstring(30725),))
+    RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Image Make'", (common.getstring(30726),))
 
     # default to not visible
     Request("update TagTypes set TagTranslation = '' where TagTranslation =  'EXIF DateTimeDigitized'")
