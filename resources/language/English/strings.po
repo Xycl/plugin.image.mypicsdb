@@ -675,6 +675,8 @@ msgctxt "#30623"
 msgid "Translation for %s"
 msgstr ""
 
+#empty strings from id 30624 to 30649
+
 msgctxt "#30650"
 msgid "Debugging"
 msgstr ""
@@ -682,6 +684,8 @@ msgstr ""
 msgctxt "#30651"
 msgid "Enable debugging (regardless of XBMC settings)"
 msgstr ""
+
+#empty strings from id 30652 to 30659
 
 msgctxt "#30660"
 msgid "Database Settings"
@@ -722,6 +726,8 @@ msgstr ""
 msgctxt "#30669"
 msgid "Sqlite DB Name"
 msgstr ""
+
+#empty strings from id 30670 to 30699
 
 # tag type translation
 msgctxt "#30700"

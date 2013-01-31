@@ -1,5 +1,9 @@
+2013/01/25 --> v 1.9.18
+Update: XMP mwg-rs:RegionList Face recognition tags now supported
+Update: Language files from Transifex
+
 2013/01/25 --> v 1.9.17
-Fix:    English string file corrected
+Fix:    English language file corrected
 
 2013/01/25 --> v 1.9.15
 Update: Source code cleanup
