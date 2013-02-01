@@ -67,12 +67,14 @@ def VersionTable():
 
     common.log("MPDB.VersionTable", "MyPicsDB database version is %s"%str(strVersion) ) 
 
-    if common.check_version(strVersion, DB_VERSION)<0:
+    if common.check_version(strVersion, DB_VERSION)>0:
         dialog = xbmcgui.Dialog()
         dialog.ok(common.getstring(30000).encode("utf8"), "Database will be updated", "You must re-scan your folders")
-        common.log("MPDB.VersionTable", "MyPicsDB database will be updated" )
+        common.log("MPDB.VersionTable", "MyPicsDB database will be updated", xbmc.LOGNOTICE )
         Make_new_base(pictureDB, True)
         #VersionTable()
+    else:
+        common.log("MPDB.VersionTable", "MyPicsDB database contains already current schema" )
         
     cn.close()
 
