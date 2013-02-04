@@ -345,6 +345,7 @@ class VFSScanner:
                     "Image Model",
                     "Image Orientation",
                     "Image Rating",
+					"Image Artist",
                     "GPS GPSLatitude",
                     "GPS GPSLatitudeRef",
                     "GPS GPSLongitude",
