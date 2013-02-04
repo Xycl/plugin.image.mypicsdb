@@ -1,3 +1,6 @@
+2013/02/04--> v 1.9.20
+Update: Additional skins removed
+
 2013/02/01--> v 1.9.19
 Fix:    DB version check was wrong
 
