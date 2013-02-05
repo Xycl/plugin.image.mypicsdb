@@ -293,7 +293,7 @@ def DB_cleanup_keywords():
 
     try:
         # in old version something went wrong with deleteing old unused folders
-        for i in range(1,10):
+        for _ in range(1,10):
             cn.execute('delete from folders where ParentFolder not in (select idFolder from folders) and ParentFolder is not null')
 
         cn.execute('delete from files where idFolder not in( select idFolder from folders)')
@@ -993,9 +993,6 @@ def get_iptc(path,filename):
 def MakeRequest(field,comparator,value):
     return Request( """SELECT p.FullPath,f.strFilename FROM files f,folders p WHERE f.idFolder=p.idFolder AND %s %s %s """%(field,comparator,value))
 
-def get_fields(table="files"):
-    tableinfo = Request( """pragma table_info("%s")"""%table)
-    return [(name,typ) for cid,name,typ,notnull,dflt_value,pk in tableinfo]
 
 def Request(SQLrequest):
     conn = sqlite.connect(pictureDB)
@@ -1324,10 +1321,10 @@ def all_children(rootid):
     #A REVOIR : Ne fonctionne pas correctement !
     enfants=[]
     childrens=[rootid]
-    continu = False
+    #continu = False
     while True:
         try:
-            id = childrens.pop(0)
+            _ = childrens.pop(0)
         except:
             #fin
             break
