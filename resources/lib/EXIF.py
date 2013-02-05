@@ -1724,6 +1724,8 @@ def process_file(f, stop_tag='UNDEF', details=True, strict=False, debug=False):
                 print "There is useful EXIF-like data here (quality, comment, copyright), but we have no parser for it."
                 base=base+ord(data[base+2])*256+ord(data[base+3])+2
             else: 
+                # Here we have sometimes an infinitive loop
+                return {}
                 try:
                     if debug: print "Unexpected/unhandled segment type or file content."
                     if debug: print "Got",hex(ord(data[base])), hex(ord(data[base+1])),"and", data[4+base:10+base], "instead."

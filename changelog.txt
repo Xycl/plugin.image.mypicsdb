@@ -1,3 +1,6 @@
+2013/02/05--> v 1.9.22
+Fix:    Infinitive loop in EXIF parser due to malformed pictures fixed.
+
 2013/02/04--> v 1.9.21
 Update: EXIF tag "Image Artist" added
 
