@@ -308,8 +308,10 @@ class VFSScanner:
             #    getting  EXIF  infos     #
             ###############################
             try:
+                common.log( "VFSScanner._get_metas()._get_exif()", 'Reading EXIF tags from "%s"'%fullpath)
                 exif = self._get_exif(fullpath)
                 picentry.update(exif)
+                common.log( "VFSScanner._get_metas()._get_exif()", "Finished reading EXIF tags")
             except Exception,msg:
                 common.log( "VFSScanner._get_metas()._get_exif()", "Exception", xbmc.LOGERROR)
                 print msg
@@ -318,8 +320,10 @@ class VFSScanner:
             #    getting  IPTC  infos     #
             ###############################
             try:
+                common.log( "VFSScanner._get_metas()._get_exif()", 'Reading IPTC tags from "%s"'%fullpath)
                 iptc = self._get_iptc(fullpath)
                 picentry.update(iptc)
+                common.log( "VFSScanner._get_metas()._get_exif()", "Finished reading IPTC tags")
             except Exception,msg:
                 common.log( "VFSScanner._get_metas()_get_iptc()", "Exception", xbmc.LOGERROR)
                 print msg
@@ -329,8 +333,10 @@ class VFSScanner:
             #    getting  XMP infos       #
             ###############################
             try:
+                common.log( "VFSScanner._get_metas()._get_exif()", 'Reading XMP tags from "%s"'%fullpath)
                 xmp = self._get_xmp(fullpath)
                 picentry.update(xmp)
+                common.log( "VFSScanner._get_metas()._get_exif()", "Finished reading XMP tags")
             except Exception,msg:
                 common.log( "VFSScanner._get_metas()._get_xmp()", "Exception", xbmc.LOGERROR)
                 print msg
@@ -370,9 +376,9 @@ class VFSScanner:
             f=open(picfile,"rb")
         except:
             f=open(picfile.encode('utf-8'),"rb")
-
+        common.log( "VFSScanner._get_exif()", 'Calling function EXIF_file for "%s"'%picfile)
         tags = EXIF_file(f,details=False)
-
+        common.log( "VFSScanner._get_exif()", 'Function returned')
         f.close()
 
         picentry={}
