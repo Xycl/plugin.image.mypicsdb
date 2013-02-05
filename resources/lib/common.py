@@ -29,13 +29,17 @@ __language__ = __settings__.getLocalizedString
 __homepath__ = __settings__.getAddonInfo('path').decode('utf-8')
 __sys_file_encoding__ = sys.getfilesystemencoding()
 
+
 def getaddon_path():
     return __homepath__
 
+
 def getaddon_name():
     __settings__.getAddonInfo('name')
+
     
 def getaddon_info(parm):
+    # author, changelog, description, disclaimer, fanart. icon, id, name, path, profile, stars, summary, type, version
     return __settings__.getAddonInfo(parm)
 
 
@@ -46,6 +50,10 @@ def getstring(num):
 # taken from: http://wiki.xbmc.org/index.php?title=Xbmcaddon_module
 def openaddon_settings():
     __settings__.openSettings()
+
+
+def getxbmc_version():    
+    xbmc.getInfoLabel('System.BuildVersion')
 
 
 def getaddon_setting(name):
@@ -129,7 +137,7 @@ def quote_param(parm):
 
 def unquote_param(parm):
     parm = urllib.unquote_plus(parm)
-    parm = smart_utf8( parm.replace ('\\"', '"').replace ("\\'", "'").replace("\\\\\\\\", "\\") )
+    parm = smart_unicode( parm.replace ('\\"', '"').replace ("\\'", "'").replace("\\\\\\\\", "\\") )
 
     return parm
 
@@ -140,12 +148,13 @@ def log(module, msg, level=xbmc.LOGDEBUG):
 
     if type(msg).__name__=='unicode':
         msg = msg.encode('utf-8')
+        
+    if getaddon_setting("debugging") == "true" and xbmc.LOGERROR != level:
+        level = xbmc.LOGNOTICE
 
     filename = smart_utf8(os.path.basename(sys._getframe(1).f_code.co_filename))
     lineno  = str(sys._getframe(1).f_lineno)
 
-    #print sys._getframe(1).f_globals
-    
     if len(module.strip()) == 0:
         try:
             module = "function " + sys._getframe(1).f_code.co_name
@@ -156,3 +165,22 @@ def log(module, msg, level=xbmc.LOGDEBUG):
         module = 'object ' + module
     xbmc.log(str("[%s] line %5d in %s %s >> %s"%(__addonname__, int(lineno), filename, module, msg.__str__())), level)    
 
+
+# version is a string like 'x.y.z'
+# if first version is greater then -1 is returned. if equal then 0 is returned.
+def check_version(first, second):
+    a = first.split('.')
+    b = second.split('.')
+    
+    for i in range(len(a)):
+        # if we're here and there is no element left in b then a is greater than b
+        if len(b)<i:
+            return -1
+        
+        if int(a[i]) != int(b[i]):
+            return int(b[i]) - int(a[i])
+    # if we're here and a was equal to b, but b is longer than a then b must be greater  
+    if len(b)>len(a):
+        return 1
+            
+    return 0

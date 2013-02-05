@@ -98,11 +98,14 @@ class Main:
         common.log("Main.get_args", "MyPicturesDB plugin called :", xbmc.LOGNOTICE)
         common.log("Main.get_args", "sys.argv[0] = %s"%sys.argv[0], xbmc.LOGNOTICE)
         common.log("Main.get_args", "sys.argv[2] = %s"%sys.argv[2], xbmc.LOGNOTICE)
+
         self.parm = common.smart_utf8(unquote_plus(sys.argv[2])).replace("\\\\", "\\")
         
         sys.argv[2] = self.parm
-        #args= "self.args = _Info(%s)" % ( self.parm[ 1 : ].replace( "&", ", " ), )
-        args= "self.args = _Info(%s)" % ( self.cleanup(self.parm[ 1 : ]), )
+        parm = self.cleanup(self.parm[ 1 : ])
+        common.log("Main.get_args", parm)
+        
+        args= "self.args = _Info(%s)" % ( parm )
         exec args
         if not hasattr(self.args, 'page'):
             self.args.page=''
@@ -110,23 +113,27 @@ class Main:
     def cleanup(self, parm):
         
         in_apostrophe=False
+        prev_char = ""
+        prevprev_char = ""
         output=""
         
         for char in parm:
-            if char == "'" or char == '"':
+            if char == "'" and prev_char != "\\" or char == "'" and prev_char =="\\" and prevprev_char == "\\":
                 if not in_apostrophe:
                     in_apostrophe = True
                 else:
                     in_apostrophe = False
-            if char == "&":
-                if not in_apostrophe:
-                    output += ","
-                else:
-                    output += "&"
-                continue
+            if char == "&" and not in_apostrophe:
+                    char = ","
                 
             output += char
             
+            prevprev_char = prev_char
+            prev_char = char
+            if prevprev_char == "\\" and prev_char == "\\" :
+                prev_char = ""
+                prevprev_char = ""
+                
         return output
         
     def Title(self,title):
@@ -861,8 +868,12 @@ class Main:
 
     def show_map(self):
         """get a google map for the given place (place is a string for an address, or a couple of gps lat/lon datas"""
+        dialog = xbmcgui.Dialog()
+        dialog.ok(common.getstring(30000).encode("utf8"), "Due to a bug in Frodo this feature was decommissioned.")
+        
+        """
         import geomaps
-
+        
         try:
             path = common.smart_unicode(self.args.path)
             filename = common.smart_unicode(self.args.filename)
@@ -879,7 +890,7 @@ class Main:
 
         showmap.doModal()
         del showmap
-
+        """
 
     def prettydate(self,dateformat,datetuple):
         "Replace %a %A %b %B date string formater (see strftime format) by the day/month names for the given date tuple given"
@@ -945,7 +956,7 @@ class Main:
         filename = common.smart_unicode(self.args.filename)
 
         MPDB.addPicToCollection( namecollection, path, filename )
-        common.show_notification(common.getstring(30000),common.getstring(30154),namecollection,3000,join(home,"icon.png"))
+        common.show_notification(common.getstring(30000), common.getstring(30154)+ ' ' + namecollection,3000,join(home,"icon.png"))
         #xbmc.executebuiltin( "Notification(%s,%s %s,%s,%s)"%(common.getstring(30000).encode('utf-8'),common.getstring(30154).encode('utf-8'),namecollection.encode('utf-8'),3000,join(home,"icon.png").encode('utf-8')))
 
 
@@ -975,7 +986,7 @@ class Main:
             path           = common.smart_unicode(path)
             filename       = common.smart_unicode(filename)
             MPDB.addPicToCollection( namecollection,path,filename )
-        common.show_notification(common.getstring(30000),common.getstring(30161)%len(filelist),namecollection,3000,join(home,"icon.png"))
+        common.show_notification(common.getstring(30000), common.getstring(30161)%len(filelist)+' '+namecollection,3000,join(home,"icon.png"))
         #xbmc.executebuiltin( "Notification(%s,%s %s,%s,%s)"%(common.getstring(30000).encode("utf8"), common.getstring(30161).encode("utf8")%len(filelist),namecollection.encode("utf8"), 3000,join(home,"icon.png").encode("utf8")) )
 
     def remove_collection(self):
@@ -1446,10 +1457,11 @@ if __name__=="__main__":
         MPDB.pictureDB = pictureDB
         #   - efface les tables et les recréés
         if common.getaddon_setting("initDB") == "true":
-            MPDB.Make_new_base(pictureDB, ecrase= common.getaddon_setting("initDB") == "true")
-            common.getaddon_setting("initDB","false")
+            MPDB.Make_new_base(pictureDB, True)
+            common.setaddon_setting("initDB","false")
         else:
             MPDB.VersionTable()
+            #MPDB.Make_new_base(pictureDB, False)
         #scan les répertoires lors du démarrage (selon setting)
         if common.getaddon_setting('bootscan')=='true':
             if not(xbmc.getInfoLabel( "Window.Property(DialogAddonScan.IsAlive)" ) == "true"):
@@ -1486,21 +1498,6 @@ if __name__=="__main__":
         m.show_tagtypes()
     elif m.args.action=='showtags':
         m.show_tags()
-    # browse by person
-    elif m.args.action=='showperson':
-        m.show_person()
-    # browse by category
-    elif m.args.action=='showcategory':
-        m.show_category()
-    # browse by supplementalcategory
-    elif m.args.action=='showsupplementalcategory':
-        m.show_supplementalcategory()
-    # browse by country
-    elif m.args.action=='showcountry':
-        m.show_country()
-    # browse by city
-    elif m.args.action=='showcity':
-        m.show_city()
     #   Affiche les images
     elif m.args.action=='showpics':
         m.show_pics()

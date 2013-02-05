@@ -22,8 +22,6 @@ import xbmcgui
 import MypicsDB as MPDB
 import common
 
-#_ = sys.modules[ "__main__" ].__language__
-
 
 STATUS_LABEL       = 100
 CHECKED_LABEL      = 101

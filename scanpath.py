@@ -48,19 +48,6 @@ from resources.lib.XMP import XMP_Tags
 from DialogAddonScan import AddonScan
 
 
-db_type  = 'mysql' if common.getaddon_setting('mysql')=='true' else 'sqlite'
-db_name  = 'Pictures.db' if len(common.getaddon_setting('db_name')) == 0 else common.getaddon_setting('db_name')
-if db_type == 'sqlite':
-    db_user    = ''
-    db_pass    = ''
-    db_address = ''
-    db_port    = ''
-else:
-    db_user    = common.getaddon_setting('db_user')
-    db_pass    = common.getaddon_setting('db_pass')
-    db_address = common.getaddon_setting('db_address')
-    db_port    = common.getaddon_setting('db_port')
-
 
 class VFSScanner:
 
@@ -133,6 +120,7 @@ class VFSScanner:
                 self.scan.update(0,0,
                             common.getstring(30000)+" ["+common.getstring(30241)+"]",#MyPicture Database [preparing]
                             common.getstring(30247))#please wait...
+                print paths
                 for path,recursive,update,exclude in paths:
                     if exclude==0:
                         self.total_root_entries += 1
@@ -147,7 +135,10 @@ class VFSScanner:
                             print_exc()
 
                 self.scan.close()
-
+                
+        # Set default translation for tag types
+        mpdb.DefaultTagTypesTranslation()
+        
         xbmc.executebuiltin( "Notification(%s,%s)"%(common.getstring(30000).encode("utf8"),
                                                     common.getstring(30248).encode("utf8")%(self.picsscanned,self.picsadded,self.picsdeleted,self.picsupdated)
                                                     )
@@ -159,15 +150,14 @@ class VFSScanner:
             self.totalfiles = 0
         
         common.log("VFSScanner._countfiles", 'path "%s"'%path)
-        (dirs, files) = self.filescanner.walk(path, recursive, self.picture_extensions if self.use_videos == "false" else self.all_extensions)
+        (_, files) = self.filescanner.walk(path, recursive, self.picture_extensions if self.use_videos == "false" else self.all_extensions)
         self.totalfiles += len(files)
 
         return self.totalfiles
 
 
     def _addpath(self, path, parentfolderid, recursive, update):
-        dirnames        = []
-        filenames       = []
+
         """
         try:
         """
@@ -200,7 +190,8 @@ class VFSScanner:
                     return
                     
                 self.picsscanned += 1
-                filename = common.smart_unicode(os.path.basename(pic))
+                #filename = common.smart_unicode(os.path.basename(pic))
+                filename = os.path.basename(pic)
                 extension = os.path.splitext(pic)[1].upper()
                     
                 picentry = { "idFolder": folderid,
@@ -275,6 +266,7 @@ class VFSScanner:
                     mpdb.DB_file_insert(path, filename, picentry, sqlupdate, filesha)
                 except Exception, msg:
                     common.log("VFSScanner._addpath", 'Unable to insert picture "%s"'%pic, xbmc.LOGERROR)
+                    common.log("VFSScanner._addpath", '"%s" - "%s"'%(Exception, msg), xbmc.LOGERROR)
                     continue
                     
                 if sqlupdate:
@@ -299,6 +291,8 @@ class VFSScanner:
         if recursive:
             for dirname in dirnames:
                 self._addpath(dirname, folderid, True, update)
+                
+    
         """
         except Exception,msg:
             print_exc
@@ -314,8 +308,10 @@ class VFSScanner:
             #    getting  EXIF  infos     #
             ###############################
             try:
+                common.log( "VFSScanner._get_metas()._get_exif()", 'Reading EXIF tags from "%s"'%fullpath)
                 exif = self._get_exif(fullpath)
                 picentry.update(exif)
+                common.log( "VFSScanner._get_metas()._get_exif()", "Finished reading EXIF tags")
             except Exception,msg:
                 common.log( "VFSScanner._get_metas()._get_exif()", "Exception", xbmc.LOGERROR)
                 print msg
@@ -324,8 +320,10 @@ class VFSScanner:
             #    getting  IPTC  infos     #
             ###############################
             try:
+                common.log( "VFSScanner._get_metas()._get_exif()", 'Reading IPTC tags from "%s"'%fullpath)
                 iptc = self._get_iptc(fullpath)
                 picentry.update(iptc)
+                common.log( "VFSScanner._get_metas()._get_exif()", "Finished reading IPTC tags")
             except Exception,msg:
                 common.log( "VFSScanner._get_metas()_get_iptc()", "Exception", xbmc.LOGERROR)
                 print msg
@@ -335,8 +333,10 @@ class VFSScanner:
             #    getting  XMP infos       #
             ###############################
             try:
+                common.log( "VFSScanner._get_metas()._get_exif()", 'Reading XMP tags from "%s"'%fullpath)
                 xmp = self._get_xmp(fullpath)
                 picentry.update(xmp)
+                common.log( "VFSScanner._get_metas()._get_exif()", "Finished reading XMP tags")
             except Exception,msg:
                 common.log( "VFSScanner._get_metas()._get_xmp()", "Exception", xbmc.LOGERROR)
                 print msg
@@ -351,6 +351,7 @@ class VFSScanner:
                     "Image Model",
                     "Image Orientation",
                     "Image Rating",
+					"Image Artist",
                     "GPS GPSLatitude",
                     "GPS GPSLatitudeRef",
                     "GPS GPSLongitude",
@@ -375,9 +376,9 @@ class VFSScanner:
             f=open(picfile,"rb")
         except:
             f=open(picfile.encode('utf-8'),"rb")
-
+        common.log( "VFSScanner._get_exif()", 'Calling function EXIF_file for "%s"'%picfile)
         tags = EXIF_file(f,details=False)
-
+        common.log( "VFSScanner._get_exif()", 'Function returned')
         f.close()
 
         picentry={}
@@ -415,21 +416,9 @@ class VFSScanner:
 
             tags = xmpclass.get_xmp(os.path.dirname(fullpath), os.path.basename(fullpath))
 
-            for tagname in tags:
-
-                if tagname == 'Iptc4xmpExt:PersonInImage':
-                    key = 'persons'
-
-                    if tags.has_key(key):
-                        tags[key] += '||' + tags[tagname]
-                    else:
-                        tags[key] = tags[tagname]
-
-            if tags.has_key('Iptc4xmpExt:PersonInImage'):
-                del(tags['Iptc4xmpExt:PersonInImage'])
-
-        except:
+        except Exception, msg:
             common.log("VFSScanner._get_xmp", 'Error reading XMP tags for "%s"'%(fullpath), xbmc.LOGERROR)
+            common.log("VFSScanner._get_xmp",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
         
         return tags
 
