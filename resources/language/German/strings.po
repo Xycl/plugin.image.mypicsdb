@@ -683,3 +683,15 @@ msgstr "Ausrichtung"
 msgctxt "#30724"
 msgid "Flash"
 msgstr "Blitzlicht"
+
+msgctxt "#30725"
+msgid "Image Model"
+msgstr "Kameramodell"
+
+msgctxt "#30726"
+msgid "Image Make"
+msgstr "Kamerahersteller"
+
+msgctxt "#30727"
+msgid "Image Artist"
+msgstr "Künstler"
