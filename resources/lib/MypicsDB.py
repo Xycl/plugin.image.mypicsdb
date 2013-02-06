@@ -804,6 +804,7 @@ def RemovePath(path):
 def MakeRequest(field,comparator,value):
     return Request( """SELECT p.FullPath,f.strFilename FROM files f,folders p WHERE f.idFolder=p.idFolder AND %s %s %s """%(field,comparator,value))
 
+
 def Request(SQLrequest):
     conn = sqlite.connect(pictureDB)
     conn.text_factory = unicode #sqlite.OptimizedUnicode
@@ -1145,10 +1146,10 @@ def all_children(rootid):
     #A REVOIR : Ne fonctionne pas correctement !
     enfants=[]
     childrens=[rootid]
-    continu = False
+    #continu = False
     while True:
         try:
-            id = childrens.pop(0)
+            _ = childrens.pop(0)
         except:
             #fin
             break

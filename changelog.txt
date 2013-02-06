@@ -1,4 +1,4 @@
-2013/02/05--> v 1.9.23
+2013/02/05--> v 1.9.24
 Update: New translations for tag types: Image Model, Image Make and Image Artist
 
 2013/02/05--> v 1.9.22
