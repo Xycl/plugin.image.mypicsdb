@@ -1,5 +1,0 @@
-*.pyo
-*.project
-*.pydevproject
-/.settings/org.eclipse.core.resources.prefs
-/resources/lib/xmp_parser.py
