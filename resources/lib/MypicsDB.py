@@ -967,6 +967,7 @@ def DefaultTagTypesTranslation():
     RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation = 'Iptc4xmpExt:City'", (common.getstring(30703),))
     RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation = 'City'", (common.getstring(30703),))
 
+
     RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpCore:Location'", (common.getstring(30704),))
 
     RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation = 'Iptc4xmpExt:Event'", (common.getstring(30705),))
