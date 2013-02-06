@@ -10,6 +10,7 @@ Excluding paths
 a) Add the exclude path(s) via menu "Paths of pictures folders".
 b) Rescan the paths which contain these added exclude paths to remove the pictures from MyPicsDB
 
+
 2) General problems with MyPicsDB
 ==================================================================================
 If you have unexplainable problems like pictures don't get included into database and you're a long time user of MyPicsDB 
@@ -19,13 +20,8 @@ Then start MyPicsDB. All tables (except table rootpaths which includes your ente
 This means that the already entered paths are still available and that you can start a rescan with "Paths of picture folders"->"Scan all paths". 
 Because all pictures were deleted from database it doesn't matter what you select in the following dialog box.
 
-3) Please translate MyPicsDB into your native language!
-==================================================================================
-   Files can be found in plugin.image.mypicsdb/resources/language
-   Please be aware that the / must be replaced with a \ for Windows!
 
-
-4) Auto-update  MyPicsDB
+3) Auto-update  MyPicsDB
 ==================================================================================
    Idea from Fungify 
    You can call (example for Windows):
@@ -35,7 +31,7 @@ Because all pictures were deleted from database it doesn't matter what you selec
    Fungify uses this approach to automatically update MyPicsDB via HTTP API with a cron job.
    wget --directory-prefix=tmp --http-user=<xbmc username> --http-passwd=<xbmc password> "http://Servername:Portnumber/xbmcCmds/xbmcHttp?command=ExecBuiltIn&parameter=XBMC.RunScript("<full path to plugin>\plugin.image.mypicsdb\scanpath.py",--database)
 
-5) For skinners
+4) For skinners
 ==================================================================================
   Done by MikeBZH44
 
