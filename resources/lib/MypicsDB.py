@@ -965,6 +965,7 @@ def DefaultTagTypesTranslation():
 
     RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation = 'Photoshop:City'", (common.getstring(30703),))
     RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation = 'Iptc4xmpExt:City'", (common.getstring(30703),))
+    RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation = 'City'", (common.getstring(30703),))
 
     RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpCore:Location'", (common.getstring(30704),))
 
@@ -981,6 +982,7 @@ def DefaultTagTypesTranslation():
 
     RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation = 'Iptc4xmpCore:Headline'", (common.getstring(30710),))
     RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Photoshop:Headline'", (common.getstring(30710),))
+    RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Headline'", (common.getstring(30710),))
 
     RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation = 'Object name'", (common.getstring(30711),))
     RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation = 'Dc:title'", (common.getstring(30711),))
@@ -1039,6 +1041,8 @@ def DefaultTagTypesTranslation():
     Request("update TagTypes set TagTranslation = '' where TagTranslation =  'Photoshop:CaptionWriter'")
     Request("update TagTypes set TagTranslation = '' where TagTranslation =  'Photoshop:Instructions'")
     Request("update TagTypes set TagTranslation = '' where TagTranslation =  'Special instructions'")    
+    Request("update TagTypes set TagTranslation = '' where TagTranslation =  'Credit'")    
+    Request("update TagTypes set TagTranslation = '' where TagTranslation =  'Sub-location'")    
 
 
 def list_TagTypes():
