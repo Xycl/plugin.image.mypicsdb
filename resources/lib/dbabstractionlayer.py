@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # -*- coding: utf8 -*-
 
 """ 
@@ -48,9 +49,53 @@ Supported methods:
 4) fetchall(). Fetches all rows.
 5) request(). Does an execute() and fetchall() without the possiblity to use bind variables.
 6) request_with_binds(). Does an execute() and fetchall() with bind variables.
+
+
+Example
+
+db_type  = 'mysql' if common.getaddon_setting('mysql')=='true' else 'sqlite'
+db_name  = 'Pictures.db' if len(common.getaddon_setting('db_name')) == 0 else common.getaddon_setting('db_name')
+if db_type == 'sqlite':
+    db_user    = ''
+    db_pass    = ''
+    db_address = ''
+    db_port    = ''
+else:
+    db_user    = common.getaddon_setting('db_user')
+    db_pass    = common.getaddon_setting('db_pass')
+    db_address = common.getaddon_setting('db_address')
+    db_port    = common.getaddon_setting('db_port')
+
 """
 
-import xbmc
+
+import xbmc, sys
+import common
+
+AddonName = ( sys.modules[ "__main__" ].AddonName )
+
+database=''
+
+def DBFactory(backend, db_name, *args):
+    global database
+    
+    backends = {'mysql':MysqlConnection, 'sqlite':SqliteConnection}
+
+    if backend.lower() == 'mysql':
+        print "mysql"
+        import mysql.connector as database
+            
+    # default is to use Sqlite
+    else:
+        print "Sqlite"
+        try:
+            from sqlite3 import dbapi2 as database
+        except:
+            from pysqlite2 import dbapi2 as database        
+                
+    return backends[backend](db_name, *args)
+    
+
 
 class BaseConnection(object):
 
@@ -77,7 +122,7 @@ class MysqlConnection(BaseConnection):
         self.connect(*args)
 
 
-    def connect( self, db_name, db_user, db_pass, db_address='127.0.0.1', port=3306):
+    def connect( self, db_name, db_user, db_pass, db_address='127.0.0.1', db_port=3306):
         self.db_name  = db_name
         self.db_user = db_user
         self.db_pass = db_pass
@@ -117,16 +162,6 @@ class BaseCursor(object):
 
     DEBUGGING = True
 
-    LOGDEBUG = 0
-    LOGINFO = 1
-    LOGNOTICE = 2
-    LOGWARNING = 3
-    LOGERROR = 4
-    LOGSEVERE = 5
-    LOGFATAL = 6
-    LOGNONE = 7
-
-
     def __init__(self, cursor):
         self.cursor = cursor
 
@@ -156,34 +191,27 @@ class BaseCursor(object):
         return [row for row in self.cursor.fetchall()]
 
 
-    def log(msg, level=LOGDEBUG):
-        if type(msg).__name__=='unicode':
-            msg = msg.encode('utf-8')
-        if DEBUGGING:
-            xbmc.log(str("MyPicsDB >> %s"%msg.__str__()), level)
-
-
-    def request(statement):
+    def request(self, statement):
         try:
             self.execute( statement )
             retour = self.fetchall()
             self.commit()
         except Exception,msg:
-            self.log( "The request failed :", LOGERROR )
-            self.log( "%s - %s"%(Exception,msg), LOGERROR )
-            self.log( "SQL Request> %s"%statement, LOGERROR)
-            self.log( "---", LOGERROR )
+            common.log("Database abstraction layer",  "The request failed :", xbmc.LOGERROR )
+            common.log("Database abstraction layer",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+            common.log("Database abstraction layer",  "SQL Request> %s"%statement, xbmc.LOGERROR)
+            common.log("Database abstraction layer",  "---", xbmc.LOGERROR )
             retour= []
 
         return retour
 
 
-    def request_with_binds(statement, bindvariables):
+    def request_with_binds(self, statement, bindvariables):
 
         binds = []
         for value in bindvariables:
             if type(value).__name__ == 'str':
-                binds.append(decoder.smart_unicode(value))
+                binds.append(common.smart_unicode(value))
             else:
                 binds.append(value)
         try:
@@ -193,20 +221,20 @@ class BaseCursor(object):
 
         except Exception,msg:
             try:
-                self.log( "The request failed :", LOGERROR )
-                self.log( "%s - %s"%(Exception,msg), LOGERROR )
+                common.log("Database abstraction layer",  "The request failed :", xbmc.LOGERROR )
+                common.log("Database abstraction layer",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
             except:
                 pass
             try:
-                self.log( "SQL RequestWithBinds > %s"%statement, LOGERROR)
+                common.log("Database abstraction layer",  "SQL RequestWithBinds > %s"%statement, xbmc.LOGERROR)
             except:
                 pass
             try:
                 i = 1
                 for var in binds:
-                    self.log ("SQL RequestWithBinds %d> %s"%(i,var), LOGERROR)
+                    common.log ("SQL RequestWithBinds %d> %s"%(i,var), xbmc.LOGERROR)
                     i=i+1
-                self.log( "---", LOGERROR )
+                common.log("Database abstraction layer",  "---", xbmc.LOGERROR )
             except:
                 pass
             retour= []
@@ -259,24 +287,3 @@ class SqliteCursor(BaseCursor):
         return [row for row in self.cursor]
 """
 
-database=''
-
-def DBFactory(backend, db_name, *args):
-    global database
-    
-    backends = {'mysql':MysqlConnection, 'sqlite':SqliteConnection}
-
-    if backend.lower() == 'mysql':
-        print "mysql"
-        import mysql.connector as database
-            
-    # default is to use Sqlite
-    else:
-        print "Sqlite"
-        try:
-            from sqlite3 import dbapi2 as database
-        except:
-            from pysqlite2 import dbapi2 as database        
-                
-    return backends[backend](db_name, *args)
-    

@@ -1,7 +1,6 @@
 # XBMC Media Center language file
 # Addon Name: My Pictures Database
 # Addon id: plugin.image.mypicsdb
-# Addon version: 1.9.4
 # Addon Provider: Xycl, MikeBZH44, Alexsolex
 msgid ""
 msgstr ""
@@ -44,3 +43,15 @@ msgstr "Bone"
 msgctxt "#30614"
 msgid "Cancel"
 msgstr "Nuligi"
+
+msgctxt "#30665"
+msgid "Password"
+msgstr "pasvorto"
+
+msgctxt "#30667"
+msgid "Port"
+msgstr "Port"
+
+msgctxt "#30711"
+msgid "Title"
+msgstr "Nomo"
