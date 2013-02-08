@@ -39,7 +39,8 @@ env = ( os.environ.get( "OS", "win32" ), "win32", )[ os.environ.get( "OS", "win3
 sys.path.append( os.path.join( BASE_RESOURCE_PATH, "platform_libraries", env ) )
 
 DEBUGGING = True
-DB_VERSION = '1.9.12'
+DB_VERSION19 = '1.9.12'
+DB_VERSION = '2.0.1'
 
 global pictureDB
 pictureDB = join(DB_PATH,"MyPictures.db")
@@ -67,7 +68,10 @@ def VersionTable():
 
     common.log("MPDB.VersionTable", "MyPicsDB database version is %s"%str(strVersion) ) 
 
-    if common.check_version(strVersion, DB_VERSION)>0:
+    if common.check_version(strVersion, DB_VERSION)>0 and common.check_version(strVersion, DB_VERSION19) <=0:
+        common.log("MPDB.VersionTable", "MyPicsDB database will be updated to version %s"%str(DB_VERSION) ) 
+        version_201_tables(pictureDB)
+    elif common.check_version(strVersion, DB_VERSION)>0:
         dialog = xbmcgui.Dialog()
         dialog.ok(common.getstring(30000).encode("utf8"), "Database will be updated", "You must re-scan your folders")
         common.log("MPDB.VersionTable", "MyPicsDB database will be updated", xbmc.LOGNOTICE )
@@ -78,6 +82,35 @@ def VersionTable():
         
     cn.close()
 
+# new tables in version 2.0.1
+def version_201_tables(DBpath):
+    #table 'FilterWizard'
+    conn = sqlite.connect(DBpath)
+    cn=conn.cursor()    
+    try:
+        cn.execute("""create table FilterWizard (pkFilter integer primary key, strFilterName text unique, bMatchAll integer)""")
+    except Exception,msg:
+        if str(msg).find("already exists") > -1:
+            pass
+        else:
+            common.log("MPDB.Make_new_base", "CREATE TABLE FilterWizard ...", xbmc.LOGERROR )
+            common.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+
+    #table 'FilterWizardItems'
+    try:
+        cn.execute("""create table FilterWizardItems (idItems integer primary key, fkFilter integer, strItem text unique, nState integer, FOREIGN KEY(fkFilter) REFERENCES FilterWizard(pkFilter))""")
+    except Exception,msg:
+        if str(msg).find("already exists") > -1:
+            pass
+        else:
+            common.log("MPDB.Make_new_base", "CREATE TABLE FilterWizardItems ...", xbmc.LOGERROR )
+            common.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+            
+    cn.execute("update DBVersion set strVersion = '"+DB_VERSION+"'")
+    conn.commit()            
+    cn.close()
+
+    
 def Make_new_base(DBpath,ecrase=True):
 ##    if not(isfile(DBpath)):
 ##        f=open("DBpath","w")
@@ -87,7 +120,7 @@ def Make_new_base(DBpath,ecrase=True):
     cn=conn.cursor()
     if ecrase:
         #drop table
-        for table in ['Persons', 'PersonsInFiles', 'tags', 'TagContent', 'TagContents', 'TagsInFiles', 'TagTypes',"files","keywords","folders","KeywordsInFiles","Collections","FilesInCollections","Periodes","CategoriesInFiles","Categories","SupplementalCategoriesInFiles","SupplementalCategories","CitiesInFiles","Cities","CountriesInFiles","Countries","DBVersion"]:
+        for table in ['FilterWizard', 'FilterWizardItems', 'Persons', 'PersonsInFiles', 'tags', 'TagContent', 'TagContents', 'TagsInFiles', 'TagTypes',"files","keywords","folders","KeywordsInFiles","Collections","FilesInCollections","Periodes","CategoriesInFiles","Categories","SupplementalCategoriesInFiles","SupplementalCategories","CitiesInFiles","Cities","CountriesInFiles","Countries","DBVersion"]:
             common.log("MPDB.Make_new_base >> Dropping table", "%s"%table)
             try:
                 cn.execute("""DROP TABLE %s"""%table)
@@ -209,6 +242,8 @@ def Make_new_base(DBpath,ecrase=True):
             common.log("MPDB.Make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
 
 
+    version_201_tables(DBpath)
+    
     try:
         cn.execute("CREATE INDEX idxFilesInCollections1 ON FilesInCollections(idCol)")
     except Exception,msg:
@@ -592,6 +627,130 @@ def getRating(path,filename):
     except IndexError:
         return None
 
+
+
+###################################
+# Filter Wizard functions
+#####################################
+
+def search_filter_tags(FilterInlineArrayTrue, FilterInlineArrayFalse, MatchAll):
+
+    if len(FilterInlineArrayTrue) == 0 and len(FilterInlineArrayFalse) == 0:
+        return
+    
+    #FilterInlineArrayTrue = unquote_plus(FilterInlineArrayTrue)
+    FilterArrayTrue = FilterInlineArrayTrue.split("|||")
+
+    #FilterInlineArrayFalse = unquote_plus(FilterInlineArrayFalse)
+    FilterArrayFalse = FilterInlineArrayFalse.split("|||")    
+
+    OuterSelect = "SELECT distinct strPath,strFilename FROM FILES WHERE 1=1 "
+    # These selects are joined with IN clause
+    InnerSelect = "SELECT tif.idfile FROM TagContents tc, TagsInFiles tif , TagTypes tt WHERE tif.idTagContent = tc.idTagContent AND tc.idTagType = tt.idTagType "
+    # Build the conditions
+    if MatchAll == "1":
+        if len(FilterInlineArrayTrue) > 0:
+            for Filter in FilterArrayTrue:
+
+                KeyValue = Filter.split("||")
+                Key = KeyValue[0]
+                Value = KeyValue[1].replace("'", "''")
+
+                Condition = "AND tt.TagTranslation = '"+Key+"' AND tc.TagContent = '"+Value+"' "
+                OuterSelect += " AND idFile in ( " + InnerSelect + Condition + " ) "
+
+        if len(FilterInlineArrayFalse) > 0:
+            for Filter in FilterArrayFalse:
+
+                KeyValue = Filter.split("||")
+                Key = KeyValue[0]
+                Value = KeyValue[1].replace("'", "''")
+
+                Condition = "AND tt.TagTranslation = '"+Key+"' AND tc.TagContent = '"+Value+"' "
+                OuterSelect += " AND idFile not in ( " + InnerSelect + Condition + " ) "            
+
+    else:
+        OldKey = ""
+        OldValue = ""
+
+        if len(FilterInlineArrayTrue) > 0:        
+            for Filter in FilterArrayTrue:
+
+                KeyValue = Filter.split("||")
+                Key = KeyValue[0]
+                Value = KeyValue[1].replace("'", "''")
+
+                if Key != OldKey:
+                    if len(OldKey) > 0:
+                        Condition = "AND tt.TagTranslation = '"+OldKey+"' AND tc.TagContent in( "+OldValue+" ) "
+                        OuterSelect += " AND idFile in ( " + InnerSelect + Condition + " ) "
+                    OldKey = Key
+                    OldValue = "'" + Value + "'"
+                else:
+                    OldValue += ", '" + Value + "'"
+            Condition = "AND tt.TagTranslation = '"+OldKey+"' AND tc.TagContent in( "+OldValue+" ) "
+            OuterSelect += " AND idFile in ( " + InnerSelect + Condition + " ) "
+
+
+        if len(FilterInlineArrayFalse) > 0:
+            for Filter in FilterArrayFalse:
+
+                KeyValue = Filter.split("||")
+                Key = KeyValue[0]
+                Value = KeyValue[1].replace("'", "''")
+
+                if Key != OldKey:
+                    if len(OldKey) > 0:
+                        Condition = "AND tt.TagTranslation = '"+OldKey+"' AND tc.TagContent in( "+OldValue+" ) "
+                        OuterSelect += " AND idFile not in ( " + InnerSelect + Condition + " ) "
+                    OldKey = Key
+                    OldValue = "'" + Value + "'"
+                else:
+                    OldValue += ", '" + Value + "'"
+
+            Condition = "AND tt.TagTranslation = '"+OldKey+"' AND tc.TagContent in( "+OldValue+" ) "
+            OuterSelect += " AND idFile not in ( " + InnerSelect + Condition + " ) "
+
+    common.log('search_filter_tags', OuterSelect, xbmc.LOGDEBUG)
+    
+    return [row for row in Request(OuterSelect)]
+
+
+def list_filterwizard_filters():
+    return [row for row in Request( """select strFilterName from FilterWizard""")][0]
+
+
+def delete_filterwizard_filter(filter_name):
+    RequestWithBinds( "delete from FilterWizard where strFilterName = ? ",(filter_name, ))
+
+
+def save_filterwizard_filter(filter_name, items, bmatch_all):
+
+    match_all = (1 if bmatch_all == True else 0)
+    if [row for row in RequestWithBinds( "select count(*) from FilterWizard where strFilterName = ? ",(filter_name, ))] [0][0] == 0:
+        RequestWithBinds( "insert into FilterWizard(strFilterName, bMatchAll) values (?, ?) ",(filter_name, match_all ))
+    else:
+        RequestWithBinds( "update FilterWizard set bMatchAll = ? where strFiltername = ? ",(match_all, filter_name ))
+        
+    filter_key = [row for row in RequestWithBinds( "select pkFilter from FilterWizard where strFilterName = ? ",(filter_name, ))] [0][0]
+    #common.log("MPDB.save_filterwizard_filter", "filter_key = %d"%filter_key, xbmc.LOGNOTICE )
+    RequestWithBinds("delete from FilterWizardItems where fkfilter = ?", (filter_key, ))
+    for item, state in items.iteritems():
+        RequestWithBinds("insert into FilterWizardItems(fkFilter, strItem, nState) values(?, ?, ?)", (filter_key, item, state))
+
+
+def load_filterwizard_filter(filter_name):
+    items = {}
+    match_all = 0
+    #
+    if [row for row in RequestWithBinds( "select count(*) from FilterWizard where strFilterName = ? ",(filter_name, ))] [0][0] > 0:
+        filter_key, match_all = [row for row in RequestWithBinds( "select pkFilter, bMatchAll from FilterWizard where strFilterName = ? ",(filter_name, ))] [0]
+        for state, item in RequestWithBinds( "select nState, strItem from FilterWizardItems where fkFilter = ?", (filter_key,)):
+            items[item] = state
+    
+    return items, (True if match_all == 1 else False)
+    
+
 ###################################
 # Collection functions
 #####################################
@@ -858,85 +1017,6 @@ def RequestWithBinds(SQLrequest, bindVariablesOrg):
     cn.close()
     return retour
 
-def search_filter_tags(FilterInlineArrayTrue, FilterInlineArrayFalse, MatchAll):
-
-    if len(FilterInlineArrayTrue) == 0 and len(FilterInlineArrayFalse) == 0:
-        return
-
-    #FilterInlineArrayTrue = unquote_plus(FilterInlineArrayTrue)
-    FilterArrayTrue = FilterInlineArrayTrue.split("|||")
-
-    #FilterInlineArrayFalse = unquote_plus(FilterInlineArrayFalse)
-    FilterArrayFalse = FilterInlineArrayFalse.split("|||")    
-
-    OuterSelect = "SELECT distinct strPath,strFilename FROM FILES WHERE 1=1 "
-    # These selects are joined with IN clause
-    InnerSelect = "SELECT tif.idfile FROM TagContents tc, TagsInFiles tif , TagTypes tt WHERE tif.idTagContent = tc.idTagContent AND tc.idTagType = tt.idTagType "
-    # Build the conditions
-    if MatchAll == "1":
-        if len(FilterInlineArrayTrue) > 0:
-            for Filter in FilterArrayTrue:
-
-                KeyValue = Filter.split("||")
-                Key = KeyValue[0]
-                Value = KeyValue[1].replace("'", "''")
-
-                Condition = "AND tt.TagTranslation = '"+Key+"' AND tc.TagContent = '"+Value+"' "
-                OuterSelect += " AND idFile in ( " + InnerSelect + Condition + " ) "
-
-        if len(FilterInlineArrayFalse) > 0:
-            for Filter in FilterArrayFalse:
-
-                KeyValue = Filter.split("||")
-                Key = KeyValue[0]
-                Value = KeyValue[1].replace("'", "''")
-
-                Condition = "AND tt.TagTranslation = '"+Key+"' AND tc.TagContent = '"+Value+"' "
-                OuterSelect += " AND idFile not in ( " + InnerSelect + Condition + " ) "            
-
-    else:
-        OldKey = ""
-        OldValue = ""
-
-        if len(FilterInlineArrayTrue) > 0:        
-            for Filter in FilterArrayTrue:
-
-                KeyValue = Filter.split("||")
-                Key = KeyValue[0]
-                Value = KeyValue[1].replace("'", "''")
-
-                if Key != OldKey:
-                    if len(OldKey) > 0:
-                        Condition = "AND tt.TagTranslation = '"+OldKey+"' AND tc.TagContent in( "+OldValue+" ) "
-                        OuterSelect += " AND idFile in ( " + InnerSelect + Condition + " ) "
-                    OldKey = Key
-                    OldValue = "'" + Value + "'"
-                else:
-                    OldValue += ", '" + Value + "'"
-            Condition = "AND tt.TagTranslation = '"+OldKey+"' AND tc.TagContent in( "+OldValue+" ) "
-            OuterSelect += " AND idFile in ( " + InnerSelect + Condition + " ) "
-
-
-        if len(FilterInlineArrayFalse) > 0:
-            for Filter in FilterArrayFalse:
-
-                KeyValue = Filter.split("||")
-                Key = KeyValue[0]
-                Value = KeyValue[1].replace("'", "''")
-
-                if Key != OldKey:
-                    if len(OldKey) > 0:
-                        Condition = "AND tt.TagTranslation = '"+OldKey+"' AND tc.TagContent in( "+OldValue+" ) "
-                        OuterSelect += " AND idFile not in ( " + InnerSelect + Condition + " ) "
-                    OldKey = Key
-                    OldValue = "'" + Value + "'"
-                else:
-                    OldValue += ", '" + Value + "'"
-
-            Condition = "AND tt.TagTranslation = '"+OldKey+"' AND tc.TagContent in( "+OldValue+" ) "
-            OuterSelect += " AND idFile in ( " + InnerSelect + Condition + " ) "
-
-    return [row for row in Request(OuterSelect)]
 
 def search_tag(tag=None,tagtype='a',limit=-1,offset=-1):
     """Look for given keyword and return the list of pictures.

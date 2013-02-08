@@ -59,18 +59,26 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
         self.getControl( BUTTON_MATCHALL ).setLabel( common.getstring(30615) )
         self.getControl( TAGS_LIST ).reset()
 
-        
         self.TagTypes = [u"%s"%k  for k in MPDB.list_TagTypes()]
         self.CurrentlySelectedTagType = ''
         self.checkedTags = 0
         self.bAnd = False
         self.CheckTagNames = {}
         
+        # load last filter settings
+        self.CheckTagNames, self.bAnd = MPDB.load_filterwizard_filter('default')
+        print self.getControl( BUTTON_MATCHALL ).isSelected()
+        if self.bAnd:
+            self.getControl( BUTTON_MATCHALL ).setSelected(1)
+        
+        for key in self.CheckTagNames:
+            if self.CheckTagNames[key] != 0:
+                self.checkedTags += 1
+
         if self.checkedTags == 1:
             self.getControl( CHECKED_LABEL ).setLabel(  common.getstring(30611) )
         else:
             self.getControl( CHECKED_LABEL ).setLabel(  common.getstring(30612)% (self.checkedTags) )
-        
 
         i = 0
         for TagType in self.TagTypes:
@@ -95,6 +103,7 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
             self.CheckTagNames[ key ] = 0
             checked = 0    
         return checked
+
     
     def loadTagContentList(self, tagType) :
     
@@ -110,16 +119,21 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
             
             if self.isContentChecked(tagType, TagContent) == 0:
                 TagContentItem.setProperty( "checked", "transparent.png")
-            else:
+            elif self.isContentChecked(tagType, TagContent) == 1:
                 TagContentItem.setProperty( "checked", "checkbutton.png")
-            
+            else:
+                TagContentItem.setProperty( "checked", "uncheckbutton.png")
+                
             self.getControl( TAGS_CONTENT_LIST ).addItem( TagContentItem )
-            
+
+
     def onClick( self, controlId ):
         pass    
 
+
     def onFocus( self, controlId ):
         self.controlId = controlId
+
 
     def checkGUITagContent(self, item, checked):
         
@@ -139,6 +153,7 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
 
         self.getControl( TAGS_CONTENT_LIST ).setVisible(False)
         self.getControl( TAGS_CONTENT_LIST ).setVisible(True)    
+
 
     def onAction( self, action ):
         #try:
@@ -162,6 +177,8 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
                         arrayfalse.append( key)
                 
                 self.filter (arraytrue, arrayfalse, self.bAnd )
+                MPDB.save_filterwizard_filter('default', self.CheckTagNames, self.bAnd)
+                
                 self.close()
             
             # Match all button
