@@ -616,6 +616,14 @@ msgctxt "#30602"
 msgid "Contents"
 msgstr "Inhalt"
 
+msgctxt "#30608"
+msgid "Filter auswählen"
+msgstr ""
+
+msgctxt "#30609"
+msgid "Filternamen eingeben"
+msgstr ""
+
 msgctxt "#30610"
 msgid "Please select tags (red checkbox means \"not\")"
 msgstr "Bitte Tags auswählen (rote Checkbox bedeutet \"nicht\")"
@@ -639,6 +647,18 @@ msgstr "Abbrechen"
 msgctxt "#30615"
 msgid "Match all tags"
 msgstr "Alle Tags müssen zutreffen"
+
+msgctxt "#30616"
+msgid "Load Settings"
+msgstr "Filter laden"
+
+msgctxt "#30617"
+msgid "Save Settings"
+msgstr "Filter speichern"
+
+msgctxt "#30618"
+msgid "Clear Settings"
+msgstr "Filter zurücksetzen"
 
 msgctxt "#30620"
 msgid "Translate your tags"

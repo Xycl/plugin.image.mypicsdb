@@ -98,7 +98,7 @@ def version_201_tables(DBpath):
 
     #table 'FilterWizardItems'
     try:
-        cn.execute("""create table FilterWizardItems (idItems integer primary key, fkFilter integer, strItem text unique, nState integer, FOREIGN KEY(fkFilter) REFERENCES FilterWizard(pkFilter))""")
+        cn.execute("""create table FilterWizardItems (idItems integer primary key, fkFilter integer, strItem, nState integer, FOREIGN KEY(fkFilter) REFERENCES FilterWizard(pkFilter))""")
     except Exception,msg:
         if str(msg).find("already exists") > -1:
             pass
@@ -717,7 +717,10 @@ def search_filter_tags(FilterInlineArrayTrue, FilterInlineArrayFalse, MatchAll):
 
 
 def list_filterwizard_filters():
-    return [row for row in Request( """select strFilterName from FilterWizard""")][0]
+    filter = []
+    for row in Request( """select strFilterName from FilterWizard"""):
+        filter.append(row[0])
+    return filter
 
 
 def delete_filterwizard_filter(filter_name):

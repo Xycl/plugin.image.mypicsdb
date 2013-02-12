@@ -633,6 +633,14 @@ msgstr ""
 
 #empty strings from id 30603 to 30609
 
+msgctxt "#30608"
+msgid "Select filter"
+msgstr ""
+
+msgctxt "#30609"
+msgid "Enter filter name"
+msgstr ""
+
 msgctxt "#30610"
 msgid "Please select tags (red checkbox means \"not\")"
 msgstr ""
@@ -657,7 +665,19 @@ msgctxt "#30615"
 msgid "Match all tags"
 msgstr ""
 
-#empty strings from id 30616 to 30619
+msgctxt "#30616"
+msgid "Load Settings"
+msgstr ""
+
+msgctxt "#30617"
+msgid "Save Settings"
+msgstr ""
+
+msgctxt "#30618"
+msgid "Clear Settings"
+msgstr ""
+
+#empty strings from id 30619 to 30619
 
 msgctxt "#30620"
 msgid "Translate your tags"
