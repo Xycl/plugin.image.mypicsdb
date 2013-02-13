@@ -551,7 +551,7 @@ msgstr ""
 #empty string with id 30219
 
 msgctxt "#30220"
-msgid "Geolocation"
+msgid "Google Map"
 msgstr ""
 
 #.%0.2f%% will be replaced by the percent of download for a map
@@ -568,7 +568,19 @@ msgctxt "#30223"
 msgid "Use up / down arrows to zoom in / out"
 msgstr ""
 
-#empty strings from id 30224 to 30240
+msgctxt "#30224"
+msgid "Close"
+msgstr ""
+
+msgctxt "#30225"
+msgid "Zoom In"
+msgstr ""
+
+msgctxt "#30226"
+msgid "Zoom Out"
+msgstr ""
+
+#empty strings from id 30227 to 30240
 
 msgctxt "#30241"
 msgid "preparing"

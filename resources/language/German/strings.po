@@ -541,8 +541,8 @@ msgid "to exclude the pictures!"
 msgstr "um die Bilder endgültig auszuschließen!"
 
 msgctxt "#30220"
-msgid "Geolocation"
-msgstr "Geolocation"
+msgid "Google Map"
+msgstr "Google Map"
 
 #. 0.2f%% will be replaced by the percent of download for a map
 msgctxt "#30221"
@@ -557,6 +557,18 @@ msgstr "Zoom=%s"
 msgctxt "#30223"
 msgid "Use up / down arrows to zoom in / out"
 msgstr "Use up / down arrows to zoom in / out"
+
+msgctxt "#30224"
+msgid "Close"
+msgstr "Schließen"
+
+msgctxt "#30225"
+msgid "Zoom In"
+msgstr "Hineinzoomen"
+
+msgctxt "#30226"
+msgid "Zoom Out"
+msgstr "Herauszoomen"
 
 msgctxt "#30241"
 msgid "preparing"

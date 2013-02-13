@@ -19,7 +19,7 @@
                 <texture border="40">default-panel.png</texture>
             </control>
             <control type="label" id="100">
-                <description>textarea</description>
+                <description>Translation Editor Label</description>
                 <posx>200</posx>
                 <posy>25</posy>
                 <width>690</width>
@@ -28,11 +28,10 @@
                 <textcolor>white</textcolor>
                 <aligny>center</aligny>
                 <align>center</align>
-                <label>Translation Editor</label>
                 <wrapmultiline>true</wrapmultiline>
             </control>
             <control type="label" id="101">
-                <description>textarea</description>
+                <description>Leave translation empty to hide tag type in MyPicsDB</description>
                 <posx>200</posx>
                 <posy>60</posy>
                 <width>690</width>
@@ -41,7 +40,6 @@
                 <textcolor>white</textcolor>
                 <aligny>center</aligny>
                 <align>center</align>
-                <label>Leave translation empty to hide tag type in MyPicsDB</label>
                 <wrapmultiline>true</wrapmultiline>
             </control>
             <control type="button" id="102">
@@ -54,7 +52,6 @@
                 <textcolor>white</textcolor>
                 <aligny>center</aligny>
                 <align>center</align>
-                <label>Close</label>
                 <onleft>120</onleft>
                 <onright>103</onright>
             </control>

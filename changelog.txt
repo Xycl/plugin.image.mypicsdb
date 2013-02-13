@@ -1,6 +1,7 @@
 2013/02/13--> v 2.0.1
 Update: Save/Load/Delete filter wizard settings
 Update: Store filenames to exclude from scan in add-on settings
+Update: Google Maps reintroduced
 
 2013/02/06--> v 2.0.0
 Added:  Productive Frodo Version

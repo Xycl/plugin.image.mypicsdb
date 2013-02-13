@@ -717,10 +717,10 @@ def search_filter_tags(FilterInlineArrayTrue, FilterInlineArrayFalse, MatchAll):
 
 
 def list_filterwizard_filters():
-    filter = []
-    for row in Request( """select strFilterName from FilterWizard"""):
-        filter.append(row[0])
-    return filter
+    filterarray = []
+    for row in Request( """select strFilterName from FilterWizard order by 1"""):
+        filterarray.append(row[0])
+    return filterarray
 
 
 def delete_filterwizard_filter(filter_name):

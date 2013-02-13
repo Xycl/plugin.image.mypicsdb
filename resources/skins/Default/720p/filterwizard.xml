@@ -31,7 +31,7 @@
                 <wrapmultiline>true</wrapmultiline>
             </control>
             <control type="label" id="101">
-                <description>textarea</description>
+                <description>number of selected tags</description>
                 <posx>1060</posx>
                 <posy>20</posy>
                 <width>200</width>
@@ -40,7 +40,6 @@
                 <textcolor>white</textcolor>
                 <aligny>center</aligny>
                 <align>right</align>
-                <label>(0) tags</label>
             </control>
             <control type="button" id="102">
                 <description>OK button</description>
@@ -52,7 +51,6 @@
                 <textcolor>white</textcolor>
                 <aligny>center</aligny>
                 <align>center</align>
-                <label>OK</label>
                 <onleft>120</onleft>
                 <onright>103</onright>
                 <ondown>107</ondown>
@@ -68,45 +66,42 @@
                 <textcolor>white</textcolor>
                 <aligny>center</aligny>
                 <align>center</align>
-                <label>Cancel</label>
                 <onleft>102</onleft>
                 <onright>104</onright>
                 <ondown>108</ondown>
                 <onup>120</onup>
             </control>
-            <!-- load / save -->
+            <!-- load / save 
             <control type="label" id="110">
-                <description>textarea</description>
-                <posx>30</posx>
+                <description>Filter label</description>
+                <posx>40</posx>
                 <posy>550</posy>
-                <width>110</width>
+                <width>100</width>
                 <height>40</height>
                 <font>font18</font>
                 <textcolor>white</textcolor>
                 <aligny>center</aligny>
                 <align>left</align>
-                <label>Filter:</label>
-            </control>            
+            </control>            -->
             <control type="button" id="107">
                 <description>Load button</description>
-                <posx>150</posx>
+                <posx>30</posx>
                 <posy>550</posy>
-                <width>220</width>
+                <width>250</width>
                 <height>40</height>
                 <font>font18</font>
                 <textcolor>white</textcolor>
                 <aligny>center</aligny>
                 <align>center</align>
-                <label>Cancel</label>
                 <onleft>104</onleft>
                 <onright>108</onright>
                 <onup>102</onup>
             </control>
             <control type="button" id="108">
                 <description>Save button</description>
-                <posx>380</posx>
+                <posx>290</posx>
                 <posy>550</posy>
-                <width>220</width>
+                <width>250</width>
                 <height>40</height>
                 <font>font18</font>
                 <textcolor>white</textcolor>
@@ -118,9 +113,9 @@
             </control>
             <control type="button" id="109">
                 <description>Clear button</description>
-                <posx>610</posx>
+                <posx>550</posx>
                 <posy>550</posy>
-                <width>220</width>
+                <width>250</width>
                 <height>40</height>
                 <font>font18</font>
                 <textcolor>white</textcolor>
@@ -132,9 +127,9 @@
             </control>         
             <control type="button" id="111">
                 <description>Delete filter button</description>
-                <posx>840</posx>
+                <posx>810</posx>
                 <posy>550</posy>
-                <width>220</width>
+                <width>250</width>
                 <height>40</height>
                 <font>font18</font>
                 <textcolor>white</textcolor>
@@ -145,7 +140,7 @@
                 <onup>104</onup>
             </control> 
             <control type="radiobutton" id="104">
-                <description>Match button</description>
+                <description>Match all button</description>
                 <posx>690</posx>
                 <posy>500</posy>
                 <width>370</width>
@@ -154,14 +149,13 @@
                 <textcolor>white</textcolor>
                 <aligny>center</aligny>
                 <align>left</align>
-                <label>Match all</label>
                 <onleft>103</onleft>
                 <onright>107</onright>
                 <ondown>109</ondown>
                 <onup>120</onup>
             </control>
             <control type="label" id="105">
-                <description>textarea</description>
+                <description>Tags</description>
                 <posx>70</posx>
                 <posy>100</posy>
                 <width>315</width>
@@ -170,10 +164,9 @@
                 <textcolor>white</textcolor>
                 <aligny>center</aligny>
                 <align>left</align>
-                <label>Tags</label>
             </control>
             <control type="label" id="106">
-                <description>textarea</description>
+                <description>Tag content</description>
                 <posx>440</posx>
                 <posy>100</posy>
                 <width>315</width>
@@ -182,7 +175,6 @@
                 <textcolor>white</textcolor>
                 <aligny>center</aligny>
                 <align>left</align>
-                <label>Content</label>
             </control>
             <control type="image">
                 <posx>20</posx>
