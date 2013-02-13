@@ -93,7 +93,6 @@ msgctxt "#30025"
 msgid "Initialize the database at next addon startup"
 msgstr "Initialisiere Datenbank vor dem Scannen"
 
-#. etting
 msgctxt "#30026"
 msgid "Use the picture as fanart for pictures"
 msgstr "Bild als Hintergrund einblenden"
@@ -173,6 +172,10 @@ msgstr "Videos"
 msgctxt "#30052"
 msgid "Tags"
 msgstr "Tags"
+
+msgctxt "#30053"
+msgid "Excluded Files"
+msgstr "Ausgeschlossene Dateien"
 
 msgctxt "#30060"
 msgid "Locate on disk"
@@ -616,13 +619,17 @@ msgctxt "#30602"
 msgid "Contents"
 msgstr "Inhalt"
 
+msgctxt "#30607"
+msgid "Last used filter"
+msgstr "Letzter benutzter Filter"
+
 msgctxt "#30608"
-msgid "Filter auswählen"
-msgstr ""
+msgid "Select filter"
+msgstr "Filter auswählen"
 
 msgctxt "#30609"
-msgid "Filternamen eingeben"
-msgstr ""
+msgid "Enter filter name"
+msgstr "Filternamen eingeben"
 
 msgctxt "#30610"
 msgid "Please select tags (red checkbox means \"not\")"
@@ -649,16 +656,20 @@ msgid "Match all tags"
 msgstr "Alle Tags müssen zutreffen"
 
 msgctxt "#30616"
-msgid "Load Settings"
-msgstr "Filter laden"
+msgid "Load"
+msgstr "Laden"
 
 msgctxt "#30617"
-msgid "Save Settings"
-msgstr "Filter speichern"
+msgid "Save"
+msgstr "Speichern"
 
 msgctxt "#30618"
-msgid "Clear Settings"
-msgstr "Filter zurücksetzen"
+msgid "Reset"
+msgstr "Zurücksetzen"
+
+msgctxt "#30619"
+msgid "Delete"
+msgstr "Löschen"
 
 msgctxt "#30620"
 msgid "Translate your tags"
@@ -683,6 +694,14 @@ msgstr "Debugging"
 msgctxt "#30651"
 msgid "Enable debugging (regardless of XBMC settings)"
 msgstr "Debugging einschalten"
+
+msgctxt "#30652"
+msgid "Filter:"
+msgstr "Filter:"
+
+msgctxt "#30653"
+msgid "New Filter"
+msgstr "Neuer Filter"
 
 msgctxt "#30660"
 msgid "Database Settings"

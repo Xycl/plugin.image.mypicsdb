@@ -75,11 +75,23 @@
                 <onup>120</onup>
             </control>
             <!-- load / save -->
-            <control type="button" id="107">
-                <description>Load button</description>
+            <control type="label" id="110">
+                <description>textarea</description>
                 <posx>30</posx>
                 <posy>550</posy>
-                <width>300</width>
+                <width>110</width>
+                <height>40</height>
+                <font>font18</font>
+                <textcolor>white</textcolor>
+                <aligny>center</aligny>
+                <align>left</align>
+                <label>Filter:</label>
+            </control>            
+            <control type="button" id="107">
+                <description>Load button</description>
+                <posx>150</posx>
+                <posy>550</posy>
+                <width>220</width>
                 <height>40</height>
                 <font>font18</font>
                 <textcolor>white</textcolor>
@@ -92,34 +104,46 @@
             </control>
             <control type="button" id="108">
                 <description>Save button</description>
-                <posx>360</posx>
+                <posx>380</posx>
                 <posy>550</posy>
-                <width>300</width>
+                <width>220</width>
                 <height>40</height>
                 <font>font18</font>
                 <textcolor>white</textcolor>
                 <aligny>center</aligny>
                 <align>center</align>
-                <label>Cancel</label>
                 <onleft>107</onleft>
                 <onright>109</onright>
                 <onup>103</onup>
             </control>
             <control type="button" id="109">
                 <description>Clear button</description>
-                <posx>690</posx>
+                <posx>610</posx>
                 <posy>550</posy>
-                <width>300</width>
+                <width>220</width>
                 <height>40</height>
                 <font>font18</font>
                 <textcolor>white</textcolor>
                 <aligny>center</aligny>
                 <align>center</align>
-                <label>Cancel</label>
                 <onleft>107</onleft>
-                <onright>122</onright>
+                <onright>111</onright>
                 <onup>104</onup>
-            </control>            
+            </control>         
+            <control type="button" id="111">
+                <description>Delete filter button</description>
+                <posx>840</posx>
+                <posy>550</posy>
+                <width>220</width>
+                <height>40</height>
+                <font>font18</font>
+                <textcolor>white</textcolor>
+                <aligny>center</aligny>
+                <align>center</align>
+                <onleft>109</onleft>
+                <onright>102</onright>
+                <onup>104</onup>
+            </control> 
             <control type="radiobutton" id="104">
                 <description>Match button</description>
                 <posx>690</posx>
@@ -275,7 +299,6 @@
                     <textureslidernib>-</textureslidernib>
                     <textureslidernibfocus>-</textureslidernibfocus>
                     <orientation>vertical</orientation>
-                    <showonepage>false</showonepage>
                     <visible>Control.IsVisible(120)</visible>
                 </control>
             </control>
@@ -364,7 +387,6 @@
                     <textureslidernib>-</textureslidernib>
                     <textureslidernibfocus>-</textureslidernibfocus>
                     <orientation>vertical</orientation>
-                    <showonepage>false</showonepage>
                     <visible>Control.IsVisible(122)</visible>
                 </control>
             </control>

@@ -156,6 +156,13 @@ class VFSScanner:
         return self.totalfiles
 
 
+    def _check_excluded_files(self, filename):
+        for ext in common.getaddon_setting("picsexcl").lower().split("|"):
+            if ext in filename.lower():
+                common.log("VFSScanner._check_excluded_files", 'Picture "%s" excluded due to exclude condition "%s"'%(filename , common.getaddon_setting("picsexcl")) )
+                return False
+        return True
+            
     def _addpath(self, path, parentfolderid, recursive, update):
 
         """
@@ -189,6 +196,9 @@ class VFSScanner:
                     common.log( "VFSScanner._addpath", "Scanning canncelled", xbmc.LOGNOTICE)
                     return
                     
+                if self._check_excluded_files(pic) == False:
+                    continue
+                
                 self.picsscanned += 1
                 #filename = common.smart_unicode(os.path.basename(pic))
                 filename = os.path.basename(pic)

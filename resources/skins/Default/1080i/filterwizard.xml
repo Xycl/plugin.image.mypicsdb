@@ -77,11 +77,23 @@
                 <onup>120</onup>
             </control>
             <!-- load / save -->
-            <control type="button" id="107">
-                <description>Load button</description>
+            <control type="label" id="110">
+                <description>textarea</description>
                 <posx>45</posx>
                 <posy>855</posy>
-                <width>450</width>
+                <width>165</width>
+                <height>60</height>
+                <font>font18</font>
+                <textcolor>white</textcolor>
+                <aligny>center</aligny>
+                <align>left</align>
+                <label>Filter:</label>
+            </control>            
+            <control type="button" id="107">
+                <description>Load button</description>
+                <posx>225</posx>
+                <posy>855</posy>
+                <width>330</width>
                 <height>60</height>
                 <font>font18</font>
                 <textcolor>white</textcolor>
@@ -92,36 +104,51 @@
                 <onright>108</onright>
                 <onup>102</onup>
             </control>
+            
+
             <control type="button" id="108">
                 <description>Save button</description>
-                <posx>540</posx>
+                <posx>570</posx>
                 <posy>855</posy>
-                <width>450</width>
+                <width>330</width>
                 <height>60</height>
                 <font>font18</font>
                 <textcolor>white</textcolor>
                 <aligny>center</aligny>
                 <align>center</align>
-                <label>Cancel</label>
                 <onleft>107</onleft>
                 <onright>109</onright>
                 <onup>103</onup>
             </control>
             <control type="button" id="109">
                 <description>Clear button</description>
-                <posx>1035</posx>
+                <posx>915</posx>
                 <posy>855</posy>
-                <width>450</width>
+                <width>330</width>
                 <height>60</height>
                 <font>font18</font>
                 <textcolor>white</textcolor>
                 <aligny>center</aligny>
-                <align>left</align>
-                <label>Cancel</label>
+                <align>center</align>
                 <onleft>107</onleft>
-                <onright>122</onright>
+                <onright>111</onright>
                 <onup>104</onup>
-            </control>                        
+            </control>         
+            <control type="button" id="111">
+                <description>Delete filter button</description>
+                <posx>1260</posx>
+                <posy>855</posy>
+                <width>330</width>
+                <height>60</height>
+                <font>font18</font>
+                <textcolor>white</textcolor>
+                <aligny>center</aligny>
+                <align>center</align>
+                <onleft>109</onleft>
+                <onright>102</onright>
+                <onup>104</onup>
+            </control>             
+                  
             <control type="radiobutton" id="104">
                 <description>Cancel button</description>
                 <posx>1035</posx>
@@ -277,7 +304,6 @@
                     <textureslidernib>-</textureslidernib>
                     <textureslidernibfocus>-</textureslidernibfocus>
                     <orientation>vertical</orientation>
-                    <showonepage>false</showonepage>
                     <visible>Control.IsVisible(120)</visible>
                 </control>
             </control>
@@ -366,7 +392,6 @@
                     <textureslidernib>-</textureslidernib>
                     <textureslidernibfocus>-</textureslidernibfocus>
                     <orientation>vertical</orientation>
-                    <showonepage>false</showonepage>
                     <visible>Control.IsVisible(122)</visible>
                 </control>
             </control>

@@ -168,7 +168,11 @@ msgctxt "#30052"
 msgid "Tags"
 msgstr ""
 
-#empty strings from id 30053 to 30059
+msgctxt "#30053"
+msgid "Excluded Files"
+msgstr ""
+
+#empty strings from id 30054 to 30059
 
 msgctxt "#30060"
 msgid "Locate on disk"
@@ -631,7 +635,11 @@ msgctxt "#30602"
 msgid "Contents"
 msgstr ""
 
-#empty strings from id 30603 to 30609
+#empty strings from id 30603 to 30606
+
+msgctxt "#30607"
+msgid "Last used filter"
+msgstr ""
 
 msgctxt "#30608"
 msgid "Select filter"
@@ -666,18 +674,21 @@ msgid "Match all tags"
 msgstr ""
 
 msgctxt "#30616"
-msgid "Load Settings"
+msgid "Load"
 msgstr ""
 
 msgctxt "#30617"
-msgid "Save Settings"
+msgid "Save"
 msgstr ""
 
 msgctxt "#30618"
-msgid "Clear Settings"
+msgid "Reset"
 msgstr ""
 
-#empty strings from id 30619 to 30619
+msgctxt "#30619"
+msgid "Delete"
+msgstr ""
+
 
 msgctxt "#30620"
 msgid "Translate your tags"
@@ -705,7 +716,15 @@ msgctxt "#30651"
 msgid "Enable debugging (regardless of XBMC settings)"
 msgstr ""
 
-#empty strings from id 30652 to 30659
+msgctxt "#30652"
+msgid "Filter:"
+msgstr ""
+
+msgctxt "#30653"
+msgid "New Filter"
+msgstr ""
+
+#empty strings from id 30654 to 30659
 
 msgctxt "#30660"
 msgid "Database Settings"

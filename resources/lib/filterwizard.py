@@ -25,6 +25,7 @@ import common
 
 STATUS_LABEL       = 100
 CHECKED_LABEL      = 101
+FILTER_LABEL       = 110
 BUTTON_OK          = 102
 BUTTON_CANCEL      = 103
 BUTTON_MATCHALL    = 104
@@ -33,6 +34,7 @@ CONTENT_COLUMN     = 106
 LOAD_FILTER        = 107
 SAVE_FILTER        = 108
 CLEAR_FILTER       = 109
+DELETE_FILTER      = 111
 
 TAGS_LIST          = 120
 TAGS_CONTENT_LIST  = 122
@@ -55,7 +57,7 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
 
 
     def onInit( self ):  
-        self.setup_all('default')
+        self.setup_all('')
 
  
     def onClick( self, controlId ):
@@ -75,7 +77,7 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
             self.close()
             
         # Okay
-        if ( self.getFocusId() == BUTTON_OK and action.getId() in SELECT_ITEM ):
+        elif ( self.getFocusId() == BUTTON_OK and action.getId() in SELECT_ITEM ):
             arraytrue = []
             arrayfalse = []
             
@@ -87,39 +89,39 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
                     arrayfalse.append( key)
             
             self.filter (arraytrue, arrayfalse, self.bAnd )
-            MPDB.save_filterwizard_filter('default', self.CheckTagNames, self.bAnd)
+            MPDB.save_filterwizard_filter(common.getstring(30607) , self.CheckTagNames, self.bAnd)
             
             self.close()
         
         # Match all button
-        if ( action.getId() in SELECT_ITEM and self.getFocusId() == BUTTON_MATCHALL ):
+        elif ( action.getId() in SELECT_ITEM and self.getFocusId() == BUTTON_MATCHALL ):
             self.bAnd = not self.bAnd
 
         # Load filter settings
-        if ( action.getId() in SELECT_ITEM and self.getFocusId() == LOAD_FILTER ):
+        elif ( action.getId() in SELECT_ITEM and self.getFocusId() == LOAD_FILTER ):
             self.show_filter_settings()
             
         # Save filter settings
-        if ( action.getId() in SELECT_ITEM and self.getFocusId() == SAVE_FILTER ):
-            kb = xbmc.Keyboard()
-            kb.setHeading(common.getstring(30609))
-            kb.doModal()
-            if (kb.isConfirmed()):
-                MPDB.save_filterwizard_filter(kb.getText(), self.CheckTagNames, self.bAnd)
+        elif ( action.getId() in SELECT_ITEM and self.getFocusId() == SAVE_FILTER ):
+            self.save_filter_settings()
             
         # Clear filter settings
-        if ( action.getId() in SELECT_ITEM and self.getFocusId() == CLEAR_FILTER ):
+        elif ( action.getId() in SELECT_ITEM and self.getFocusId() == CLEAR_FILTER ):
             self.clear_settings()
             
+        # Delete filter settings
+        elif ( action.getId() in SELECT_ITEM and self.getFocusId() == DELETE_FILTER ):
+            self.delete_filter_settings()
+            
         # Select or deselect item in TagTypes list
-        if ( action.getId() in SELECT_ITEM and self.getFocusId() == TAGS_LIST ):
+        elif ( action.getId() in SELECT_ITEM and self.getFocusId() == TAGS_LIST ):
             item = self.getControl( TAGS_LIST ).getSelectedItem()
             pos  = self.getControl( TAGS_LIST ).getSelectedPosition()
             if self.CurrentlySelectedTagType != self.TagTypes[pos]:
                 self.load_tag_content_list(self.TagTypes[pos])
         
         # Select or deselect item in TagContents list
-        if ( action.getId() in SELECT_ITEM and self.getFocusId() == TAGS_CONTENT_LIST ):
+        elif ( action.getId() in SELECT_ITEM and self.getFocusId() == TAGS_CONTENT_LIST ):
             # get selected item
             item = self.getControl( TAGS_CONTENT_LIST ).getSelectedItem()
             pos  = self.getControl( TAGS_CONTENT_LIST ).getSelectedPosition()
@@ -168,23 +170,9 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
         self.getControl( TAGS_CONTENT_LIST ).setVisible(True)    
 
 
-    def clear_settings(self):
-        self.CheckTagNames.clear()
-        self.bAnd = False
-        self.getControl( BUTTON_MATCHALL ).setSelected(0)
-
-        item = self.getControl( TAGS_LIST ).getSelectedItem()
-        pos  = self.getControl( TAGS_LIST ).getSelectedPosition()
-        self.load_tag_content_list(self.TagTypes[0])
-            
-        self.getControl( CHECKED_LABEL ).setVisible(False)
-        self.getControl( CHECKED_LABEL ).setVisible(True)
-    
-        MPDB.save_filterwizard_filter('default', self.CheckTagNames, False)    
-
-
-    def setup_all( self, filter ):
+    def setup_all( self, filtersettings = ""):
         self.getControl( STATUS_LABEL ).setLabel( common.getstring(30610) )
+        self.getControl( FILTER_LABEL ).setLabel( common.getstring(30652) )
         self.getControl( TAGS_COLUMN ).setLabel(  common.getstring(30601) )        
         self.getControl( CONTENT_COLUMN ).setLabel( common.getstring(30602) )        
         self.getControl( BUTTON_OK ).setLabel( common.getstring(30613) )
@@ -193,6 +181,7 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
         self.getControl( LOAD_FILTER ).setLabel( common.getstring(30616) )
         self.getControl( SAVE_FILTER ).setLabel( common.getstring(30617) )
         self.getControl( CLEAR_FILTER ).setLabel( common.getstring(30618) )
+        self.getControl( DELETE_FILTER ).setLabel( common.getstring(30619) )
         self.getControl( TAGS_LIST ).reset()
 
         self.TagTypes = [u"%s"%k  for k in MPDB.list_TagTypes()]
@@ -205,10 +194,10 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
         self.getControl( TAGS_LIST ).reset()
         
         # load last filter settings
-        self.CheckTagNames, self.bAnd = MPDB.load_filterwizard_filter(filter)
-        print self.getControl( BUTTON_MATCHALL ).isSelected()
-        if self.bAnd:
-            self.getControl( BUTTON_MATCHALL ).setSelected(1)
+        if filtersettings != "":
+            self.CheckTagNames, self.bAnd = MPDB.load_filterwizard_filter(filtersettings)
+            if self.bAnd:
+                self.getControl( BUTTON_MATCHALL ).setSelected(1)
         
         for key in self.CheckTagNames:
             if self.CheckTagNames[key] != 0:
@@ -253,7 +242,6 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
         dialog = xbmcgui.Dialog()
         ret = dialog.select(common.getstring(30608), filters)
         if ret > -1:
-            print "Load: " + filters[ret]
             self.setup_all(filters[ret])
 
 
@@ -278,3 +266,43 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
                 
             self.getControl( TAGS_CONTENT_LIST ).addItem( TagContentItem )
 
+
+
+    def clear_settings(self):
+        self.CheckTagNames.clear()
+        self.bAnd = False
+        self.getControl( BUTTON_MATCHALL ).setSelected(0)
+
+        self.load_tag_content_list(self.TagTypes[0])
+            
+        self.getControl( CHECKED_LABEL ).setVisible(False)
+        self.getControl( CHECKED_LABEL ).setVisible(True)
+    
+        #MPDB.save_filterwizard_filter(common.getstring(30607), self.CheckTagNames, False)    
+
+
+    def delete_filter_settings(self):
+        filters = MPDB.list_filterwizard_filters()
+        dialog = xbmcgui.Dialog()
+        ret = dialog.select(common.getstring(30608), filters)
+        if ret > -1:
+            MPDB.delete_filterwizard_filter(filters[ret])
+
+
+    def save_filter_settings(self):
+        # Display a list of already saved filters to give the possibility to override a filter
+        filters = []
+        filters.append( common.getstring(30653) )
+        filters = filters + MPDB.list_filterwizard_filters()
+        print filters
+        dialog = xbmcgui.Dialog()
+        ret = dialog.select(common.getstring(30608), filters)
+        if ret > 0:
+            MPDB.save_filterwizard_filter(filters[ret], self.CheckTagNames, self.bAnd)
+        if ret == 0:
+            kb = xbmc.Keyboard()
+            kb.setHeading(common.getstring(30609))
+            kb.doModal()
+            if (kb.isConfirmed()):
+                MPDB.save_filterwizard_filter(kb.getText(), self.CheckTagNames, self.bAnd)
+        
