@@ -1,3 +1,6 @@
+2013/02/15--> v 2.0.2
+Fix:    Global search repaired
+
 2013/02/13--> v 2.0.1
 Update: Save/Load/Delete filter wizard settings
 Update: Store filenames to exclude from scan in add-on settings

@@ -837,7 +837,7 @@ def Searchfiles(tagtype, tagvalue, count=False):
                                                       from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
                                                      where tt.idTagType = tc.idTagType
                                                        and tc.idTagContent = tif.idTagContent
-                                                       and tt.TagType = ?
+                                                       and tt.TagTranslation = ?
                                                        and lower(tc.TagContent) LIKE '%%%s%%'
                                                        and tif.idFile = fi.idFile"""%val, (tagtype,))][0][0]
     else:
@@ -845,7 +845,7 @@ def Searchfiles(tagtype, tagvalue, count=False):
                                                       from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
                                                      where tt.idTagType = tc.idTagType
                                                        and tc.idTagContent = tif.idTagContent
-                                                       and tt.TagType = ?
+                                                       and tt.TagTranslation = ?
                                                        and lower(tc.TagContent) LIKE '%%%s%%'
                                                        and tif.idFile = fi.idFile"""%val, (tagtype, ))]
 ###

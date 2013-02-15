@@ -720,17 +720,22 @@ class Main:
             kb.doModal()
             if (kb.isConfirmed()):
                 motrecherche = kb.getText()
+                common.log("Main.global_search", "user entered %s"%motrecherche)
             else:
+                common.log("Main.global_search", "user cancelled search")
                 return
             refresh=False
         else:
             motrecherche = self.args.searchterm
+            common.log("Main.global_search", "search %s"%motrecherche)
             refresh=True
 
 
         listtags = [k for k in MPDB.list_TagTypesAndCount()]
+        
         result = False
         for tag, _ in listtags:            
+            common.log("Main.global_search","Search %s in %s"%(motrecherche, tag))
             compte = MPDB.Searchfiles(tag, motrecherche, count=True)
             if compte:
                 result = True
