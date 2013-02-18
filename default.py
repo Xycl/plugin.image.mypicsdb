@@ -183,7 +183,7 @@ class Main:
         return xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=u,listitem=liz,isFolder=False)#,totalItems=total)
 
 
-    def addPic(self,picname,picpath,info="*",fanart=None,contextmenu=None,replacemenu=True):
+    def addPic(self,picname,picpath,count=0, info="*",fanart=None,contextmenu=None,replacemenu=True):
         fullfilepath = join(picpath,picname)
         common.log("Main.addPic", "Name = %s"%fullfilepath)
         
@@ -227,7 +227,7 @@ class Main:
                                                        and fi.strFilename = ?  """,(picpath,picname))     
 
             #resolution = MPDB.RequestWithBinds( """select coalesce("EXIF ExifImageWidth", '0'),  coalesce("EXIF ExifImageLength", '0') from files where strPath=? and strFilename=? """,(picpath,picname))
-            infolabels = { "picturepath":picname+" "+suffix, "date": date  }
+            infolabels = { "picturepath":picname+" "+suffix, "date": date, "count": count  }
             try:
                 if exiftime[0] != None and exiftime[0] != "0":
                     common.log("Main.addPic", "Picture has EXIF Date/Time %s"%exiftime[0])
@@ -342,7 +342,7 @@ class Main:
                     join(PIC_PATH,"keywords.png"),
                     fanart=join(PIC_PATH,"fanart-keyword.png"))        
 
-        xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_NONE)
+        xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_UNSORTED)
         #xbmcplugin.setPluginCategory( handle=int( sys.argv[ 1 ] ), category=unquote_plus("My Pictures Library".encode("utf-8")) )
         xbmcplugin.endOfDirectory(int(sys.argv[1]),cacheToDisc=True)
 
@@ -444,12 +444,14 @@ class Main:
                         total = len(childrenfolders))#nb total d'éléments
 
         #maintenant, on liste les photos si il y en a, du dossier en cours
-        picsfromfolder = [row for row in MPDB.RequestWithBinds("SELECT p.FullPath,f.strFilename FROM files f,folders p WHERE f.idFolder=p.idFolder AND f.idFolder=? ", (self.args.folderid, ) )]
+        picsfromfolder = [row for row in MPDB.RequestWithBinds("SELECT p.FullPath,f.strFilename FROM files f,folders p WHERE f.idFolder=p.idFolder AND f.idFolder=? order by f.imagedatetime", (self.args.folderid, ) )]
 
+        count = 0
         for path,filename in picsfromfolder:
             path     = common.smart_unicode(path)
             filename = common.smart_unicode(filename)
 
+            count = count + 1
             common.log("Main.show_folders", "pic's path = %s  pic's name = %s"%(path,filename))
 
             context = []
@@ -458,12 +460,15 @@ class Main:
                                                                                                                          common.quote_param(path.encode('utf-8')),
                                                                                                                          common.quote_param(filename.encode('utf-8')))  )
                             )
-            self.addPic(filename,path,contextmenu=context,
+            self.addPic(filename,path, count=count, contextmenu=context,
                         fanart = xbmcplugin.getSetting(int(sys.argv[1]),'usepicasfanart')=='true' and join(path,filename) or join(PIC_PATH,"fanart-folder.png")
                         )
 
-        xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_LABEL )
+
         xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_DATE )
+        xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_PROGRAM_COUNT )
+        xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_LABEL )
+
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
     def show_translationeditor(self):
@@ -474,11 +479,7 @@ class Main:
 
     def show_map(self):
         """get a google map for the given place (place is a string for an address, or a couple of gps lat/lon datas"""
-        """
-        dialog = xbmcgui.Dialog()
-        dialog.ok(common.getstring(30000).encode("utf8"), "Due to a bug in Frodo this feature was decommissioned.")
-        
-        """
+
         try:
             path = common.smart_unicode(self.args.path)
             filename = common.smart_unicode(self.args.filename)
@@ -497,30 +498,11 @@ class Main:
         ui.set_datapath(DATA_PATH)
         ui.doModal()
         del ui
-           
-        """     
-        import geomaps
-        
-        try:
-            path = common.smart_unicode(self.args.path)
-            filename = common.smart_unicode(self.args.filename)
-            joined = common.smart_utf8(join(path,filename))
-            showmap = geomaps.main(datapath = DATA_PATH, place =self.args.place, picfile = joined )
-        except:
-            try:
-                path = common.smart_utf8(self.args.path)
-                filename = common.smart_utf8(self.args.filename)
-                joined = join(path,filename)
-                showmap = geomaps.main(datapath = DATA_PATH, place =self.args.place, picfile = joined )
-            except:
-                return
 
-        showmap.doModal()
-        del showmap
-        """
 
     def show_help(self):
         viewer.Viewer()
+
 
     def show_wizard(self):
         global GlobalFilterTrue, GlobalFilterFalse, GlobalMatchAll
@@ -573,6 +555,7 @@ class Main:
                             total = total)#nb total d'éléments
         xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_LABEL)
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
 
     def show_tags(self):
         tagtype = self.args.tagtype.decode("utf8")
@@ -648,7 +631,6 @@ class Main:
             else:
                 common.log("show_period", "No pictures with an EXIF date stored in DB")
 
-
         #search for inbase periods and show periods
         for periodname,dbdatestart,dbdateend in MPDB.ListPeriodes():
             periodname = common.smart_unicode(periodname)
@@ -671,8 +653,9 @@ class Main:
                                           ( common.getstring(30152),"XBMC.RunPlugin(\"%s?action='addfolder'&method='date'&period='period'&datestart='%s'&dateend='%s'&viewmode='scan'\")"%(sys.argv[0],datestart,dateend))
                                         ] )#menucontextuel
 
-        xbmcplugin.addSortMethod( int(sys.argv[1]), xbmcplugin.SORT_METHOD_NONE )
+        xbmcplugin.addSortMethod( int(sys.argv[1]), xbmcplugin.SORT_METHOD_UNSORTED )
         xbmcplugin.endOfDirectory( int(sys.argv[1]),updateListing=update )
+
 
     def show_collection(self):
         common.log("show_collection", "started")
@@ -710,8 +693,9 @@ class Main:
                                          (common.getstring(30062),"XBMC.RunPlugin(\"%s?action='showpics'&method='collection'&page=''&viewmode='export'&name='%s'&collect='%s'\")"%(sys.argv[0],common.quote_param(collection[0].encode('utf-8')),common.quote_param(collection[0].encode('utf-8'))) )
                                          ] )#menucontextuel
 
-        xbmcplugin.addSortMethod( int(sys.argv[1]), xbmcplugin.SORT_METHOD_NONE )
+        xbmcplugin.addSortMethod( int(sys.argv[1]), xbmcplugin.SORT_METHOD_UNSORTED )
         xbmcplugin.endOfDirectory( int(sys.argv[1]),updateListing=refresh)
+
 
     def global_search(self):
         #récupére la liste des colonnes de la table files
@@ -729,7 +713,6 @@ class Main:
             motrecherche = self.args.searchterm
             common.log("Main.global_search", "search %s"%motrecherche)
             refresh=True
-
 
         listtags = [k for k in MPDB.list_TagTypesAndCount()]
         
@@ -749,8 +732,9 @@ class Main:
             dialog = xbmcgui.Dialog()
             dialog.ok(common.getstring(30000).encode("utf8"), common.getstring(30119).encode("utf8")%motrecherche)
             return
-        xbmcplugin.addSortMethod( int(sys.argv[1]), xbmcplugin.SORT_METHOD_NONE )
+        xbmcplugin.addSortMethod( int(sys.argv[1]), xbmcplugin.SORT_METHOD_UNSORTED )
         xbmcplugin.endOfDirectory( int(sys.argv[1]),updateListing=refresh)
+
 
     def show_roots(self):
         #show the root folders
@@ -930,13 +914,11 @@ class Main:
         return dateformat
 
 
-    ##################################
-    #traitement des menus contextuels
-    ##################################
     def remove_period(self):
 
         MPDB.delPeriode(self.args.periodname)
         xbmc.executebuiltin( "Container.Update(\"%s?action='showperiod'&viewmode='view'&period=''\" , replace)"%sys.argv[0]  )
+
 
     def rename_period(self):
         #TODO : test if 'datestart' is before 'dateend'
@@ -959,6 +941,7 @@ class Main:
 
         MPDB.renPeriode(self.args.periodname,titreperiode,datestart,dateend)
         xbmc.executebuiltin( "Container.Update(\"%s?action='showperiod'&viewmode='view'&period=''\" , replace)"%sys.argv[0]  )
+
 
     def addTo_collection(self):
         listcollection = ["[[%s]]"%common.getstring(30157)]+[col[0] for col in MPDB.ListCollections()]
@@ -1018,9 +1001,11 @@ class Main:
         common.show_notification(common.getstring(30000), common.getstring(30161)%len(filelist)+' '+namecollection,3000,join(home,"icon.png"))
         #xbmc.executebuiltin( "Notification(%s,%s %s,%s,%s)"%(common.getstring(30000).encode("utf8"), common.getstring(30161).encode("utf8")%len(filelist),namecollection.encode("utf8"), 3000,join(home,"icon.png").encode("utf8")) )
 
+
     def remove_collection(self):
         MPDB.delCollection(self.args.collect)
         xbmc.executebuiltin( "Container.Update(\"%s?action='showcollection'&viewmode='view'&collect=''&method='show'\" , replace)"%sys.argv[0] , )
+
 
     def rename_collection(self):
         kb = xbmc.Keyboard(self.args.collect, common.getstring(30153), False)
@@ -1032,9 +1017,11 @@ class Main:
         MPDB.renCollection(self.args.collect,newname)
         xbmc.executebuiltin( "Container.Update(\"%s?action='showcollection'&viewmode='view'&collect=''&method='show'\" , replace)"%sys.argv[0] , )
 
+
     def del_pics_from_collection(self):
         MPDB.delPicFromCollection(self.args.collect,self.args.path,self.args.filename)
         xbmc.executebuiltin( "Container.Update(\"%s?action='showpics'&viewmode='view'&page='1'&collect='%s'&method='collection'\" , replace)"%(sys.argv[0],common.quote_param(self.args.collect)) , )
+
 
     def show_diaporama(self):
         #1- récupère la liste des images (en utilisant show_pics avec le bon paramètre
@@ -1042,9 +1029,11 @@ class Main:
         self.args.page=""
         self.show_pics()
 
+
     def show_lastshots(self):
         #récupère X dernières photos puis affiche le résultat
         pass
+
 
     # MikeBZH44 : Method to execute query
     def exec_query(self,query):
@@ -1052,6 +1041,7 @@ class Main:
         # Needed to store results if CommonCache cacheFunction is used
         _results = MPDB.Request( query )
         return _results
+
 
     # MikeBZH44 : Method to query database and store result in Windows properties and CommonCache table
     def set_properties(self):
@@ -1122,6 +1112,7 @@ class Main:
         if t >= 60: return "%.3fm" % ( t / 60.0 )
         common.log("set_properties", "Function set_properties took %.3f s" % ( t ))
 
+
     # MikeBZH44 : Method to get pictures from CommonCache and start slideshow
     def set_slideshow(self):
         # Init variables
@@ -1160,6 +1151,7 @@ class Main:
         # Display execution time
         if t >= 60: return "%.3fm" % ( t / 60.0 )
         common.log("set_slideshow", "Function set_slideshow took %.3f s" % ( t ))
+
 
     def show_pics(self):
         if not self.args.page: #0 ou "" ou None : pas de pagination ; on affiche toutes les photos de la requête sans limite
@@ -1365,7 +1357,6 @@ class Main:
                         #xbmc.executebuiltin( "Notification(%s,%s,%s,%s )"%(common.getstring(30000).encode('utf-8'),common.getstring(30183).encode('utf-8'),3000,join(home,"icon.png").encode('utf-8')) )
                         return
 
-
             #browse(type, heading, shares[, mask, useThumbs, treatAsFolder, default])
             from shutil import copy
             pDialog = xbmcgui.DialogProgress()
@@ -1398,30 +1389,19 @@ class Main:
         if len(filelist)>=limit:#alors on ajoute les paginations
             #faire un menu contextuel afin de régler le nombre d'items par pages
             if int(page)>1:#à partir de la page 2
-                #on affiche un bouton page précédente
-##                self.addDir(name      = "page precedente",
-##                            params    = [("do","rootclic"),("rootpath",path),("viewmode","view"),("exclude","1")],#paramètres
-##                            action    = "showpics",#action
-##                            iconimage = join(PIC_PATH,"settings.png"),#icone
-##                            fanart    = join(PIC_PATH,"fanart-setting.png"),
-##                            #menucontextuel
-##                            contextmenu   = [( common.getstring(30210),"Container.Update(\"%s?action='rootfolders'&do='delroot'&delpath='%s'&exclude='0'&viewmode='view'\",)"%(sys.argv[0],common.quote_param(path)))
-##                                             ]
-##                            )
-                #print "self.args"
-                #print type(self.args.__dict__)
-                #print list(self.args.__dict__.iteritems())
                 common.log("show_pics >> pagination",  "TODO  : display previous page item")
             if (page*limit)<(len(filelist)):
                 common.log("show_pics >> pagination",  "TODO  : display next page item")
                 #on affiche un bouton page suivante
 
         # fill the pictures list
+        count = 0
         for path,filename in filelist:
             path     = common.smart_unicode(path)
             filename = common.smart_unicode(filename)        
             #création du menu contextuel selon les situasions
             context=[]
+            count += 1
             # - diaporama
             #context.append( (common.getstring(30303),"SlideShow(%s%s,recursive,notrandom)"%(sys.argv[0],common.quote_param(self.parm)) ) )
             # - add to collection
@@ -1442,20 +1422,19 @@ class Main:
             #3 - montrer où est localisé physiquement la photo
             context.append( (common.getstring(30060),"XBMC.RunPlugin(\"%s?action='locate'&filepath='%s'&viewmode='view'\" ,)"%(sys.argv[0],common.quote_param(join(path,filename).encode('utf-8')) ) ) )
 
-
             #5 - les infos de la photo
             #context.append( ( "paramètres de l'addon","XBMC.ActivateWindow(virtualkeyboard)" ) )
             self.addPic(filename,
                         path,
+                        count = count,
                         contextmenu = context,
                         fanart = xbmcplugin.getSetting(int(sys.argv[1]),'usepicasfanart')=='true' and join(path,filename) or picfanart
                         )
-        xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_DATE )#SORT_METHOD_NONE)SORT_METHOD_TITLE
+        xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_DATE )
+        xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_PROGRAM_COUNT )
         xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_LABEL )
-        xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_UNSORTED )
-        xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_FILE )
+        
 
-        #xbmcplugin.setPluginCategory( handle=int( sys.argv[ 1 ] ), category="photos" )
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 
@@ -1475,9 +1454,6 @@ def filterwizard_delegate(ArrayTrue, ArrayFalse, MatchAll = False):
 if __name__=="__main__":
 
     m=Main()
-    #print common.getaddon_setting("ratingmini")
-    #print "Handle = " + str(sys.argv[1])
-    #print "Action = " + m.args.action
 
     if not sys.argv[ 2 ]: #pas de paramètres : affichage du menu principal
         #set the debugging for the library

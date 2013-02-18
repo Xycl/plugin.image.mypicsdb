@@ -46,7 +46,7 @@
             <control type="button" id="102">
                 <description>OK button</description>
                 <posx>45</posx>
-                <posy>720</posy>
+                <posy>715</posy>
                 <width>450</width>
                 <height>60</height>
                 <font>font18</font>
@@ -61,7 +61,7 @@
             <control type="button" id="103">
                 <description>Cancel button</description>
                 <posx>540</posx>
-                <posy>720</posy>
+                <posy>715</posy>
                 <width>450</width>
                 <height>60</height>
                 <font>font18</font>
@@ -88,7 +88,7 @@
             <control type="button" id="107">
                 <description>Load button</description>
                 <posx>45</posx>
-                <posy>795</posy>
+                <posy>790</posy>
                 <width>375</width>
                 <height>60</height>
                 <font>font18</font>
@@ -104,7 +104,7 @@
             <control type="button" id="108">
                 <description>Save button</description>
                 <posx>435</posx>
-                <posy>795</posy>
+                <posy>790</posy>
                 <width>375</width>
                 <height>60</height>
                 <font>font18</font>
@@ -118,7 +118,7 @@
             <control type="button" id="109">
                 <description>Clear button</description>
                 <posx>825</posx>
-                <posy>795</posy>
+                <posy>790</posy>
                 <width>375</width>
                 <height>60</height>
                 <font>font18</font>
@@ -131,8 +131,8 @@
             </control>         
             <control type="button" id="111">
                 <description>Delete filter button</description>
-                <posx>1210</posx>
-                <posy>795</posy>
+                <posx>1215</posx>
+                <posy>790</posy>
                 <width>375</width>
                 <height>60</height>
                 <font>font18</font>
@@ -147,7 +147,7 @@
             <control type="radiobutton" id="104">
                 <description>Mach all button</description>
                 <posx>1035</posx>
-                <posy>720</posy>
+                <posy>715</posy>
                 <width>555</width>
                 <height>60</height>
                 <font>font18</font>
@@ -204,21 +204,21 @@
             </control>
             <control type="image">
                 <posx>30</posx>
-                <posy>713</posy>
+                <posy>697</posy>
                 <width>1590</width>
                 <height>3</height>
                 <texture>GMseparator.png</texture>
             </control>
             <control type="image">
                 <posx>30</posx>
-                <posy>855</posy>
+                <posy>860</posy>
                 <width>1590</width>
                 <height>3</height>
                 <texture>GMseparator.png</texture>
             </control>
             <control type="image">
                 <posx>30</posx>
-                <posy>863</posy>
+                <posy>868</posy>
                 <width>1590</width>
                 <height>3</height>
                 <texture>GMseparator.png</texture>
@@ -227,7 +227,7 @@
             <!-- ** Required ** Do not change <id> or <type> -->
             <control type="list" id="120">
                 <posx>45</posx>
-                <posy>210</posy>
+                <posy>200</posy>
                 <width>533</width>
                 <height>480</height>
                 <onleft>102</onleft>
@@ -241,6 +241,7 @@
                         <posy>54</posy>
                         <width>473</width>
                         <height>2</height>
+                        <aligny>center</aligny>
                         <texture border="10">default-list-nofocus.png</texture>
                     </control>
                     <control type="label">
@@ -249,7 +250,7 @@
                         <width>473</width>
                         <height>42</height>
                         <font>font18</font>
-                        <aligny>top</aligny>
+                        <aligny>center</aligny>
                         <textcolor>white</textcolor>
                         <selectedcolor>green</selectedcolor>
                         <align>left</align>
@@ -272,7 +273,7 @@
                         <width>473</width>
                         <height>42</height>
                         <font>font18</font>
-                        <aligny>top</aligny>
+                        <aligny>center</aligny>
                         <textcolor>white</textcolor>
                         <selectedcolor>green</selectedcolor>
                         <align>left</align>
@@ -283,7 +284,7 @@
             </control>
             <control type="group">
                 <posx>525</posx>
-                <posy>210</posy>
+                <posy>200</posy>
                 <control type="scrollbar" id="121">
                     <description>scroll bar indicator for lists</description>
                     <posx>0</posx>
@@ -301,7 +302,7 @@
             </control>
             <control type="list" id="122">
                 <posx>570</posx>
-                <posy>210</posy>
+                <posy>200</posy>
                 <width>1020</width>
                 <height>480</height>
                 <onleft>120</onleft>
@@ -315,6 +316,7 @@
                         <posy>54</posy>
                         <width>101</width>
                         <height>3</height>
+                        <aligny>center</aligny>
                         <texture border="10">default-list-nofocus.png</texture>
                     </control>
                     <control type="image">
@@ -322,6 +324,8 @@
                         <posy>0</posy>
                         <width>75</width>
                         <height>42</height>
+                        
+                        <aligny>center</aligny>
                         <texture border="10">$INFO[ListItem.Property(checked)]</texture>
                     </control>
                     <control type="label">
@@ -329,8 +333,9 @@
                         <posy>0</posy>
                         <width>923</width>
                         <height>42</height>
+                        
                         <font>font18</font>
-                        <aligny>top</aligny>
+                        <aligny>center</aligny>
                         <textcolor>white</textcolor>
                         <selectedcolor>green</selectedcolor>
                         <align>left</align>
@@ -344,6 +349,8 @@
                         <posy>0</posy>
                         <width>1005</width>
                         <height>42</height>
+                        
+                        <aligny>center</aligny>
                         <texture border="10">default-list-focus.png</texture>
                         <visible>Control.HasFocus(122)</visible>
                     </control>
@@ -352,6 +359,8 @@
                         <posy>0</posy>
                         <width>75</width>
                         <height>42</height>
+                        
+                        <aligny>center</aligny>
                         <texture border="10">$INFO[ListItem.Property(checked)]</texture>
                     </control>
                     <control type="label">
@@ -359,8 +368,9 @@
                         <posy>0</posy>
                         <width>923</width>
                         <height>42</height>
+                        
                         <font>font18</font>
-                        <aligny>top</aligny>
+                        <aligny>center</aligny>
                         <textcolor>white</textcolor>
                         <selectedcolor>green</selectedcolor>
                         <align>left</align>
@@ -371,7 +381,7 @@
             </control>
             <control type="group">
                 <posx>1583</posx>
-                <posy>270</posy>
+                <posy>200</posy>
                 <control type="scrollbar" id="123">
                     <description>scroll bar indicator for lists</description>
                     <posx>0</posx>

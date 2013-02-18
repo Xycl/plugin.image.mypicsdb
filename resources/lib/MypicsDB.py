@@ -711,6 +711,7 @@ def search_filter_tags(FilterInlineArrayTrue, FilterInlineArrayFalse, MatchAll):
             Condition = "AND tt.TagTranslation = '"+OldKey+"' AND tc.TagContent in( "+OldValue+" ) "
             OuterSelect += " AND idFile not in ( " + InnerSelect + Condition + " ) "
 
+    OuterSelect += " order by imagedatetime "
     common.log('search_filter_tags', OuterSelect, xbmc.LOGDEBUG)
     
     return [row for row in Request(OuterSelect)]
@@ -1025,9 +1026,9 @@ def search_tag(tag=None,tagtype='a',limit=-1,offset=-1):
     """Look for given keyword and return the list of pictures.
 If tag is not given, pictures with no keywords are returned"""
     if tag is not None: #si le mot clé est fourni
-        return [row for row in RequestWithBinds( """SELECT distinct strPath,strFilename FROM files f, TagContents tc, TagsInFiles tif, TagTypes tt WHERE f.idFile = tif.idFile AND tif.idTagContent = tc.idTagContent AND tc.TagContent = ? and tc.idTagType = tt.idTagType  and length(trim(tt.TagTranslation))>0 and tt.TagTranslation = ? LIMIT %s OFFSET %s """%(limit,offset), (tag.encode("utf8"),tagtype.encode("utf8")) )]
+        return [row for row in RequestWithBinds( """SELECT distinct strPath,strFilename FROM files f, TagContents tc, TagsInFiles tif, TagTypes tt WHERE f.idFile = tif.idFile AND tif.idTagContent = tc.idTagContent AND tc.TagContent = ? and tc.idTagType = tt.idTagType  and length(trim(tt.TagTranslation))>0 and tt.TagTranslation = ?  order by imagedatetime LIMIT %s OFFSET %s """%(limit,offset), (tag.encode("utf8"),tagtype.encode("utf8")) )]
     else: #sinon, on retourne toutes les images qui ne sont pas associées à des mots clés
-        return [row for row in Request( """SELECT distinct strPath,strFilename FROM files WHERE idFile NOT IN (SELECT DISTINCT idFile FROM TagsInFiles) LIMIT %s OFFSET %s"""%(limit,offset) )]
+        return [row for row in Request( """SELECT distinct strPath,strFilename FROM files WHERE idFile NOT IN (SELECT DISTINCT idFile FROM TagsInFiles) order by imagedatetime LIMIT %s OFFSET %s"""%(limit,offset) )]
 
 
 def DefaultTagTypesTranslation():

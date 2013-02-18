@@ -176,13 +176,13 @@
             </control>
             <control type="group">
                 <posx>1583</posx>
-                <posy>189</posy>
+                <posy>199</posy>
                 <control type="scrollbar" id="121">
                     <description>scroll bar indicator for lists</description>
                     <posx>0</posx>
                     <posy>0</posy>
                     <width>18</width>
-                    <height>570</height>
+                    <height>540</height>
                     <texturesliderbackground border="6">default-scroll_back.png</texturesliderbackground>
                     <texturesliderbar border="6">default-scroll_mid.png</texturesliderbar>
                     <texturesliderbarfocus border="6">default-scroll_mid.png</texturesliderbarfocus>

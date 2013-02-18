@@ -63,24 +63,35 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
             arrayfalse = []
             self.filter (arraytrue,arrayfalse,False)
             self.close()
-            
+
         # Okay
         elif ( self.getFocusId() == BUTTON_OK and action.getId() in SELECT_ITEM ):
             arraytrue = []
             arrayfalse = []
-            
+
             for key, value in self.active_tags.iteritems():
                 if value == 1:
                     arraytrue.append( key)
 
                 if value == -1:
                     arrayfalse.append( key)
-            
+
             self.filter (arraytrue, arrayfalse, self.bAnd )
+
+            self.getControl( BUTTON_OK ).setEnabled(False)
+            self.getControl( BUTTON_CANCEL ).setEnabled(False)
+            self.getControl( BUTTON_MATCHALL ).setEnabled(False)
+            self.getControl( LOAD_FILTER ).setEnabled(False)
+            self.getControl( SAVE_FILTER ).setEnabled(False)
+            self.getControl( CLEAR_FILTER ).setEnabled(False)
+            self.getControl( DELETE_FILTER ).setEnabled(False)
+            self.getControl( TAGS_LIST ).setEnabled(False)
+            self.getControl( TAGS_CONTENT_LIST ).setEnabled(False)
+
             MPDB.save_filterwizard_filter( self.last_used_filter_name, self.active_tags, self.bAnd)
-            
+
             self.close()
-        
+
         # Match all button
         elif ( action.getId() in SELECT_ITEM and self.getFocusId() == BUTTON_MATCHALL ):
             self.bAnd = not self.bAnd
@@ -286,7 +297,7 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
         filters = []
         filters.append( common.getstring(30653) )
         filters = filters + MPDB.list_filterwizard_filters()
-        print filters
+        filters.remove(self.last_used_filter_name)
         dialog = xbmcgui.Dialog()
         ret = dialog.select(common.getstring(30608), filters)
         if ret > 0:
