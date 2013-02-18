@@ -154,7 +154,7 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
 
 
     def check_gui_tag_content(self, item, checked):
-        
+
         AlreadyChecked = item.getProperty("checked")
  
         if checked == -1:
@@ -252,7 +252,7 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
     def load_tag_content_list(self, tagType) :
     
         self.getControl( TAGS_CONTENT_LIST ).reset()
-        TagContents = [u"%s"%k  for k in MPDB.list_Tags(tagType)]
+        TagContents = [u"%s"%k  for k in MPDB.list_tags(tagType)]
 
         self.CurrentlySelectedTagType = tagType
         

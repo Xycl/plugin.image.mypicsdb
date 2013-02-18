@@ -539,12 +539,10 @@ class Main:
 
 
     def show_tagtypes(self):
-        #listtags = [u"%s"%k  for k in MPDB.list_TagTypesAndCount()]
-        listtags =  MPDB.list_TagTypesAndCount()
+        listtags =  MPDB.list_tagtypes_count()
         total = len(listtags)
         common.log("Main.show_tagtypes", "total # of tag types = %s"%total)
         for tag, nb in listtags:
-            #nb = MPDB.countTagTypes(tag)
             if nb:
                 self.addDir(name      = "%s (%s %s)"%(tag,nb,common.getstring(30052)), #libellé
                             params    = [("method","tagtype"),("tagtype",tag),("page","1"),("viewmode","view")],#paramètres
@@ -559,11 +557,10 @@ class Main:
 
     def show_tags(self):
         tagtype = self.args.tagtype.decode("utf8")
-        listtags = [k  for k in MPDB.list_TagsAndCount(tagtype)]
+        listtags = [k  for k in MPDB.list_tags_count(tagtype)]
         total = len(listtags)
         common.log("Main.show_tags", "total # of tags = %s"%total)
         for tag, nb in listtags:
-            #nb = MPDB.countTags(tag, tagtype)
             if nb:
                 self.addDir(name      = "%s (%s %s)"%(tag,nb,common.getstring(30050)), #libellé
                             params    = [("method","tag"),("tag",tag),("tagtype",tagtype),("page","1"),("viewmode","view")],#paramètres
@@ -714,16 +711,16 @@ class Main:
             common.log("Main.global_search", "search %s"%motrecherche)
             refresh=True
 
-        listtags = [k for k in MPDB.list_TagTypesAndCount()]
+        listtags = [k for k in MPDB.list_tagtypes_count()]
         
         result = False
         for tag, _ in listtags:            
             common.log("Main.global_search","Search %s in %s"%(motrecherche, tag))
-            compte = MPDB.Searchfiles(tag, motrecherche, count=True)
+            compte = MPDB.search_in_files(tag, motrecherche, count=True)
             if compte:
                 result = True
                 self.addDir(name      = common.getstring(30116)%(compte,motrecherche.decode("utf8"),tag ), #files_fields_description.has_key(colname) and files_fields_description[colname] or colname),
-                            params    = [("method","search"),("field",u"%s"%tag.decode("utf8")),("searchterm",u"%s"%motrecherche.decode("utf8")),("page","1"),("viewmode","view")],#paramètres
+                            params    = [("method","search"),("field",u"%s"%common.smart_unicode(tag)),("searchterm",u"%s"%common.smart_unicode(motrecherche)),("page","1"),("viewmode","view")],#paramètres
                             action    = "showpics",#action
                             iconimage = join(PIC_PATH,"search.png"),#icone
                             fanart    = join(PIC_PATH,"fanart-search.png"),
@@ -1224,7 +1221,7 @@ class Main:
 
         elif self.args.method == "search":
             picfanart = join(PIC_PATH,"fanart-collection.png")
-            filelist = MPDB.Searchfiles(self.args.field,self.args.searchterm,count=False)
+            filelist = MPDB.search_in_files(self.args.field,self.args.searchterm,count=False)
 
         elif self.args.method == "lastmonth":
             #show pics taken within last month

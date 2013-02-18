@@ -46,25 +46,8 @@ class GoogleMap( xbmcgui.WindowXMLDialog ):
         xbmcgui.WindowXMLDialog.__init__(self)
 
 
-    def set_file(self, filename):
-        self.filename = filename
-
-    def set_place(self, place):
-        self.place = place
-
-    def set_datapath(self, datapath):
-        self.datapath = datapath
-
     def onInit( self ):  
         self.setup_all('')
-
- 
-    def onClick( self, controlId ):
-        pass    
-
-
-    def onFocus( self, controlId ):
-        self.controlId = controlId
 
 
     def onAction( self, action ):
@@ -81,10 +64,25 @@ class GoogleMap( xbmcgui.WindowXMLDialog ):
             self.zoom('-')
 
 
+    def set_file(self, filename):
+        self.filename = filename
+
+
+    def set_place(self, place):
+        self.place = place
+
+
+    def set_datapath(self, datapath):
+        self.datapath = datapath
+
+
     def set_pic(self, pic):
         pass
+    
+    
     def set_map(self, mapfile):
         self.getControl( GOOGLE_MAP ).setImage(mapfile)
+    
     
     def setup_all( self, filtersettings = ""):
         self.getControl( LABEL_TEXT ).setLabel( common.getstring(30220) )
@@ -108,6 +106,7 @@ class GoogleMap( xbmcgui.WindowXMLDialog ):
         if self.zoomlevel > self.zoom_max: self.zoomlevel = self.zoom_max
         elif self.zoomlevel < self.zoom_min: self.zoomlevel = self.zoom_min
         self.load_map()
+
 
     def load_map(self):
         #google geolocalisation

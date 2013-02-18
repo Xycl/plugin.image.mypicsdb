@@ -691,7 +691,6 @@ def search_filter_tags(FilterInlineArrayTrue, FilterInlineArrayFalse, MatchAll):
             Condition = "AND tt.TagTranslation = '"+OldKey+"' AND tc.TagContent in( "+OldValue+" ) "
             OuterSelect += " AND idFile in ( " + InnerSelect + Condition + " ) "
 
-
         if len(FilterInlineArrayFalse) > 0:
             for Filter in FilterArrayFalse:
 
@@ -828,13 +827,11 @@ def PicsForPeriode(periodname):
     period = RequestWithBinds( """SELECT DateStart,DateEnd FROM Periodes WHERE PeriodeName=?""", (periodname,) )
     return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM files WHERE datetime(ImageDateTime) BETWEEN ? AND ? ORDER BY ImageDateTime ASC""",period )]
 
-def Searchfiles(tagtype, tagvalue, count=False):
-    #tagvalue = tagvalue.replace("'", "''")
-
+def search_in_files(tagtype, tagvalue, count=False):
     val = tagvalue.lower().replace("'", "''")
-    
+
     if count:
-        return [row for row in RequestWithBinds( """select count(*)
+        return [row for row in RequestWithBinds( """select count(distinct fi.strFilename||fi.strPath)
                                                       from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
                                                      where tt.idTagType = tc.idTagType
                                                        and tc.idTagContent = tif.idTagContent
@@ -842,14 +839,15 @@ def Searchfiles(tagtype, tagvalue, count=False):
                                                        and lower(tc.TagContent) LIKE '%%%s%%'
                                                        and tif.idFile = fi.idFile"""%val, (tagtype,))][0][0]
     else:
-        return [row for row in RequestWithBinds( """select fi.strPath, fi.strFilename
+        return [row for row in RequestWithBinds( """select distinct fi.strPath, fi.strFilename
                                                       from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
                                                      where tt.idTagType = tc.idTagType
                                                        and tc.idTagContent = tif.idTagContent
                                                        and tt.TagTranslation = ?
                                                        and lower(tc.TagContent) LIKE '%%%s%%'
                                                        and tif.idFile = fi.idFile"""%val, (tagtype, ))]
-###
+
+
 def getGPS(filepath,filename):
 
     latR = RequestWithBinds( """select tc.TagContent from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
@@ -969,6 +967,8 @@ def MakeRequest(field,comparator,value):
 
 
 def Request(SQLrequest):
+    binds = []
+    return RequestWithBinds(SQLrequest, binds)
     conn = sqlite.connect(pictureDB)
     conn.text_factory = unicode #sqlite.OptimizedUnicode
     cn=conn.cursor()
@@ -1031,7 +1031,7 @@ If tag is not given, pictures with no keywords are returned"""
         return [row for row in Request( """SELECT distinct strPath,strFilename FROM files WHERE idFile NOT IN (SELECT DISTINCT idFile FROM TagsInFiles) order by imagedatetime LIMIT %s OFFSET %s"""%(limit,offset) )]
 
 
-def DefaultTagTypesTranslation():
+def default_tagtypes_translation():
 
     """Return a list of all keywords in database """
     
@@ -1137,7 +1137,7 @@ and tt.idTagType = tc.idTagType
 and tc.idTagContent = tif.idTagContent
 ORDER BY TagTranslation ASC""" )]
 
-def list_TagTypesAndCount():
+def list_tagtypes_count():
 
     return [row for row in Request( """
 SELECT tt.TagTranslation, count(distinct tagcontent)
@@ -1146,23 +1146,23 @@ SELECT tt.TagTranslation, count(distinct tagcontent)
    and tt.idTagType                 = tc.idTagType
 group by tt.tagtranslation """   )]
 
-def countTagTypes(tagType,limit=-1,offset=-1):
+def count_tagtypes(tagType,limit=-1,offset=-1):
     if tagType is not None:
         return RequestWithBinds("""SELECT count(distinct TagContent) FROM tagsInFiles tif, TagContents tc, TagTypes tt WHERE tif.idTagContent = tc.idTagContent AND tc.idTagType = tt.idTagType and length(trim(tt.TagTranslation))>0 and tt.idTagType =? """, (tagType,) )[0][0]
     else:
         return Request("""SELECT count(*) FROM TagTypes where length(trim(TagTranslation))>0""" )[0][0]
 
-def setTranslatedTagType(TagType, TagTranslation):
+def set_tagtype_translation(TagType, TagTranslation):
     RequestWithBinds("Update TagTypes set TagTranslation = ? where TagType = ? ",(TagTranslation.encode('utf-8'), TagType.encode('utf-8')))
 
-def getTagTypesForTranslation():
+def get_tagtypes_translation():
     return [row for row in Request('select TagType, TagTranslation from TagTypes order by 2,1')]
 
-def list_Tags(tagType):
+def list_tags(tagType):
     """Return a list of all tags in database"""
     return [row for (row,) in Request( """select distinct TagContent from TagContents tc, TagsInFiles tif, TagTypes tt  where tc.idTagContent = tif.idTagContent and tc.idTagType = tt.idTagType and tt.TagTranslation='%s' ORDER BY LOWER(TagContent) ASC"""%tagType.encode("utf8") )]
 
-def list_TagsAndCount(tagType):
+def list_tags_count(tagType):
     """Return a list of all tags in database"""
     return [row for row in RequestWithBinds( """
     select TagContent, count(distinct idFile) 
@@ -1172,7 +1172,7 @@ def list_TagsAndCount(tagType):
    and tt.TagTranslation=? 
 group BY TagContent""",(tagType.encode("utf8"),) )]
 
-def countTags(kw,tagType, limit=-1,offset=-1):
+def count_tags(kw,tagType, limit=-1,offset=-1):
     if kw is not None:
         return RequestWithBinds("""select count(distinct idFile) from  TagContents tc, TagsInFiles tif, TagTypes tt  where tc.idTagContent = tif.idTagContent and tc.TagContent = ? and tc.idTagType = tt.idTagType and tt.TagTranslation = ? """,(kw, tagType))[0][0]
     else:
