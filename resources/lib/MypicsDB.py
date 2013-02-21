@@ -1141,8 +1141,10 @@ def list_tagtypes_count():
 
     return [row for row in Request( """
 SELECT tt.TagTranslation, count(distinct tagcontent)
-  FROM TagTypes tt, TagContents tc
+  FROM TagTypes tt, TagContents tc, TagsInFiles tf, Files fi
  where length(trim(TagTranslation)) > 0 
+   and tf.idTagContent = tc.idTagContent
+   and tf.idFile = fi.idFile
    and tt.idTagType                 = tc.idTagType
 group by tt.tagtranslation """   )]
 

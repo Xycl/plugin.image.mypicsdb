@@ -1,5 +1,7 @@
+2013/02/15--> v 2.0.4
+Fix:    Displayed count of pictures in "Browse by Tags" corrected
+
 2013/02/15--> v 2.0.3
-Fix:    1080i skin for Google Map
 Update: Sort by date now possible with sort by play count. This include also the timestamp.
 
 2013/02/15--> v 2.0.2
