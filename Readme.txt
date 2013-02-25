@@ -24,13 +24,19 @@ Because all pictures were deleted from database it doesn't matter what you selec
 3) Auto-update  MyPicsDB
 ==================================================================================
    Idea from Fungify 
-   You can call (example for Windows):
-   XBMC.RunScript("C:\Users\Name\AppData\Roaming\XBMC\addons\plugin.image.mypicsdb\scanpath.py",--database)
-   where Name is the name of the xbmc windows user.
    
-   Fungify uses this approach to automatically update MyPicsDB via HTTP API with a cron job.
+   To auto update the database you can use the following XBMC command:
+   RunScript("C:\Users\Name\AppData\Roaming\XBMC\addons\plugin.image.mypicsdb\scanpa​th.py",--database)
+   (Name is your Windows user!)
+   
+   Frodo:
+   Use the service "The Scheduler" (http://forum.xbmc.org/showthread.php?tid=144378) and create a custom built-in script with the above command.
+   
+   Eden:
+   Update MyPicsDB via HTTP API with a cron job.
    wget --directory-prefix=tmp --http-user=<xbmc username> --http-passwd=<xbmc password> "http://Servername:Portnumber/xbmcCmds/xbmcHttp?command=ExecBuiltIn&parameter=XBMC.RunScript("<full path to plugin>\plugin.image.mypicsdb\scanpath.py",--database)
 
+   
 4) For skinners
 ==================================================================================
   Done by MikeBZH44
