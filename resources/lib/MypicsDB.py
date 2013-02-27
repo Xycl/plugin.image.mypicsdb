@@ -40,7 +40,8 @@ sys.path.append( os.path.join( BASE_RESOURCE_PATH, "platform_libraries", env ) )
 
 DEBUGGING = True
 DB_VERSION19 = '1.9.12'
-DB_VERSION = '2.0.1'
+DB_VERSION201 = '2.0.1'
+DB_VERSION = '2.1.0'
 
 global pictureDB
 pictureDB = join(DB_PATH,"MyPictures.db")
@@ -68,19 +69,52 @@ def VersionTable():
 
     common.log("MPDB.VersionTable", "MyPicsDB database version is %s"%str(strVersion) ) 
 
-    if common.check_version(strVersion, DB_VERSION)>0 and common.check_version(strVersion, DB_VERSION19) <=0:
-        common.log("MPDB.VersionTable", "MyPicsDB database will be updated to version %s"%str(DB_VERSION) ) 
+    # version of DB is greater/equal than 1.9.0 but less then 2.0.1
+    if common.check_version(strVersion, DB_VERSION201)>0 and common.check_version(strVersion, DB_VERSION19) <=0:
+        common.log("MPDB.VersionTable", "MyPicsDB database with version %s will be updated to version %s"%(str(strVersion),str(DB_VERSION)) ) 
         version_201_tables(pictureDB)
-    elif common.check_version(strVersion, DB_VERSION)>0:
+        # update tags for new introduced yyyy-mm  tag
+        update_yyyy_mm_tags()
+        
+    # version of DB is less then 1.9.0
+    elif common.check_version(strVersion, DB_VERSION19) >0:
         dialog = xbmcgui.Dialog()
         dialog.ok(common.getstring(30000).encode("utf8"), "Database will be updated", "You must re-scan your folders")
         common.log("MPDB.VersionTable", "MyPicsDB database will be updated", xbmc.LOGNOTICE )
         Make_new_base(pictureDB, True)
         #VersionTable()
+        
+    # version of DB is less then currenct version
+    elif common.check_version(strVersion, DB_VERSION)>0:
+        # update tags for new introduced yyyy-mm  tag
+        common.log("MPDB.VersionTable", "MyPicsDB database will be updated to version %s. New YYYY-MM tags will be inserted."%str(DB_VERSION), xbmc.LOGNOTICE )
+        update_yyyy_mm_tags()         
+        cn.execute("update DBVersion set strVersion = '"+DB_VERSION+"'")
+        conn.commit()
     else:
         common.log("MPDB.VersionTable", "MyPicsDB database contains already current schema" )
         
     cn.close()
+
+# new tag type YYYY-MM in version 2.10
+def update_yyyy_mm_tags():   
+    conn = sqlite.connect(pictureDB)
+    cn=conn.cursor()
+    dictionnary = {}
+    common.show_notification(common.getstring(30000), 'DB-Update', 2000)
+    cn.execute("SELECT idFile, strFilename, strPath, ImageDateTime FROM files")
+    rows = [row for row in cn]
+    for row in rows:
+        dictionnary['YYYY-MM'] = row[3][:7]
+        try:
+            DB_tags_insert(conn, cn, row[0], row[1], row[2], dictionnary)
+            common.log( 'MPDB.update_yyyy_mm_tags()', 'Tag YYYY-MM with value %s inserted for "%s"'%(dictionnary['YYYY-MM'], row[1]) )
+        except:
+            common.log( 'MPDB.update_yyyy_mm_tags()', 'Tag YYYY-MM with value %s NOT inserted for "%s"'%(dictionnary['YYYY-MM'], row[1]) )
+            
+    conn.commit()
+    cn.close()
+    return True
 
 # new tables in version 2.0.1
 def version_201_tables(DBpath):
@@ -404,8 +438,13 @@ def DB_file_insert(path,filename,dictionnary,update=False, sha=0):
         if len(imagedatetime.strip()) < 10 and "EXIF DateTimeDigitized" in dictionnary:
             imagedatetime = dictionnary["EXIF DateTimeDigitized"]
             #print "3 = " + str(imagedatetime)
-
-
+         
+        """   
+        try:
+            dictionnary['YYYY-MM'] = imagedatetime[:7]
+        except:
+            pass
+        """
         cn.execute( """INSERT INTO files(idFolder, strPath, strFilename, ftype, DateAdded,  Thumb,  ImageRating, ImageDateTime, Sha) values (?, ?, ?, ?, ?, ?, ?, ?, ?)""", 
                       ( dictionnary["idFolder"],  dictionnary["strPath"], dictionnary["strFilename"], dictionnary["ftype"], dictionnary["DateAdded"], dictionnary["Thumb"], dictionnary["ImageRating"], imagedatetime, sha ) )
         conn.commit()
@@ -421,59 +460,67 @@ def DB_file_insert(path,filename,dictionnary,update=False, sha=0):
 
     # meta table inserts
     cn.execute("SELECT idFile FROM files WHERE strPath = ? AND strFilename = ?",(path,filename,) )
-    idFile = [row[0] for row in cn][0]
+    idfile = [row[0] for row in cn][0]
+    DB_tags_insert(conn, cn, idfile, filename, path, dictionnary)
+
+    conn.commit()
+    cn.close()
+    return True
+
+
+def DB_tags_insert(conn, cn, idfile, filename, path, dictionnary):
 
     # loop over tags dictionary
-    for tagType, value in dictionnary.iteritems():
+    for tag_type, value in dictionnary.iteritems():
 
-        if isinstance(value, basestring) and dictionnary[tagType]:
+        if isinstance(value, basestring) and dictionnary[tag_type]:
 
             # exclude the following tags
-            if tagType not in ['sha', 'strFilename', 'strPath',
+            if tag_type not in ['sha', 'strFilename', 'strPath',
                                'mtime', 'ftype',
                                'source', 'urgency', 'time created', 'date created']:
 
-                tagValues = dictionnary[tagType].split(lists_separator)
+                tag_values = dictionnary[tag_type].split(lists_separator)
 
-                tagType = tagType[0].upper() + tagType[1:]
+                tag_type = tag_type[0].upper() + tag_type[1:]
 
-                for value in tagValues:
+                for value in tag_values:
 
                     # change dates
-                    if tagType == 'EXIF DateTimeOriginal':
+                    if tag_type == 'EXIF DateTimeOriginal':
                         value = value[:10]
 
                     # first make sure that the tag exists in table TagTypes
                     # is it already in our list?
-                    if not tagType in tagTypeDBKeys:
+                    if not tag_type in tagTypeDBKeys:
 
                         # not in list therefore insert into table TagTypes
                         try:
-                            cn.execute(""" INSERT INTO TagTypes(TagType, TagTranslation) VALUES(?, ?) """,(tagType,tagType))
+                            cn.execute(""" INSERT INTO TagTypes(tagType, TagTranslation) VALUES(?, ?) """,(tag_type,tag_type))
                         except Exception,msg:
                             if str(msg)=="column TagType is not unique":
                                 pass
                             else:
                                 common.log("DB_file_insert", "path = %s"%common.smart_unicode(filename).encode('utf-8'), xbmc.LOGERROR)
-                                common.log("DB_file_insert",  'tagType = %s'%tagType, xbmc.LOGERROR )
+                                common.log("DB_file_insert",  'tagType = %s'%tag_type, xbmc.LOGERROR )
                                 common.log("DB_file_insert",  "\t%s - %s"%(Exception,msg), xbmc.LOGERROR )
 
                         # select the key of the tag from table TagTypes
-                        cn.execute("SELECT min(idTagType) FROM TagTypes WHERE TagType = ? ",(tagType,) )
-                        idTagType= [row[0] for row in cn][0]
-                        tagTypeDBKeys[tagType] = idTagType
+                        cn.execute("SELECT min(idTagType) FROM TagTypes WHERE TagType = ? ",(tag_type,) )
+                        id_tag_type= [row[0] for row in cn][0]
+                        tagTypeDBKeys[tag_type] = id_tag_type
                     else :
-                        idTagType = tagTypeDBKeys[tagType]
+                        id_tag_type = tagTypeDBKeys[tag_type]
 
                     try:
-                        cn.execute(""" INSERT INTO TagContents(idTagType,TagContent) VALUES(?,?) """,(idTagType,value))
+                        cn.execute(""" INSERT INTO TagContents(idTagType,TagContent) VALUES(?,?) """,(id_tag_type,value))
                     except Exception,msg:
                         if str(msg)=="columns idTagType, TagContent are not unique":
                             pass
                         else:
                             common.log("DB_file_insert", "path = %s"%common.smart_unicode(filename).encode('utf-8'), xbmc.LOGERROR)
                             common.log("DB_file_insert", 'EXCEPTION >> tags', xbmc.LOGERROR )
-                            common.log("DB_file_insert", 'tagType = %s'%tagType, xbmc.LOGERROR )
+                            common.log("DB_file_insert", 'tagType = %s'%tag_type, xbmc.LOGERROR )
                             common.log("DB_file_insert", 'tagValue = %s'%common.smart_utf8(value), xbmc.LOGERROR )
                             common.log("DB_file_insert", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
 
@@ -481,7 +528,7 @@ def DB_file_insert(path,filename,dictionnary,update=False, sha=0):
 
                     #Then, add the corresponding id of file and id of tag inside the TagsInFiles database
                     try:
-                        cn.execute(""" INSERT INTO TagsInFiles(idTagContent,idFile) SELECT t.idTagContent, %d FROM TagContents t WHERE t.idTagType=%d AND t.TagContent = ? """%(idFile,idTagType), (value,))
+                        cn.execute(""" INSERT INTO TagsInFiles(idTagContent,idFile) SELECT t.idTagContent, %d FROM TagContents t WHERE t.idTagType=%d AND t.TagContent = ? """%(idfile,id_tag_type), (value,))
 
 
                     # At first column was named idTag then idTagContent
@@ -491,24 +538,19 @@ def DB_file_insert(path,filename,dictionnary,update=False, sha=0):
                                 cn.execute("DROP TABLE TagsInFiles")
                                 cn.execute('CREATE TABLE "TagsInFiles" ("idTagContent" INTEGER NOT NULL, "idFile" INTEGER NOT NULL)')
 
-                                cn.execute(""" INSERT INTO TagsInFiles(idTagContent,idFile) SELECT t.idTagContent, %d FROM TagContents t WHERE t.idTagType=%d AND t.TagContent = ? """%(idFile,idTagType), (value,))
+                                cn.execute(""" INSERT INTO TagsInFiles(idTagContent,idFile) SELECT t.idTagContent, %d FROM TagContents t WHERE t.idTagType=%d AND t.TagContent = ? """%(idfile,id_tag_type), (value,))
                             except:
                                 common.log("DB_file_insert", "Error while ALTER TABLE TagsInFiles ", xbmc.LOGERROR)
                                 common.log("DB_file_insert", "%s - %s"% (Exception,msg), xbmc.LOGERROR )
                         else:
                             common.log("DB_file_insert", "Error while adding TagsInFiles")
                             common.log("DB_file_insert", "%s - %s"% (Exception,msg) )
-                            common.log("DB_file_insert", "%s %s - %s"%(idFile,idTagType,common.smart_utf8(value)))
-                            #print """ INSERT INTO TagsInFiles(idTagContent,idFile) SELECT t.idTagContent, %d FROM TagContents t WHERE t.idTagType=%d AND t.TagContent = '%s' """%(idFile,idTagType,value)
-
-
-
-
-    conn.commit()
-    cn.close()
+                            common.log("DB_file_insert", "%s %s - %s"%(idfile,id_tag_type,common.smart_utf8(value)))
+                            #print """ INSERT INTO TagsInFiles(idTagContent,idFile) SELECT t.idTagContent, %d FROM TagContents t WHERE t.idTagType=%d AND t.TagContent = '%s' """%(idFile,id_tag_type,value)
 
 
     return True
+
 
 def DB_folder_insert(foldername,folderpath,parentfolderID,haspic):
     """insert into folders database, the folder name, folder parent, full path and if has pics
@@ -827,7 +869,7 @@ def PicsForPeriode(periodname):
     period = RequestWithBinds( """SELECT DateStart,DateEnd FROM Periodes WHERE PeriodeName=?""", (periodname,) )
     return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM files WHERE datetime(ImageDateTime) BETWEEN ? AND ? ORDER BY ImageDateTime ASC""",period )]
 
-def search_in_files(tagtype, tagvalue, count=False):
+def search_in_files(tag_type, tagvalue, count=False):
     val = tagvalue.lower().replace("'", "''")
 
     if count:
@@ -837,7 +879,7 @@ def search_in_files(tagtype, tagvalue, count=False):
                                                        and tc.idTagContent = tif.idTagContent
                                                        and tt.TagTranslation = ?
                                                        and lower(tc.TagContent) LIKE '%%%s%%'
-                                                       and tif.idFile = fi.idFile"""%val, (tagtype,))][0][0]
+                                                       and tif.idFile = fi.idFile"""%val, (tag_type,))][0][0]
     else:
         return [row for row in RequestWithBinds( """select distinct fi.strPath, fi.strFilename
                                                       from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
@@ -845,7 +887,7 @@ def search_in_files(tagtype, tagvalue, count=False):
                                                        and tc.idTagContent = tif.idTagContent
                                                        and tt.TagTranslation = ?
                                                        and lower(tc.TagContent) LIKE '%%%s%%'
-                                                       and tif.idFile = fi.idFile"""%val, (tagtype, ))]
+                                                       and tif.idFile = fi.idFile"""%val, (tag_type, ))]
 
 
 def getGPS(filepath,filename):
@@ -1022,11 +1064,11 @@ def RequestWithBinds(SQLrequest, bindVariablesOrg):
     return retour
 
 
-def search_tag(tag=None,tagtype='a',limit=-1,offset=-1):
+def search_tag(tag=None,tag_type='a',limit=-1,offset=-1):
     """Look for given keyword and return the list of pictures.
 If tag is not given, pictures with no keywords are returned"""
     if tag is not None: #si le mot clé est fourni
-        return [row for row in RequestWithBinds( """SELECT distinct strPath,strFilename FROM files f, TagContents tc, TagsInFiles tif, TagTypes tt WHERE f.idFile = tif.idFile AND tif.idTagContent = tc.idTagContent AND tc.TagContent = ? and tc.idTagType = tt.idTagType  and length(trim(tt.TagTranslation))>0 and tt.TagTranslation = ?  order by imagedatetime LIMIT %s OFFSET %s """%(limit,offset), (tag.encode("utf8"),tagtype.encode("utf8")) )]
+        return [row for row in RequestWithBinds( """SELECT distinct strPath,strFilename FROM files f, TagContents tc, TagsInFiles tif, TagTypes tt WHERE f.idFile = tif.idFile AND tif.idTagContent = tc.idTagContent AND tc.TagContent = ? and tc.idTagType = tt.idTagType  and length(trim(tt.TagTranslation))>0 and tt.TagTranslation = ?  order by imagedatetime LIMIT %s OFFSET %s """%(limit,offset), (tag.encode("utf8"),tag_type.encode("utf8")) )]
     else: #sinon, on retourne toutes les images qui ne sont pas associées à des mots clés
         return [row for row in Request( """SELECT distinct strPath,strFilename FROM files WHERE idFile NOT IN (SELECT DISTINCT idFile FROM TagsInFiles) order by imagedatetime LIMIT %s OFFSET %s"""%(limit,offset) )]
 
