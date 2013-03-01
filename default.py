@@ -137,13 +137,11 @@ class Main:
                 
         return output
         
-    def Title(self,title):
-        pass
 
-    def addDir(self,name,params,action,iconimage,fanart=None,contextmenu=None,total=0,info="*",replacemenu=True):
+    def add_directory(self,name,params,action,iconimage,fanart=None,contextmenu=None,total=0,info="*",replacemenu=True):
         #params est une liste de tuples [(nomparametre,valeurparametre),]
         #contitution des paramètres
-        common.log("Main.addDir", "Name = %s"%name)
+        common.log("Main.add_directory", "Name = %s"%name)
         try:
             parameter="&".join([param+"="+repr(common.quote_param(valeur.encode("utf-8"))) for param,valeur in params])
         except:
@@ -161,10 +159,10 @@ class Main:
         return xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=u,listitem=liz,isFolder=True)#,totalItems=total)
 
 
-    def addAction(self,name,params,action,iconimage,fanart=None,contextmenu=None,total=0,info="*",replacemenu=True):
+    def add_action(self,name,params,action,iconimage,fanart=None,contextmenu=None,total=0,info="*",replacemenu=True):
         #params est une liste de tuples [(nomparametre,valeurparametre),]
         #contitution des paramètres
-        common.log("Main.addAction", "Name = %s"%name)
+        common.log("Main.add_action", "Name = %s"%name)
         try:
             parameter="&".join([param+"="+repr(common.quote_param(valeur.encode("utf-8"))) for param,valeur in params])
         except:
@@ -183,12 +181,12 @@ class Main:
         return xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=u,listitem=liz,isFolder=False)#,totalItems=total)
 
 
-    def addPic(self,picname,picpath,count=0, info="*",fanart=None,contextmenu=None,replacemenu=True):
+    def add_picture(self,picname,picpath,count=0, info="*",fanart=None,contextmenu=None,replacemenu=True):
         fullfilepath = join(picpath,picname)
-        common.log("Main.addPic", "Name = %s"%fullfilepath)
+        common.log("Main.add_picture", "Name = %s"%fullfilepath)
         
         liz=xbmcgui.ListItem(picname,info)
-        date = MPDB.getDate(picpath,picname)
+        date = MPDB.get_pic_date(picpath,picname)
         date = date and strftime("%d.%m.%Y",strptime(date,"%Y-%m-%d %H:%M:%S")) or ""
         suffix=""
         rating=""
@@ -200,12 +198,12 @@ class Main:
             liz.setInfo( type="video", infoLabels=infolabels )
         #or is the file a picture ?
         elif extension in ["."+ext.replace(".","").upper() for ext in common.getaddon_setting("picsext").split("|")]:
-            rating = MPDB.getRating(picpath,picname)
+            rating = MPDB.get_rating(picpath,picname)
             if int(common.getaddon_setting("ratingmini"))>0:#un rating mini est configuré
                 if not rating:  return
                 if int(rating) < int(common.getaddon_setting("ratingmini")): return #si on a un rating dans la photo
 
-            coords = MPDB.getGPS(picpath,picname)
+            coords = MPDB.get_gps(picpath,picname)
             if coords: 
                 suffix = suffix + "[COLOR=C0C0C0C0][G][/COLOR]"
 
@@ -230,7 +228,7 @@ class Main:
             infolabels = { "picturepath":picname+" "+suffix, "date": date, "count": count  }
             try:
                 if exiftime[0] != None and exiftime[0] != "0":
-                    common.log("Main.addPic", "Picture has EXIF Date/Time %s"%exiftime[0])
+                    common.log("Main.add_picture", "Picture has EXIF Date/Time %s"%exiftime[0])
                     infolabels["exif:exiftime"] = exiftime[0]
             except:
                 pass
@@ -240,13 +238,13 @@ class Main:
                 resolutionY = resolutionY[0][0]
                 
                 if resolutionX != None and resolutionY != None and resolutionX != "0" and resolutionY != "0":
-                    common.log("Main.addPic", "Picture has resolution %s x %s"%(str(resolutionX), str(resolutionY)))
+                    common.log("Main.add_picture", "Picture has resolution %s x %s"%(str(resolutionX), str(resolutionY)))
                     infolabels["exif:resolution"] = str(resolutionX) + ',' + str(resolutionY)
             except:
                 pass
 
             if rating:
-                common.log("Main.addPic", "Picture has rating")
+                common.log("Main.add_picture", "Picture has rating")
                 suffix = suffix + "[COLOR=C0FFFF00]"+("*"*int(rating))+"[/COLOR][COLOR=C0C0C0C0]"+("*"*(5-int(rating)))+"[/COLOR]"
 
             liz.setInfo( type="pictures", infoLabels=infolabels )
@@ -256,7 +254,7 @@ class Main:
         if contextmenu:
             if coords:
                 #géolocalisation
-                common.log("Main.addPic", "Picture has geolocation")
+                common.log("Main.add_picture", "Picture has geolocation")
                 contextmenu.append( (common.getstring(30220),"XBMC.RunPlugin(\"%s?action='geolocate'&place='%s'&path='%s'&filename='%s'&viewmode='view'\" ,)"%(sys.argv[0],"%0.6f,%0.6f"%(coords),
                                                                                                                                                            common.quote_param(picpath.encode('utf-8')),
                                                                                                                                                            common.quote_param(picname.encode('utf-8'))
@@ -270,75 +268,75 @@ class Main:
     def show_home(self):
         common.log("Main.show_home", "start")
 ##        # last month
-##        self.addDir("last month (betatest)",[("method","lastmonth"),("period",""),("value",""),("page","1"),("viewmode","view")],
+##        self.add_directory("last month (betatest)",[("method","lastmonth"),("period",""),("value",""),("page","1"),("viewmode","view")],
 ##                    "showpics",join(PIC_PATH,"dates.png"),
 ##                    fanart=join(PIC_PATH,"fanart-date.png"))
         display_all = common.getaddon_setting('m_all')=='true'
         # last scan picture added
         if common.getaddon_setting('m_1')=='true' or display_all:
-            self.addDir(common.getstring(30209)%common.getaddon_setting("recentnbdays"),[("method","recentpicsdb"),("period",""),("value",""),("page","1"),("viewmode","view")],
+            self.add_directory(common.getstring(30209)%common.getaddon_setting("recentnbdays"),[("method","recentpicsdb"),("period",""),("value",""),("page","1"),("viewmode","view")],
                         "showpics",join(PIC_PATH,"dates.png"),
                         fanart=join(PIC_PATH,"fanart-date.png"))
 
         # Last pictures
         if common.getaddon_setting('m_2')=='true' or display_all:
-            self.addDir(common.getstring(30130)%common.getaddon_setting("lastpicsnumber"),[("method","lastpicsshooted"),("page","1"),("viewmode","view")],
+            self.add_directory(common.getstring(30130)%common.getaddon_setting("lastpicsnumber"),[("method","lastpicsshooted"),("page","1"),("viewmode","view")],
                     "showpics",join(PIC_PATH,"dates.png"),
                     fanart=join(PIC_PATH,"fanart-date.png"))
 
         # videos
         if common.getaddon_setting('m_3')=='true' or display_all and common.getaddon_setting("usevids") == "true":
-            self.addDir(common.getstring(30051),[("method","videos"),("page","1"),("viewmode","view")],
+            self.add_directory(common.getstring(30051),[("method","videos"),("page","1"),("viewmode","view")],
                         "showpics",join(PIC_PATH,"videos.png"),
                         fanart=join(PIC_PATH,"fanart-videos.png"))
         # show filter wizard
-        self.addAction(common.getstring(30600),[("wizard",""),("viewmode","view")],"showwizard",
+        self.add_action(common.getstring(30600),[("wizard",""),("viewmode","view")],"showwizard",
                     join(PIC_PATH,"keywords.png"),
                     fanart=join(PIC_PATH,"fanart-keyword.png"))
         # par années
         if common.getaddon_setting('m_4')=='true' or display_all:
-            self.addDir(common.getstring(30101),[("period","year"),("value",""),("viewmode","view")],
+            self.add_directory(common.getstring(30101),[("period","year"),("value",""),("viewmode","view")],
                     "showdate",join(PIC_PATH,"dates.png"),
                     fanart=join(PIC_PATH,"fanart-date.png") )
         # par dossiers
         if common.getaddon_setting('m_5')=='true' or display_all:
-            self.addDir(common.getstring(30102),[("method","folders"),("folderid",""),("onlypics","non"),("viewmode","view")],
+            self.add_directory(common.getstring(30102),[("method","folders"),("folderid",""),("onlypics","non"),("viewmode","view")],
                     "showfolder",join(PIC_PATH,"folders.png"),
                     fanart=join(PIC_PATH,"fanart-folder.png"))
 
         # tags submenu
         if common.getaddon_setting('m_14')=='true' or display_all:
-            self.addDir(common.getstring(30122),[("tags",""),("viewmode","view")],"showtagtypes",
+            self.add_directory(common.getstring(30122),[("tags",""),("viewmode","view")],"showtagtypes",
                         join(PIC_PATH,"keywords.png"),
                         fanart=join(PIC_PATH,"fanart-keyword.png"))
 
         # période
         if common.getaddon_setting('m_10')=='true' or display_all:
-            self.addDir(common.getstring(30105),[("period",""),("viewmode","view"),],"showperiod",
+            self.add_directory(common.getstring(30105),[("period",""),("viewmode","view"),],"showperiod",
                     join(PIC_PATH,"period.png"),
                     fanart=join(PIC_PATH,"fanart-period.png"))
         # Collections
         if common.getaddon_setting('m_11')=='true' or display_all:
-            self.addDir(common.getstring(30150),[("collect",""),("method","show"),("viewmode","view")],"showcollection",
+            self.add_directory(common.getstring(30150),[("collect",""),("method","show"),("viewmode","view")],"showcollection",
                     join(PIC_PATH,"collection.png"),
                     fanart=join(PIC_PATH,"fanart-collection.png"))
         # recherche globale
         if common.getaddon_setting('m_12')=='true' or display_all:
-            self.addDir(common.getstring(30098),[("searchterm",""),("viewmode","view")],"globalsearch",
+            self.add_directory(common.getstring(30098),[("searchterm",""),("viewmode","view")],"globalsearch",
                     join(PIC_PATH,"search.png"),
                     fanart=join(PIC_PATH,"fanart-search.png"))
         # chemin scannés
-        self.addDir(common.getstring(30099),[("do","showroots"),("viewmode","view")],"rootfolders",
+        self.add_directory(common.getstring(30099),[("do","showroots"),("viewmode","view")],"rootfolders",
                     join(PIC_PATH,"settings.png"),
                     fanart=join(PIC_PATH,"fanart-setting.png"))
 
         # Translation Editor
-        self.addAction(common.getstring(30620),[("showtranslationeditor",""),("viewmode","view")],"showtranslationeditor",
+        self.add_action(common.getstring(30620),[("showtranslationeditor",""),("viewmode","view")],"showtranslationeditor",
                     join(PIC_PATH,"keywords.png"),
                     fanart=join(PIC_PATH,"fanart-keyword.png"))
 
         # Show readme
-        self.addAction(common.getstring(30123),[("help",""),("viewmode","view")],"help",
+        self.add_action(common.getstring(30123),[("help",""),("viewmode","view")],"help",
                     join(PIC_PATH,"keywords.png"),
                     fanart=join(PIC_PATH,"fanart-keyword.png"))        
 
@@ -394,7 +392,7 @@ class Main:
         dptd = dptd.replace("%b",monthname[strptime(self.args.value,thisdateformat).tm_mon - 1])    #replace %b marker by short month name
         dptd = dptd.replace("%B",fullmonthname[strptime(self.args.value,thisdateformat).tm_mon - 1])#replace %B marker by long month name
         nameperiode = strftime(dptd.encode("utf8"),strptime(self.args.value,thisdateformat))
-        self.addDir(name      = common.getstring(30100)%(nameperiode.decode("utf8"),MPDB.countPeriod(allperiod,self.args.value)), #libellé#"All the period %s (%s pics)"%(self.args.value,MPDB.countPeriod(allperiod,self.args.value)), #libellé
+        self.add_directory(name      = common.getstring(30100)%(nameperiode.decode("utf8"),MPDB.count_pics_in_period(allperiod,self.args.value)), #libellé#"All the period %s (%s pics)"%(self.args.value,MPDB.count_pics_in _period(allperiod,self.args.value)), #libellé
                     params    = [("method","date"),("period",allperiod),("value",self.args.value),("page",""),("viewmode","view")],#paramètres
                     action    = "showpics",#action
                     iconimage = join(PIC_PATH,"dates.png"),#icone
@@ -410,8 +408,8 @@ class Main:
                     context = [(common.getstring(30152),"XBMC.RunPlugin(\"%s?action='addfolder'&method='date'&period='%s'&value='%s'&page=''&viewmode='scan'\")"%(sys.argv[0],nextperiod,period))]
                 else:
                     context = [(common.getstring(30152),"XBMC.RunPlugin(\"%s?action='addfolder'&method='date'&period='%s'&value='%s'&viewmode='scan'\")"%(sys.argv[0],self.args.period,period))]
-                self.addDir(name      = "%s (%s %s)"%(strftime(self.prettydate(displaydate,strptime(period,periodformat)).encode("utf8"),strptime(period,periodformat)).decode("utf8"),
-                                                      MPDB.countPeriod(self.args.period,period),
+                self.add_directory(name      = "%s (%s %s)"%(strftime(self.prettydate(displaydate,strptime(period,periodformat)).encode("utf8"),strptime(period,periodformat)).decode("utf8"),
+                                                      MPDB.count_pics_in_period(self.args.period,period),
                                                       common.getstring(30050).encode("utf8")), #libellé
                             params    = [("method","date"),("period",nextperiod),("value",period),("viewmode","view")],#paramètres
                             action    = action,#action
@@ -435,7 +433,7 @@ class Main:
         for idchildren, childrenfolder in childrenfolders:
             common.log("Main.show_folders", "children folder = %s"%childrenfolder)
             path = MPDB.RequestWithBinds( "SELECT FullPath FROM folders WHERE idFolder = ?",(idchildren,) )[0][0]
-            self.addDir(name      = "%s (%s %s)"%(childrenfolder,MPDB.countPicsFolder(idchildren),common.getstring(30050)), #libellé
+            self.add_directory(name      = "%s (%s %s)"%(childrenfolder,MPDB.count_pics_in_folder(idchildren),common.getstring(30050)), #libellé
                         params    = [("method","folders"),("folderid",str(idchildren)),("onlypics","non"),("viewmode","view")],#paramètres
                         action    = "showfolder",#action
                         iconimage = join(PIC_PATH,"folders.png"),#icone
@@ -460,7 +458,7 @@ class Main:
                                                                                                                          common.quote_param(path.encode('utf-8')),
                                                                                                                          common.quote_param(filename.encode('utf-8')))  )
                             )
-            self.addPic(filename,path, count=count, contextmenu=context,
+            self.add_picture(filename,path, count=count, contextmenu=context,
                         fanart = xbmcplugin.getSetting(int(sys.argv[1]),'usepicasfanart')=='true' and join(path,filename) or join(PIC_PATH,"fanart-folder.png")
                         )
 
@@ -544,7 +542,7 @@ class Main:
         common.log("Main.show_tagtypes", "total # of tag types = %s"%total)
         for tag, nb in listtags:
             if nb:
-                self.addDir(name      = "%s (%s %s)"%(tag,nb,common.getstring(30052)), #libellé
+                self.add_directory(name      = "%s (%s %s)"%(tag,nb,common.getstring(30052)), #libellé
                             params    = [("method","tagtype"),("tagtype",tag),("page","1"),("viewmode","view")],#paramètres
                             action    = "showtags",#action
                             iconimage = join(PIC_PATH,"keywords.png"),#icone
@@ -562,7 +560,7 @@ class Main:
         common.log("Main.show_tags", "total # of tags = %s"%total)
         for tag, nb in listtags:
             if nb:
-                self.addDir(name      = "%s (%s %s)"%(tag,nb,common.getstring(30050)), #libellé
+                self.add_directory(name      = "%s (%s %s)"%(tag,nb,common.getstring(30050)), #libellé
                             params    = [("method","tag"),("tag",tag),("tagtype",tagtype),("page","1"),("viewmode","view")],#paramètres
                             action    = "showpics",#action
                             iconimage = join(PIC_PATH,"keywords.png"),#icone
@@ -579,7 +577,7 @@ class Main:
     def show_period(self): #TODO finished the datestart and dateend editing
         common.log("show_period", "started")
         update=False
-        self.addDir(name      = common.getstring(30106),
+        self.add_directory(name      = common.getstring(30106),
                     params    = [("period","setperiod"),("viewmode","view")],#paramètres
                     action    = "showperiod",#action
                     iconimage = join(PIC_PATH,"newperiod.png"),#icone
@@ -623,13 +621,13 @@ class Main:
                         else:
                             titreperiode = common.getstring(30109)%(datestart,dateend)
                         #add the new period inside the database
-                        MPDB.addPeriode(common.smart_unicode(titreperiode),common.smart_unicode("datetime('%s')"%datestart),common.smart_unicode("datetime('%s')"%dateend) )
+                        MPDB.add_period(common.smart_unicode(titreperiode),common.smart_unicode("datetime('%s')"%datestart),common.smart_unicode("datetime('%s')"%dateend) )
                 update=True
             else:
                 common.log("show_period", "No pictures with an EXIF date stored in DB")
 
         #search for inbase periods and show periods
-        for periodname,dbdatestart,dbdateend in MPDB.ListPeriodes():
+        for periodname,dbdatestart,dbdateend in MPDB.list_periods():
             periodname = common.smart_unicode(periodname)
             dbdatestart = common.smart_unicode(dbdatestart)
             dbdateend = common.smart_unicode(dbdateend)
@@ -637,7 +635,7 @@ class Main:
             datestart,dateend = MPDB.Request("SELECT strftime('%%Y-%%m-%%d',('%s')),strftime('%%Y-%%m-%%d',datetime('%s','+1 days','-1.0 seconds'))"%(dbdatestart,dbdateend))[0]
             datestart = common.smart_unicode(datestart)
             dateend   = common.smart_unicode(dateend)
-            self.addDir(name      = "%s [COLOR=C0C0C0C0](%s)[/COLOR]"%(periodname,
+            self.add_directory(name      = "%s [COLOR=C0C0C0C0](%s)[/COLOR]"%(periodname,
                                                common.getstring(30113)%(strftime(self.prettydate(common.getstring(30002).encode("utf8"),strptime(datestart,"%Y-%m-%d")).encode("utf8"),strptime(datestart,"%Y-%m-%d")).decode("utf8"),
                                                                     strftime(self.prettydate(common.getstring(30002).encode("utf8"),strptime(dateend  ,"%Y-%m-%d")).encode("utf8"),strptime(dateend  ,"%Y-%m-%d")).decode("utf8")
                                                                     )), #libellé
@@ -666,20 +664,20 @@ class Main:
                 return
             #create the collection in the database
             common.log("show_collection", "setcollection = %s"%namecollection)
-            MPDB.NewCollection(namecollection)
+            MPDB.new_collection(namecollection)
             refresh=True
         else:
             refresh=False
             
-        self.addDir(name      = common.getstring(30160),
+        self.add_directory(name      = common.getstring(30160),
                     params    = [("method","setcollection"),("collect",""),("viewmode","view"),],#paramètres
                     action    = "showcollection",#action
                     iconimage = join(PIC_PATH,"newcollection.png"),#icone
                     fanart    = join(PIC_PATH,"fanart-collection.png"),
                     contextmenu   = None)#menucontextuel
 
-        for collection in MPDB.ListCollections():
-            self.addDir(name      = collection[0],
+        for collection in MPDB.list_collections():
+            self.add_directory(name      = collection[0],
                         params    = [("method","collection"),("collect",collection[0]),("page","1"),("viewmode","view")],#paramètres
                         action    = "showpics",#action
                         iconimage = join(PIC_PATH,"collection.png"),#icone
@@ -719,7 +717,7 @@ class Main:
             compte = MPDB.search_in_files(tag, motrecherche, count=True)
             if compte:
                 result = True
-                self.addDir(name      = common.getstring(30116)%(compte,motrecherche.decode("utf8"),tag ), #files_fields_description.has_key(colname) and files_fields_description[colname] or colname),
+                self.add_directory(name      = common.getstring(30116)%(compte,motrecherche.decode("utf8"),tag ), #files_fields_description.has_key(colname) and files_fields_description[colname] or colname),
                             params    = [("method","search"),("field",u"%s"%common.smart_unicode(tag)),("searchterm",u"%s"%common.smart_unicode(motrecherche)),("page","1"),("viewmode","view")],#paramètres
                             action    = "showpics",#action
                             iconimage = join(PIC_PATH,"search.png"),#icone
@@ -744,7 +742,7 @@ class Main:
                 return
 
             if str(self.args.exclude)=="1":
-                MPDB.AddRoot(newroot,0,0,1)
+                MPDB.add_root_folder(newroot,0,0,1)
                 xbmc.executebuiltin( "Container.Refresh(\"%s?action='rootfolders'&do='showroots'&exclude='1'&viewmode='view'\",)"%(sys.argv[0],))
                 common.log("Main.show_roots", 'Exclude folder "%s" added'%newroot)
                 #xbmc.executebuiltin( "Notification(%s,%s,%s,%s)"%(common.getstring(30000).encode("utf8"),common.getstring(30204).encode("utf8"),3000,join(home,"icon.png").encode("utf8") ) )
@@ -760,16 +758,16 @@ class Main:
                         common.log("Main.show_roots", 'Adding Multipath: "%s"'%unquote_plus(newroot))
                         newpartialroot = newroot[12:-1].split('/')
                         for item in newpartialroot:
-                            MPDB.AddRoot(unquote_plus(item),recursive,update,0)#TODO : traiter le exclude (=0 pour le moment) pour gérer les chemins à exclure
+                            MPDB.add_root_folder(unquote_plus(item),recursive,update,0)#TODO : traiter le exclude (=0 pour le moment) pour gérer les chemins à exclure
                             common.log("Main.show_roots", 'Multipath addroot for part "%s" done'%unquote_plus(item))
                     else:
-                        MPDB.AddRoot(newroot,recursive,update,0)#TODO : traiter le exclude (=0 pour le moment) pour gérer les chemins à exclure
+                        MPDB.add_root_folder(newroot,recursive,update,0)#TODO : traiter le exclude (=0 pour le moment) pour gérer les chemins à exclure
                         common.log("Main.show_roots", 'Singlepath addroot "%s" done'%newroot)
 
                     xbmc.executebuiltin( "Container.Refresh(\"%s?action='rootfolders'&do='showroots'&exclude='0'&viewmode='view'\",)"%(sys.argv[0],))
 
                 except:
-                    common.log("Main.show_roots", 'MPDB.AddRoot failed for "%s"'%newroot, xbmc.LOGERROR)
+                    common.log("Main.show_roots", 'MPDB.add_root_folder failed for "%s"'%newroot, xbmc.LOGERROR)
                 common.show_notification(common.getstring(30000),common.getstring(30204),3000,join(home,"icon.png"))
                 #xbmc.executebuiltin( "Notification(%s,%s,%s,%s)"%(common.getstring(30000).encode("utf8"),common.getstring(30204).encode("utf8"),3000,join(home,"icon.png").encode("utf8") ) )
                 if not(xbmc.getInfoLabel( "Window.Property(DialogAddonScan.IsAlive)" ) == "true"): #si dialogaddonscan n'est pas en cours d'utilisation...
@@ -796,12 +794,12 @@ class Main:
         elif self.args.do=="addrootfolder":
             if str(self.args.exclude)=="1":
                 common.log("Main.show_roots", 'addrootfolder "%s" (exclude) from context menu'%self.args.addpath)
-                MPDB.AddRoot(self.args.addpath,0,0,1)
+                MPDB.add_root_folder(self.args.addpath,0,0,1)
 
         elif self.args.do=="delroot":
             try:
                 common.log("Main.show_roots", 'delroot "%s"'% self.args.delpath)
-                MPDB.RemoveRoot( self.args.delpath) 
+                MPDB.delete_root( self.args.delpath) 
             except IndexError,msg:
                 common.log("Main.show_roots", 'delroot IndexError %s - %s'%( IndexError,msg), xbmc.LOGERROR )
             if self.args.delpath != 'neverexistingpath':
@@ -810,7 +808,7 @@ class Main:
         elif self.args.do=="rootclic":#clic sur un chemin (à exclure ou à scanner)
             if not(xbmc.getInfoLabel( "Window.Property(DialogAddonScan.IsAlive)" ) == "true"): #si dialogaddonscan n'est pas en cours d'utilisation...
                 if str(self.args.exclude)=="0":#le chemin choisi n'est pas un chemin à exclure...
-                    path,recursive,update,exclude = MPDB.getRoot(self.args.rootpath)
+                    path,recursive,update,exclude = MPDB.get_root_folders(self.args.rootpath)
                     common.run_script("%s,%s --rootpath=%s"%( join( home, "scanpath.py"),recursive and "-r, " or "",common.quote_param(path)))
                     #xbmc.executebuiltin( "RunScript(%s,%s--rootpath=%s)"%( join( home, "scanpath.py").encode("utf8"),recursive and "-r, " or "",common.quote_param(path)))
                 else:#clic sur un chemin à exclure...
@@ -837,7 +835,7 @@ class Main:
         if int(sys.argv[1]) >= 0:
             excludefolders=[]
             includefolders=[]
-            for path,recursive,update,exclude in MPDB.RootFolders():
+            for path,recursive,update,exclude in MPDB.get_all_root_folders():
                 if exclude:
                     excludefolders.append([path,recursive,update])
                 else:
@@ -845,7 +843,7 @@ class Main:
 
 
             # Add a path to database
-            self.addAction(name      = common.getstring(30208),#add a root path
+            self.add_action(name      = common.getstring(30208),#add a root path
                         params    = [("do","addroot"),("viewmode","view"),("exclude","0")],#paramètres
                         action    = "rootfolders",#action
                         iconimage = join(PIC_PATH,"newsettings.png"),#icone
@@ -854,7 +852,7 @@ class Main:
 
             # Scan all paths
             if len(includefolders) > 0:
-                self.addAction(name      = common.getstring(30213),#scan all distinct root paths
+                self.add_action(name      = common.getstring(30213),#scan all distinct root paths
                             params    = [("do","scanall"),("viewmode","view"),],#paramètres
                             action    = "rootfolders",#action
                             iconimage = join(PIC_PATH,"settings.png"),#icone
@@ -867,7 +865,7 @@ class Main:
                 supd = update==1 and "ON" or "OFF"
                 path = common.smart_unicode(path)
 
-                self.addAction(name      = "[COLOR=FF66CC00][B][ + ][/B][/COLOR] "+path+" [COLOR=FFC0C0C0][recursive="+srec+" , update="+supd+"][/COLOR]",
+                self.add_action(name      = "[COLOR=FF66CC00][B][ + ][/B][/COLOR] "+path+" [COLOR=FFC0C0C0][recursive="+srec+" , update="+supd+"][/COLOR]",
                             params    = [("do","rootclic"),("rootpath",path),("viewmode","view"),("exclude","0")],#paramètres
                             action    = "rootfolders",#action
                             iconimage = join(PIC_PATH,"settings.png"),#icone
@@ -879,7 +877,7 @@ class Main:
                             )
             #Add a folder to exclude
             if len(includefolders)>=0:
-                self.addAction(name      = common.getstring(30211),#add a folder to exclude
+                self.add_action(name      = common.getstring(30211),#add a folder to exclude
                             params    = [("do","addroot"),("viewmode","view"),("exclude","1")],#paramètres
                             action    = "rootfolders",#action
                             iconimage = join(PIC_PATH,"newsettings.png"),#icone
@@ -888,7 +886,7 @@ class Main:
 
             #Show excluded folders
             for path,recursive,update in excludefolders:
-                self.addAction(name      = "[COLOR=FFFF0000][B][ - ][/B][/COLOR] "+path,
+                self.add_action(name      = "[COLOR=FFFF0000][B][ - ][/B][/COLOR] "+path,
                             params    = [("do","rootclic"),("rootpath",path),("viewmode","view"),("exclude","1")],#paramètres
                             action    = "rootfolders",#action
                             iconimage = join(PIC_PATH,"settings.png"),#icone
@@ -913,7 +911,7 @@ class Main:
 
     def remove_period(self):
 
-        MPDB.delPeriode(self.args.periodname)
+        MPDB.delete_period(self.args.periodname)
         xbmc.executebuiltin( "Container.Update(\"%s?action='showperiod'&viewmode='view'&period=''\" , replace)"%sys.argv[0]  )
 
 
@@ -936,12 +934,12 @@ class Main:
         else:
             titreperiode = periodname
 
-        MPDB.renPeriode(self.args.periodname,titreperiode,datestart,dateend)
+        MPDB.rename_period(self.args.periodname,titreperiode,datestart,dateend)
         xbmc.executebuiltin( "Container.Update(\"%s?action='showperiod'&viewmode='view'&period=''\" , replace)"%sys.argv[0]  )
 
 
-    def addTo_collection(self):
-        listcollection = ["[[%s]]"%common.getstring(30157)]+[col[0] for col in MPDB.ListCollections()]
+    def add_to_collection(self):
+        listcollection = ["[[%s]]"%common.getstring(30157)]+[col[0] for col in MPDB.list_collections()]
 
         dialog = xbmcgui.Dialog()
         rets = dialog.select(common.getstring(30156),listcollection)
@@ -956,7 +954,7 @@ class Main:
                 #il faut traiter l'annulation
                 return
             #2 créé la collection en base
-            MPDB.NewCollection(namecollection)
+            MPDB.new_collection(namecollection)
         else: #dans tous les autres cas, une collection existente choisie
             namecollection = listcollection[rets]
         #3 associe en base l'id du fichier avec l'id de la collection
@@ -964,13 +962,13 @@ class Main:
         path     = common.smart_unicode(self.args.path)
         filename = common.smart_unicode(self.args.filename)
 
-        MPDB.addPicToCollection( namecollection, path, filename )
+        MPDB.add_to_collection( namecollection, path, filename )
         common.show_notification(common.getstring(30000), common.getstring(30154)+ ' ' + namecollection,3000,join(home,"icon.png"))
         #xbmc.executebuiltin( "Notification(%s,%s %s,%s,%s)"%(common.getstring(30000).encode('utf-8'),common.getstring(30154).encode('utf-8'),namecollection.encode('utf-8'),3000,join(home,"icon.png").encode('utf-8')))
 
 
     def add_folder_to_collection(self):
-        listcollection = ["[[%s]]"%common.getstring(30157)]+[col[0] for col in MPDB.ListCollections()]
+        listcollection = ["[[%s]]"%common.getstring(30157)]+[col[0] for col in MPDB.list_collections()]
 
         dialog = xbmcgui.Dialog()
         rets = dialog.select(common.getstring(30156),listcollection)
@@ -984,7 +982,7 @@ class Main:
             else:
                 # cancel
                 return
-            MPDB.NewCollection(namecollection)
+            MPDB.new_collection(namecollection)
         else: # existing collection
             namecollection = listcollection[rets]
 
@@ -994,13 +992,13 @@ class Main:
         for path,filename in filelist: #on les ajoute une par une
             path           = common.smart_unicode(path)
             filename       = common.smart_unicode(filename)
-            MPDB.addPicToCollection( namecollection,path,filename )
+            MPDB.add_to_collection( namecollection,path,filename )
         common.show_notification(common.getstring(30000), common.getstring(30161)%len(filelist)+' '+namecollection,3000,join(home,"icon.png"))
         #xbmc.executebuiltin( "Notification(%s,%s %s,%s,%s)"%(common.getstring(30000).encode("utf8"), common.getstring(30161).encode("utf8")%len(filelist),namecollection.encode("utf8"), 3000,join(home,"icon.png").encode("utf8")) )
 
 
     def remove_collection(self):
-        MPDB.delCollection(self.args.collect)
+        MPDB.delete_collection(self.args.collect)
         xbmc.executebuiltin( "Container.Update(\"%s?action='showcollection'&viewmode='view'&collect=''&method='show'\" , replace)"%sys.argv[0] , )
 
 
@@ -1011,12 +1009,12 @@ class Main:
             newname = kb.getText()
         else:
             newname = self.args.collect
-        MPDB.renCollection(self.args.collect,newname)
+        MPDB.rename_collection(self.args.collect,newname)
         xbmc.executebuiltin( "Container.Update(\"%s?action='showcollection'&viewmode='view'&collect=''&method='show'\" , replace)"%sys.argv[0] , )
 
 
     def del_pics_from_collection(self):
-        MPDB.delPicFromCollection(self.args.collect,self.args.path,self.args.filename)
+        MPDB.delete_fro_collection(self.args.collect,self.args.path,self.args.filename)
         xbmc.executebuiltin( "Container.Update(\"%s?action='showpics'&viewmode='view'&page='1'&collect='%s'&method='collection'\" , replace)"%(sys.argv[0],common.quote_param(self.args.collect)) , )
 
 
@@ -1210,14 +1208,14 @@ class Main:
             # BUG CONNU : cette requête ne récupère que les photos du dossier choisi, pas les photos 'filles' des sous dossiers
             #   il faut la modifier pour récupérer les photos filles des sous dossiers
             picfanart = join(PIC_PATH,"fanart-folder.png")
-            listid = MPDB.all_children(self.args.folderid)
+            listid = MPDB.all_children_of_folder(self.args.folderid)
             filelist = [row for row in MPDB.Request( """SELECT p.FullPath,f.strFilename FROM files f,folders p WHERE f.idFolder=p.idFolder AND p.ParentFolder in ('%s') ORDER BY ImageDateTime ASC LIMIT %s OFFSET %s"""%("','".join([str(i) for i in listid]),
                                                                                                                                                                                                                                     limit,
                                                                                                                                                                                                                                     offset) )]
 
         elif self.args.method == "collection":
             picfanart = join(PIC_PATH,"fanart-collection.png")
-            filelist = MPDB.getCollectionPics(self.args.collect)
+            filelist = MPDB.get_collection_pics(self.args.collect)
 
         elif self.args.method == "search":
             picfanart = join(PIC_PATH,"fanart-collection.png")
@@ -1421,7 +1419,7 @@ class Main:
 
             #5 - les infos de la photo
             #context.append( ( "paramètres de l'addon","XBMC.ActivateWindow(virtualkeyboard)" ) )
-            self.addPic(filename,
+            self.add_picture(filename,
                         path,
                         count = count,
                         contextmenu = context,
@@ -1459,11 +1457,11 @@ if __name__=="__main__":
         MPDB.pictureDB = pictureDB
         #   - efface les tables et les recréés
         if common.getaddon_setting("initDB") == "true":
-            MPDB.Make_new_base(pictureDB, True)
+            MPDB.make_new_base(pictureDB, True)
             common.setaddon_setting("initDB","false")
         else:
-            MPDB.VersionTable()
-            #MPDB.Make_new_base(pictureDB, False)
+            MPDB.version_table()
+            
         #scan les répertoires lors du démarrage (selon setting)
         if common.getaddon_setting('bootscan')=='true':
             if not(xbmc.getInfoLabel( "Window.Property(DialogAddonScan.IsAlive)" ) == "true"):
@@ -1513,7 +1511,7 @@ if __name__=="__main__":
     elif m.args.action=='showcollection':
         m.show_collection()
     elif m.args.action=='addtocollection':
-        m.addTo_collection()
+        m.add_to_collection()
     elif m.args.action=='removecollection':
         m.remove_collection()
     elif m.args.action=='delfromcollection':
