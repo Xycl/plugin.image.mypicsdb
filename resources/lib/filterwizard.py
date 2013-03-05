@@ -273,14 +273,16 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
 
     def clear_settings(self):
         self.active_tags.clear()
+        self.checkedTags = 0
         self.bAnd = False
         self.getControl( BUTTON_MATCHALL ).setSelected(0)
 
         self.load_tag_content_list(self.TagTypes[0])
-            
+        
+        self.getControl( CHECKED_LABEL ).setLabel(  common.getstring(30612)% (self.checkedTags) )
         self.getControl( CHECKED_LABEL ).setVisible(False)
         self.getControl( CHECKED_LABEL ).setVisible(True)
-    
+
 
     def delete_filter_settings(self):
         filters = MPDB.list_filterwizard_filters()
