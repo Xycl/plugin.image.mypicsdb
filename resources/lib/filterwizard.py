@@ -19,6 +19,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
 import xbmc, xbmcgui
+from time import strftime,strptime
+import datetime
 import MypicsDB as MPDB
 import common
 
@@ -35,7 +37,8 @@ LOAD_FILTER        = 107
 SAVE_FILTER        = 108
 CLEAR_FILTER       = 109
 DELETE_FILTER      = 111
-
+BUTTON_DATE        = 112
+FILTER_NAME        = 113
 TAGS_LIST          = 120
 TAGS_CONTENT_LIST  = 122
 
@@ -61,7 +64,7 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
         if ( action.getId() in CANCEL_DIALOG or self.getFocusId() == BUTTON_CANCEL and action.getId() in SELECT_ITEM ):
             arraytrue = []
             arrayfalse = []
-            self.filter (arraytrue,arrayfalse,False)
+            self.filter (arraytrue,arrayfalse,False,'','')
             self.close()
 
         # Okay
@@ -76,7 +79,7 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
                 if value == -1:
                     arrayfalse.append( key)
 
-            self.filter (arraytrue, arrayfalse, self.bAnd )
+            self.filter (arraytrue, arrayfalse, self.use_and, self.start_date, self.end_date )
 
             self.getControl( BUTTON_OK ).setEnabled(False)
             self.getControl( BUTTON_CANCEL ).setEnabled(False)
@@ -88,13 +91,13 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
             self.getControl( TAGS_LIST ).setEnabled(False)
             self.getControl( TAGS_CONTENT_LIST ).setEnabled(False)
 
-            MPDB.save_filterwizard_filter( self.last_used_filter_name, self.active_tags, self.bAnd)
+            MPDB.save_filterwizard_filter( self.last_used_filter_name, self.active_tags, self.use_and, self.start_date, self.end_date)
 
             self.close()
 
         # Match all button
         elif ( action.getId() in SELECT_ITEM and self.getFocusId() == BUTTON_MATCHALL ):
-            self.bAnd = not self.bAnd
+            self.use_and = not self.use_and
 
         # Load filter settings
         elif ( action.getId() in SELECT_ITEM and self.getFocusId() == LOAD_FILTER ):
@@ -112,12 +115,17 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
         elif ( action.getId() in SELECT_ITEM and self.getFocusId() == DELETE_FILTER ):
             self.delete_filter_settings()
             
+        # Set start and end date
+        elif ( action.getId() in SELECT_ITEM and self.getFocusId() == BUTTON_DATE ):
+            self.set_filter_date()            
+
+            
         # Select or deselect item in TagTypes list
         elif ( action.getId() in SELECT_ITEM and self.getFocusId() == TAGS_LIST ):
             item = self.getControl( TAGS_LIST ).getSelectedItem()
             pos  = self.getControl( TAGS_LIST ).getSelectedPosition()
-            if self.CurrentlySelectedTagType != self.TagTypes[pos]:
-                self.load_tag_content_list(self.TagTypes[pos])
+            if self.currently_selected_tagtypes != self.tag_types[pos]:
+                self.load_tag_content_list(self.tag_types[pos])
         
         # Select or deselect item in TagContents list
         elif ( action.getId() in SELECT_ITEM and self.getFocusId() == TAGS_CONTENT_LIST ):
@@ -127,7 +135,7 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
             if pos != -1 and item != None:            
             
                 checked = item.getProperty("checked")
-                key = common.smart_unicode(self.CurrentlySelectedTagType) + '||' + common.smart_unicode(item.getLabel2())
+                key = common.smart_unicode(self.currently_selected_tagtypes) + '||' + common.smart_unicode(item.getLabel2())
                 
                 if checked == "checkbutton.png":
                     self.check_gui_tag_content(item, -1)
@@ -141,10 +149,10 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
                     
                 
 
-                if self.checkedTags == 1:
+                if self.checked_tags == 1:
                     self.getControl( CHECKED_LABEL ).setLabel(  common.getstring(30611) )
                 else:
-                    self.getControl( CHECKED_LABEL ).setLabel(  common.getstring(30612)% (self.checkedTags) )
+                    self.getControl( CHECKED_LABEL ).setLabel(  common.getstring(30612)% (self.checked_tags) )
                 self.getControl( CHECKED_LABEL ).setVisible(False)
                 self.getControl( CHECKED_LABEL ).setVisible(True)
 
@@ -162,12 +170,12 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
         elif checked == 0:
             item.setProperty( "checked", "transparent.png")
             if AlreadyChecked != "transparent.png":
-                self.checkedTags -= 1
+                self.checked_tags -= 1
 
         else:
             item.setProperty( "checked", "checkbutton.png")
             if AlreadyChecked == "transparent.png":
-                self.checkedTags += 1
+                self.checked_tags += 1
 
         self.getControl( TAGS_CONTENT_LIST ).setVisible(False)
         self.getControl( TAGS_CONTENT_LIST ).setVisible(True)    
@@ -185,12 +193,20 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
         self.getControl( SAVE_FILTER ).setLabel( common.getstring(30617) )
         self.getControl( CLEAR_FILTER ).setLabel( common.getstring(30618) )
         self.getControl( DELETE_FILTER ).setLabel( common.getstring(30619) )
+        self.getControl( BUTTON_DATE ).setLabel( common.getstring(30117) )
+        if filtersettings != '':
+            self.getControl( FILTER_NAME ).setLabel( common.getstring(30652) +' '+filtersettings)
+        else:
+            self.getControl( FILTER_NAME ).setLabel( '' )
+        
         self.getControl( TAGS_LIST ).reset()
 
-        self.TagTypes = [u"%s"%k  for k in MPDB.list_TagTypes()]
-        self.CurrentlySelectedTagType = ''
-        self.checkedTags = 0
-        self.bAnd = False
+        self.tag_types = [u"%s"%k  for k in MPDB.list_TagTypes()]
+        self.currently_selected_tagtypes = ''
+        self.checked_tags = 0
+        self.use_and = False
+        self.start_date = ''
+        self.end_date   = ''
         self.active_tags = {}
         self.last_used_filter_name = "  " + common.getstring(30607)
 
@@ -199,25 +215,27 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
         
         # load last filter settings
         if filtersettings != "":
-            self.active_tags, self.bAnd = MPDB.load_filterwizard_filter(filtersettings)
-            if self.bAnd:
+            self.active_tags, self.use_and, self.start_date, self.end_date = MPDB.load_filterwizard_filter(filtersettings)
+            if self.use_and:
                 self.getControl( BUTTON_MATCHALL ).setSelected(1)
+            self.getControl( BUTTON_DATE ).setLabel( self.start_date + ' ... ' + self.end_date )
+            self.getControl( BUTTON_DATE ).setVisible(False)
+            self.getControl( BUTTON_DATE ).setVisible(True)                   
         
         for key in self.active_tags:
             if self.active_tags[key] != 0:
-                self.checkedTags += 1
+                self.checked_tags += 1
 
-        if self.checkedTags == 1:
+        if self.checked_tags == 1:
             self.getControl( CHECKED_LABEL ).setLabel(  common.getstring(30611) )
         else:
-            self.getControl( CHECKED_LABEL ).setLabel(  common.getstring(30612)% (self.checkedTags) )
+            self.getControl( CHECKED_LABEL ).setLabel(  common.getstring(30612)% (self.checked_tags) )
 
-        self.init_tags()
-
+        self.init_tags()     
 
     def init_tags(self):
         i = 0
-        for TagType in self.TagTypes:
+        for TagType in self.tag_types:
             TagTypeItem = xbmcgui.ListItem( label=TagType)   
             TagTypeItem.setProperty( "checked", "transparent.png")
             self.getControl( TAGS_LIST ).addItem( TagTypeItem )
@@ -254,7 +272,7 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
         self.getControl( TAGS_CONTENT_LIST ).reset()
         TagContents = [u"%s"%k  for k in MPDB.list_tags(tagType)]
 
-        self.CurrentlySelectedTagType = tagType
+        self.currently_selected_tagtypes = tagType
         
         for TagContent in TagContents:
                 
@@ -273,16 +291,23 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
 
     def clear_settings(self):
         self.active_tags.clear()
-        self.checkedTags = 0
-        self.bAnd = False
+        self.checked_tags = 0
+        self.use_and = False
         self.getControl( BUTTON_MATCHALL ).setSelected(0)
 
-        self.load_tag_content_list(self.TagTypes[0])
+        self.load_tag_content_list(self.tag_types[0])
         
-        self.getControl( CHECKED_LABEL ).setLabel(  common.getstring(30612)% (self.checkedTags) )
+        self.getControl( CHECKED_LABEL ).setLabel(  common.getstring(30612)% (self.checked_tags) )
         self.getControl( CHECKED_LABEL ).setVisible(False)
         self.getControl( CHECKED_LABEL ).setVisible(True)
+        
+        self.getControl( BUTTON_DATE ).setLabel( common.getstring(30117) )
+        self.getControl( BUTTON_DATE ).setVisible(False)
+        self.getControl( BUTTON_DATE ).setVisible(True)   
 
+        self.getControl( FILTER_NAME ).setLabel( '' )
+        self.getControl( FILTER_NAME ).setVisible(False)
+        self.getControl( FILTER_NAME ).setVisible(True)   
 
     def delete_filter_settings(self):
         filters = MPDB.list_filterwizard_filters()
@@ -303,11 +328,43 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
         dialog = xbmcgui.Dialog()
         ret = dialog.select(common.getstring(30608), filters)
         if ret > 0:
-            MPDB.save_filterwizard_filter(filters[ret], self.active_tags, self.bAnd)
+            MPDB.save_filterwizard_filter(filters[ret], self.active_tags, self.use_and, self.start_date, self.end_date)
         if ret == 0:
             kb = xbmc.Keyboard()
             kb.setHeading(common.getstring(30609))
             kb.doModal()
             if (kb.isConfirmed()):
-                MPDB.save_filterwizard_filter(kb.getText(), self.active_tags, self.bAnd)
-        
+                MPDB.save_filterwizard_filter(kb.getText(), self.active_tags, self.use_and, self.start_date, self.end_date)
+
+
+    def set_filter_date(self):
+    
+        dialog = xbmcgui.Dialog()
+        if self.start_date == '':
+            self.start_date = str(datetime.datetime.now())[:10]
+        if self.end_date == '':
+            self.end_date = str(datetime.datetime.now())[:10]
+
+        try:
+            d = dialog.numeric(1, common.getstring(30117) ,strftime("%d/%m/%Y",strptime(self.start_date,"%Y-%m-%d")) )
+            if d != '':    
+                self.start_date = strftime("%Y-%m-%d",strptime(d.replace(" ","0"),"%d/%m/%Y"))
+            else:
+                self.start_date =''
+            common.log('', str(self.start_date))
+            
+            d = dialog.numeric(1, common.getstring(30118) ,strftime("%d/%m/%Y",strptime(self.end_date,"%Y-%m-%d")) )
+            if d != '':
+                self.end_date = strftime("%Y-%m-%d",strptime(d.replace(" ","0"),"%d/%m/%Y"))
+            else:
+                self.end_date =''
+            common.log('', str(self.end_date))
+        except:
+            pass
+
+        if self.start_date != '' or self.end_date != '':
+            self.getControl( BUTTON_DATE ).setLabel( self.start_date + ' ... ' + self.end_date )
+        else:
+            self.getControl( BUTTON_DATE ).setLabel( common.getstring(30117) )
+        self.getControl( BUTTON_DATE ).setVisible(False)
+        self.getControl( BUTTON_DATE ).setVisible(True)        

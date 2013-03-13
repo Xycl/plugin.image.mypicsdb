@@ -19,9 +19,9 @@
                 <texture border="40">default-panel.png</texture>
             </control>
             <control type="label" id="100">
-                <description>textarea</description>
+                <description>Header</description>
                 <posx>200</posx>
-                <posy>20</posy>
+                <posy>15</posy>
                 <width>690</width>
                 <height>40</height>
                 <font>font18</font>
@@ -33,7 +33,7 @@
             <control type="label" id="101">
                 <description>number of selected tags</description>
                 <posx>1060</posx>
-                <posy>20</posy>
+                <posy>15</posy>
                 <width>200</width>
                 <height>40</height>
                 <font>font18</font>
@@ -41,6 +41,19 @@
                 <aligny>center</aligny>
                 <align>right</align>
             </control>
+            <control type="label" id="113">
+                <description>Filter:</description>
+                <posx>60</posx>
+                <posy>50</posy>
+                <width>400</width>
+                <height>40</height>
+                <font>font18</font>
+                <textcolor>white</textcolor>
+                <aligny>center</aligny>
+                <align>left</align>
+                <label>Filter: </label>
+            </control>            
+            
             <control type="button" id="102">
                 <description>OK button</description>
                 <posx>30</posx>
@@ -51,10 +64,9 @@
                 <textcolor>white</textcolor>
                 <aligny>center</aligny>
                 <align>center</align>
-                <onleft>120</onleft>
+                <onleft>112</onleft>
                 <onright>103</onright>
                 <ondown>107</ondown>
-                <onup>120</onup>
             </control>
             <control type="button" id="103">
                 <description>Cancel button</description>
@@ -69,20 +81,44 @@
                 <onleft>102</onleft>
                 <onright>104</onright>
                 <ondown>108</ondown>
-                <onup>120</onup>
             </control>
-            <!-- load / save 
-            <control type="label" id="110">
-                <description>Filter label</description>
-                <posx>40</posx>
-                <posy>550</posy>
-                <width>100</width>
+
+            <control type="radiobutton" id="104">
+                <description>Match all button</description>
+                <posx>690</posx>
+                <posy>500</posy>
+                <width>370</width>
                 <height>40</height>
                 <font>font18</font>
                 <textcolor>white</textcolor>
                 <aligny>center</aligny>
                 <align>left</align>
-            </control>            -->
+                <onleft>103</onleft>
+                <onright>107</onright>
+                <ondown>109</ondown>
+            </control>
+            <control type="label" id="105">
+                <description>Tags</description>
+                <posx>70</posx>
+                <posy>100</posy>
+                <width>315</width>
+                <height>36</height>
+                <font>font18</font>
+                <textcolor>white</textcolor>
+                <aligny>center</aligny>
+                <align>left</align>
+            </control>
+            <control type="label" id="106">
+                <description>Tag content</description>
+                <posx>440</posx>
+                <posy>100</posy>
+                <width>315</width>
+                <height>36</height>
+                <font>font18</font>
+                <textcolor>white</textcolor>
+                <aligny>center</aligny>
+                <align>left</align>
+            </control>
             <control type="button" id="107">
                 <description>Load button</description>
                 <posx>30</posx>
@@ -125,6 +161,19 @@
                 <onright>111</onright>
                 <onup>104</onup>
             </control>         
+            <!-- load / save 
+            <control type="label" id="110">
+                <description>Filter label</description>
+                <posx>40</posx>
+                <posy>550</posy>
+                <width>100</width>
+                <height>40</height>
+                <font>font18</font>
+                <textcolor>white</textcolor>
+                <aligny>center</aligny>
+                <align>left</align>
+            </control>            -->
+            
             <control type="button" id="111">
                 <description>Delete filter button</description>
                 <posx>810</posx>
@@ -136,46 +185,22 @@
                 <aligny>center</aligny>
                 <align>center</align>
                 <onleft>109</onleft>
-                <onright>102</onright>
+                <onright>120</onright>
                 <onup>104</onup>
-            </control> 
-            <control type="radiobutton" id="104">
-                <description>Match all button</description>
-                <posx>690</posx>
-                <posy>500</posy>
-                <width>370</width>
-                <height>40</height>
-                <font>font18</font>
-                <textcolor>white</textcolor>
-                <aligny>center</aligny>
-                <align>left</align>
-                <onleft>103</onleft>
-                <onright>107</onright>
-                <ondown>109</ondown>
-                <onup>120</onup>
-            </control>
-            <control type="label" id="105">
-                <description>Tags</description>
-                <posx>70</posx>
+            </control>           
+            <control type="button" id="112">
+                <description>Date set button</description>
+                <posx>745</posx>
                 <posy>100</posy>
                 <width>315</width>
                 <height>36</height>
                 <font>font18</font>
                 <textcolor>white</textcolor>
                 <aligny>center</aligny>
-                <align>left</align>
-            </control>
-            <control type="label" id="106">
-                <description>Tag content</description>
-                <posx>440</posx>
-                <posy>100</posy>
-                <width>315</width>
-                <height>36</height>
-                <font>font18</font>
-                <textcolor>white</textcolor>
-                <aligny>center</aligny>
-                <align>left</align>
-            </control>
+                <align>center</align>
+                <onleft>122</onleft>
+                <onright>102</onright>
+            </control>      
             <control type="image">
                 <posx>20</posx>
                 <posy>90</posy>
@@ -225,7 +250,7 @@
                 <posy>160</posy>
                 <width>355</width>
                 <height>320</height>
-                <onleft>102</onleft>
+                <onleft>111</onleft>
                 <onright>122</onright>
                 <viewtype label="535">list</viewtype>
                 <pagecontrol>121</pagecontrol>
@@ -300,7 +325,7 @@
                 <width>680</width>
                 <height>320</height>
                 <onleft>120</onleft>
-                <onright>102</onright>
+                <onright>112</onright>
                 <viewtype label="535">list</viewtype>
                 <pagecontrol>123</pagecontrol>
                 <scrolltime>200</scrolltime>

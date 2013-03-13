@@ -503,7 +503,7 @@ class Main:
 
 
     def show_wizard(self):
-        global GlobalFilterTrue, GlobalFilterFalse, GlobalMatchAll
+        global GlobalFilterTrue, GlobalFilterFalse, GlobalMatchAll, g_start_date, g_end_date
         #picfanart = join(PIC_PATH,"fanart-keyword.png")
         ui = filterwizard.FilterWizard( "filterwizard.xml" , common.getaddon_path(), "Default")
         ui.set_delegate(filterwizard_delegate)
@@ -513,7 +513,8 @@ class Main:
         newtagtrue = ""
         newtagfalse = ""
         matchall = (1 if GlobalMatchAll else 0)
-
+        start_date = g_start_date
+        end_date = g_end_date
         if len(GlobalFilterTrue) > 0:
 
             for tag in GlobalFilterTrue:
@@ -532,8 +533,8 @@ class Main:
                     newtagfalse += "|||" + tag
             newtagfalse = common.smart_unicode(newtagfalse)
 
-        if len(GlobalFilterTrue) > 0 or len(GlobalFilterFalse) > 0:
-            xbmc.executebuiltin("XBMC.Container.Update(%s?action='showpics'&viewmode='view'&method='wizard'&matchall='%s'&kw='%s'&nkw='%s')" % ( sys.argv[0], matchall, common.quote_param(newtagtrue.encode('utf-8')), common.quote_param(newtagfalse.encode('utf-8'))))
+        if len(GlobalFilterTrue) > 0 or len(GlobalFilterFalse) > 0 or start_date != '' or end_date != '':
+            xbmc.executebuiltin("XBMC.Container.Update(%s?action='showpics'&viewmode='view'&method='wizard'&matchall='%s'&kw='%s'&nkw='%s'&start='%s'&end='%s')" % ( sys.argv[0], matchall, common.quote_param(newtagtrue.encode('utf-8')), common.quote_param(newtagfalse.encode('utf-8')), start_date, end_date) )
 
 
     def show_tagtypes(self):
@@ -598,30 +599,40 @@ class Main:
                 if not rets==-1:#is not canceled
                     if rets==0: #input manually the date
                         d = dialog.numeric(1, common.getstring(30117) ,strftime("%d/%m/%Y",strptime(dateofpics[0],"%Y-%m-%d")) )
-                        datestart = strftime("%Y-%m-%d",strptime(d.replace(" ","0"),"%d/%m/%Y"))
+                        common.log("period", str(d))
+                        if d != '':
+                            datestart = strftime("%Y-%m-%d",strptime(d.replace(" ","0"),"%d/%m/%Y"))
+                        else: 
+                            datestart = ''
                         deb=0
                     else:
                         datestart = dateofpics[rets-1]
                         deb=rets-1
-    
-                    retf = dialog.select(common.getstring(30108),["[[%s]]"%common.getstring(30114)] + nameddates[deb:])#dateofpics[deb:])#choose the end date (all dates before startdate are ignored to preserve begin/end)
-                    if not retf==-1:#if end date is not canceled...
-                        if retf==0:#choix d'un date de fin manuelle ou choix précédent de la date de début manuelle
-                            d = dialog.numeric(1, common.getstring(30118) ,strftime("%d/%m/%Y",strptime(dateofpics[-1],"%Y-%m-%d")) )
-                            dateend = strftime("%Y-%m-%d",strptime(d.replace(" ","0"),"%d/%m/%Y"))
-                            deb=0
-                        else:
-                            dateend = dateofpics[deb+retf-1]
-                        #now input the title for the period
-                        #
-                        kb = xbmc.Keyboard(common.smart_utf8(common.getstring(30109)%(datestart,dateend)), common.getstring(30110), False)
-                        kb.doModal()
-                        if (kb.isConfirmed()):
-                            titreperiode = kb.getText()
-                        else:
-                            titreperiode = common.getstring(30109)%(datestart,dateend)
-                        #add the new period inside the database
-                        MPDB.add_period(common.smart_unicode(titreperiode),common.smart_unicode("datetime('%s')"%datestart),common.smart_unicode("datetime('%s')"%dateend) )
+                    
+                    if datestart != '':
+                        retf = dialog.select(common.getstring(30108),["[[%s]]"%common.getstring(30114)] + nameddates[deb:])#dateofpics[deb:])#choose the end date (all dates before startdate are ignored to preserve begin/end)
+                        if not retf==-1:#if end date is not canceled...
+                            if retf==0:#choix d'un date de fin manuelle ou choix précédent de la date de début manuelle
+                                d = dialog.numeric(1, common.getstring(30118) ,strftime("%d/%m/%Y",strptime(dateofpics[-1],"%Y-%m-%d")) )
+                                if d != '':
+                                    dateend = strftime("%Y-%m-%d",strptime(d.replace(" ","0"),"%d/%m/%Y"))
+                                else:
+                                    dateend =''
+                                deb=0
+                            else:
+                                dateend = dateofpics[deb+retf-1]
+                                
+                            if dateend != '':
+                                #now input the title for the period
+                                #
+                                kb = xbmc.Keyboard(common.smart_utf8(common.getstring(30109)%(datestart,dateend)), common.getstring(30110), False)
+                                kb.doModal()
+                                if (kb.isConfirmed()):
+                                    titreperiode = kb.getText()
+                                else:
+                                    titreperiode = common.getstring(30109)%(datestart,dateend)
+                                #add the new period inside the database
+                                MPDB.add_period(common.smart_unicode(titreperiode),common.smart_unicode("datetime('%s')"%datestart),common.smart_unicode("datetime('%s')"%dateend) )
                 update=True
             else:
                 common.log("show_period", "No pictures with an EXIF date stored in DB")
@@ -1191,7 +1202,7 @@ class Main:
 
         # we are showing pictures for a TAG selection
         elif self.args.method == "wizard":
-            filelist = MPDB.search_filter_tags(self.args.kw.decode("utf8"), self.args.nkw.decode("utf8"), self.args.matchall)
+            filelist = MPDB.search_filter_tags(self.args.kw.decode("utf8"), self.args.nkw.decode("utf8"), self.args.matchall, self.args.start, self.args.end)
 
         # we are showing pictures for a TAG selection
         elif self.args.method == "tag":
@@ -1436,12 +1447,16 @@ class Main:
 GlobalFilterTrue  = []
 GlobalFilterFalse  = []
 GlobalMatchAll = False
+g_start_date = ''
+g_end_date   = ''
 Handle        = 0
-def filterwizard_delegate(ArrayTrue, ArrayFalse, MatchAll = False):
-    global GlobalFilterTrue, GlobalFilterFalse, GlobalMatchAll, Handle
+def filterwizard_delegate(ArrayTrue, ArrayFalse, MatchAll = False, start_date = '', end_date = ''):
+    global GlobalFilterTrue, GlobalFilterFalse, GlobalMatchAll, Handle, g_start_date, g_end_date
     GlobalFilterTrue  = ArrayTrue
     GlobalFilterFalse  = ArrayFalse
     GlobalMatchAll = MatchAll
+    g_start_date = start_date
+    g_end_date   = end_date
     Handle        = int(sys.argv[ 1 ] )
 
 

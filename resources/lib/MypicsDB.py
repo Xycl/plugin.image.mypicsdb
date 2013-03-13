@@ -41,7 +41,7 @@ sys.path.append( os.path.join( BASE_RESOURCE_PATH, "platform_libraries", env ) )
 
 DB_VERSION19 = '1.9.12'
 DB_VERSION201 = '2.0.1'
-DB_VERSION = '2.1.0'
+DB_VERSION = '2.1.1'
 
 global pictureDB
 pictureDB = join(DB_PATH,"MyPictures.db")
@@ -82,11 +82,12 @@ def version_table():
         make_new_base(pictureDB, True)
         #VersionTable()
         
-    # version of DB is less then currenct version
+    # version of DB is less then current version
     elif common.check_version(strVersion, DB_VERSION)>0:
         # update tags for new introduced yyyy-mm  tag
         common.log("MPDB.version_table", "MyPicsDB database will be updated to version %s. New YYYY-MM tags will be inserted."%str(DB_VERSION), xbmc.LOGNOTICE )
-        update_yyyy_mm_tags()         
+        update_yyyy_mm_tags()
+        version_211_tables(pictureDB)         
         cn.execute("update DBVersion set strVersion = '"+DB_VERSION+"'")
         conn.commit()
     else:
@@ -114,13 +115,25 @@ def update_yyyy_mm_tags():
     cn.close()
     return True
 
+def version_211_tables(DBpath):
+    conn = sqlite.connect(DBpath)
+    cn=conn.cursor()    
+    try:
+        cn.execute("drop table FilterWizard ")
+        cn.execute("drop table FilterWizardItems ")
+    except:
+        pass
+       
+    cn.close()
+    version_201_tables(DBpath)
+        
 # new tables in version 2.0.1
 def version_201_tables(DBpath):
     #table 'FilterWizard'
     conn = sqlite.connect(DBpath)
     cn=conn.cursor()    
     try:
-        cn.execute("""create table FilterWizard (pkFilter integer primary key, strFilterName text unique, bMatchAll integer)""")
+        cn.execute("""create table FilterWizard (pkFilter integer primary key, strFilterName text unique, bMatchAll integer, StartDate date, EndDate date)""")
     except Exception,msg:
         if str(msg).find("already exists") > -1:
             pass
@@ -438,12 +451,11 @@ def file_insert(path,filename,dictionnary,update=False, sha=0):
             imagedatetime = dictionnary["EXIF DateTimeDigitized"]
             #print "3 = " + str(imagedatetime)
          
-        """   
         try:
             dictionnary['YYYY-MM'] = imagedatetime[:7]
         except:
             pass
-        """
+        
         cn.execute( """INSERT INTO files(idFolder, strPath, strFilename, ftype, DateAdded,  Thumb,  ImageRating, ImageDateTime, Sha) values (?, ?, ?, ?, ?, ?, ?, ?, ?)""", 
                       ( dictionnary["idFolder"],  dictionnary["strPath"], dictionnary["strFilename"], dictionnary["ftype"], dictionnary["DateAdded"], dictionnary["Thumb"], dictionnary["ImageRating"], imagedatetime, sha ) )
         conn.commit()
@@ -675,15 +687,15 @@ def get_rating(path,filename):
 # Filter Wizard functions
 #####################################
 
-def search_filter_tags(set_tags, unset_tags, match_all):
-    if len(set_tags) == 0 and len(unset_tags) == 0:
+def search_filter_tags(set_tags, unset_tags, match_all, start_date='', end_date=''):
+    if len(set_tags) == 0 and len(unset_tags) == 0 and start_date == '' and end_date == '':
         return
     
     set_tags_array = set_tags.split("|||")
 
     unset_tags_array = unset_tags.split("|||")    
 
-    outer_select = "SELECT distinct strPath,strFilename FROM FILES WHERE 1=1 "
+    outer_select = "SELECT distinct strPath,strFilename, ImageDateTime FROM FILES WHERE 1=1 "
 
     # These selects are joined with IN clause
     inner_select = "SELECT tif.idfile FROM TagContents tc, TagsInFiles tif , TagTypes tt WHERE tif.idTagContent = tc.idTagContent AND tc.idTagType = tt.idTagType "
@@ -752,8 +764,27 @@ def search_filter_tags(set_tags, unset_tags, match_all):
             outer_select += " AND idFile not in ( " + inner_select + condition + " ) "
 
     outer_select += " order by imagedatetime "
+    
+    # test if start or end_date is set
+    if start_date != '' or end_date != '':
+        dates_set = 0
+        outer_select = 'Select strPath,strFilename from (' + outer_select + ' ) '
+        
+        if start_date != '':
+            dates_set += 1
+            outer_select += " where ImageDateTime >= date('%s') "%(start_date,)
+        
+        if end_date != '':
+            dates_set += 1
+            if dates_set == 1:
+                outer_select += " where ImageDateTime <= date('%s') "%(end_date,)
+            else:
+                outer_select += " and ImageDateTime <= date('%s') "%(end_date,)
+                
+    else:
+        outer_select = 'Select strPath,strFilename from (' + outer_select + ' ) '
+            
     common.log('search_filter_tags', outer_select, xbmc.LOGDEBUG)
-
     return [row for row in Request(outer_select)]
 
 
@@ -768,31 +799,33 @@ def delete_filterwizard_filter(filter_name):
     RequestWithBinds( "delete from FilterWizard where strFilterName = ? ",(filter_name, ))
 
 
-def save_filterwizard_filter(filter_name, items, bmatch_all):
+def save_filterwizard_filter(filter_name, items, bmatch_all, start_date ='', end_date = ''):
 
     match_all = (1 if bmatch_all == True else 0)
     if [row for row in RequestWithBinds( "select count(*) from FilterWizard where strFilterName = ? ",(filter_name, ))] [0][0] == 0:
-        RequestWithBinds( "insert into FilterWizard(strFilterName, bMatchAll) values (?, ?) ",(filter_name, match_all ))
+        RequestWithBinds( "insert into FilterWizard(strFilterName, bMatchAll, StartDate, EndDate) values (?, ?, ?, ?) ",(filter_name, match_all, start_date, end_date ))
     else:
-        RequestWithBinds( "update FilterWizard set bMatchAll = ? where strFiltername = ? ",(match_all, filter_name ))
-        
+        RequestWithBinds( "update FilterWizard set bMatchAll = ?, StartDate = ?, EndDate = ? where strFiltername = ? ",(match_all, start_date, end_date, filter_name ))
+    
     filter_key = [row for row in RequestWithBinds( "select pkFilter from FilterWizard where strFilterName = ? ",(filter_name, ))] [0][0]
     #common.log("MPDB.save_filterwizard_filter", "filter_key = %d"%filter_key, xbmc.LOGNOTICE )
     RequestWithBinds("delete from FilterWizardItems where fkfilter = ?", (filter_key, ))
     for item, state in items.iteritems():
         RequestWithBinds("insert into FilterWizardItems(fkFilter, strItem, nState) values(?, ?, ?)", (filter_key, item, state))
-
-
+       
+        
 def load_filterwizard_filter(filter_name):
     items = {}
     match_all = 0
+    start_date = ''
+    end_date = ''
     #
     if [row for row in RequestWithBinds( "select count(*) from FilterWizard where strFilterName = ? ",(filter_name, ))] [0][0] > 0:
-        filter_key, match_all = [row for row in RequestWithBinds( "select pkFilter, bMatchAll from FilterWizard where strFilterName = ? ",(filter_name, ))] [0]
+        filter_key, match_all, start_date, end_date = [row for row in RequestWithBinds( "select pkFilter, bMatchAll, StartDate, EndDate from FilterWizard where strFilterName = ? ",(filter_name, ))] [0]
         for state, item in RequestWithBinds( "select nState, strItem from FilterWizardItems where fkFilter = ?", (filter_key,)):
             items[item] = state
-    
-    return items, (True if match_all == 1 else False)
+
+    return items, (True if match_all == 1 else False), start_date, end_date
     
 
 ###################################
@@ -1168,8 +1201,7 @@ def default_tagtypes_translation():
     Request("update TagTypes set TagTranslation = '' where TagTranslation =  'Photoshop:Instructions'")
     Request("update TagTypes set TagTranslation = '' where TagTranslation =  'Special instructions'")    
     Request("update TagTypes set TagTranslation = '' where TagTranslation =  'Credit'")    
-    Request("update TagTypes set TagTranslation = '' where TagTranslation =  'Sub-location'")    
-
+    Request("update TagTypes set TagTranslation = '' where TagTranslation =  'Sub-location'")
 
 def list_TagTypes():
 
