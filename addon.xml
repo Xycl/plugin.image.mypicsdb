@@ -41,5 +41,6 @@
         <description lang="sk">Spravujte svoje obrázky ako zvyknete hudbu a videá&#10;Potom budete môcť usporiadať svoje obrázky podľa dňa/mesiaca/roku, kľúčového slova a oveľa viac</description>
         <description lang="sv">Hantera dina bilder som du gör med musik och film[CR]Du kommer att kunna sortera dina bilder efter dag/månad/år, nyckelord och mycket mer</description>
         <platform>all</platform>
+        <language />
 </extension>
 </addon>
