@@ -687,7 +687,7 @@ def get_rating(path,filename):
 # Filter Wizard functions
 #####################################
 
-def search_filter_tags(set_tags, unset_tags, match_all, start_date='', end_date=''):
+def filterwizard_result(set_tags, unset_tags, match_all, start_date='', end_date=''):
     if len(set_tags) == 0 and len(unset_tags) == 0 and start_date == '' and end_date == '':
         return
     
@@ -784,22 +784,22 @@ def search_filter_tags(set_tags, unset_tags, match_all, start_date='', end_date=
     else:
         outer_select = 'Select strPath,strFilename from (' + outer_select + ' ) '
             
-    common.log('search_filter_tags', outer_select, xbmc.LOGDEBUG)
+    common.log('filterwizard_result', outer_select, xbmc.LOGDEBUG)
     return [row for row in Request(outer_select)]
 
 
-def list_filterwizard_filters():
+def filterwizard_list_filters():
     filterarray = []
     for row in Request( """select strFilterName from FilterWizard order by 1"""):
         filterarray.append(row[0])
     return filterarray
 
 
-def delete_filterwizard_filter(filter_name):
+def filterwizard_delete_filter(filter_name):
     RequestWithBinds( "delete from FilterWizard where strFilterName = ? ",(filter_name, ))
 
 
-def save_filterwizard_filter(filter_name, items, bmatch_all, start_date ='', end_date = ''):
+def filterwizard_save_filter(filter_name, items, bmatch_all, start_date ='', end_date = ''):
 
     match_all = (1 if bmatch_all == True else 0)
     if [row for row in RequestWithBinds( "select count(*) from FilterWizard where strFilterName = ? ",(filter_name, ))] [0][0] == 0:
@@ -808,13 +808,14 @@ def save_filterwizard_filter(filter_name, items, bmatch_all, start_date ='', end
         RequestWithBinds( "update FilterWizard set bMatchAll = ?, StartDate = ?, EndDate = ? where strFiltername = ? ",(match_all, start_date, end_date, filter_name ))
     
     filter_key = [row for row in RequestWithBinds( "select pkFilter from FilterWizard where strFilterName = ? ",(filter_name, ))] [0][0]
-    #common.log("MPDB.save_filterwizard_filter", "filter_key = %d"%filter_key, xbmc.LOGNOTICE )
+    #common.log("MPDB.filterwizard_save_filter", "filter_key = %d"%filter_key, xbmc.LOGNOTICE )
     RequestWithBinds("delete from FilterWizardItems where fkfilter = ?", (filter_key, ))
     for item, state in items.iteritems():
-        RequestWithBinds("insert into FilterWizardItems(fkFilter, strItem, nState) values(?, ?, ?)", (filter_key, item, state))
+        if state != 0:
+            RequestWithBinds("insert into FilterWizardItems(fkFilter, strItem, nState) values(?, ?, ?)", (filter_key, item, state))
        
         
-def load_filterwizard_filter(filter_name):
+def filterwizard_load_filter(filter_name):
     items = {}
     match_all = 0
     start_date = ''
@@ -831,43 +832,43 @@ def load_filterwizard_filter(filter_name):
 ###################################
 # Collection functions
 #####################################
-def list_collections():
+def collections_list():
     """List all available collections"""
     return [row for row in Request( """SELECT CollectionName FROM Collections""")]
 
 
-def new_collection(Colname):
+def collection_new(Colname):
     """Add a new collection"""       
     if Colname :
         RequestWithBinds( "INSERT INTO Collections(CollectionName) VALUES (?) ",(Colname, ))
     else:
-        common.log( "new_collection", "User did not specify a name for the collection.")
+        common.log( "collection_new", "User did not specify a name for the collection.")
         
         
-def delete_collection(Colname):      
+def collection_delete(Colname):      
     """delete a collection"""
-    common.log( "delete_collection", "Name = %s"%Colname)
+    common.log( "collection_delete", "Name = %s"%Colname)
     if Colname:
         RequestWithBinds( """DELETE FROM FilesInCollections WHERE idCol=(SELECT idCol FROM Collections WHERE CollectionName=?)""", (Colname,))
         RequestWithBinds( """DELETE FROM Collections WHERE CollectionName=? """,(Colname,) )
     else:
-        common.log( "delete_collection",  "User did not specify a name for the collection" )
+        common.log( "collection_delete",  "User did not specify a name for the collection" )
 
 
-def get_collection_pics(Colname):      
+def collection_get_pics(Colname):      
     """List all pics associated to the Collection given as Colname"""
     return [row for row in RequestWithBinds( """SELECT strPath,strFilename FROM Files WHERE idFile IN (SELECT idFile FROM FilesInCollections WHERE idCol IN (SELECT idCol FROM Collections WHERE CollectionName=?)) ORDER BY ImageDateTime ASC""",(Colname,))]
 
 
-def rename_collection(Colname,newname):   
+def collection_rename(Colname,newname):   
     """rename give collection"""
     if Colname:
         RequestWithBinds( """UPDATE Collections SET CollectionName = ? WHERE CollectionName=? """, (newname,Colname) )
     else:
-        common.log( "rename_collection",  "User did not specify a name for the collection")
+        common.log( "collection_rename",  "User did not specify a name for the collection")
 
 
-def add_to_collection(Colname,filepath,filename):    
+def collection_add_pic(Colname,filepath,filename):    
 
     #cette requête ne vérifie pas si :
     #   1- le nom de la collection existe dans la table Collections
@@ -878,28 +879,28 @@ def add_to_collection(Colname,filepath,filename):
     RequestWithBinds( """INSERT INTO FilesInCollections(idCol,idFile) VALUES ( (SELECT idCol FROM Collections WHERE CollectionName=?) , (SELECT idFile FROM files WHERE strPath=? AND strFilename=?) )""",(Colname,filepath,filename) )
 
 
-def delete_fro_collection(Colname,filepath,filename):
-    common.log("delete_fro_collection","%s, %s, %s"%(Colname,filepath,filename))
+def collection_del_pic(Colname,filepath,filename):
+    common.log("collection_del_pic","%s, %s, %s"%(Colname,filepath,filename))
     RequestWithBinds( """DELETE FROM FilesInCollections WHERE idCol=(SELECT idCol FROM Collections WHERE CollectionName=?) AND idFile=(SELECT idFile FROM files WHERE strPath=? AND strFilename=?)""",(Colname,filepath,filename) )
 
 
 ####################
 # Periodes functions
 #####################
-def list_periods():
+def periods_list():
     """List all periodes"""
     return [row for row in Request( """SELECT PeriodeName,DateStart,DateEnd FROM Periodes""")]
 
-def add_period(periodname,datestart,dateend):
+def period_add(periodname,datestart,dateend):
     #datestart et dateend doivent être au format string ex.: "datetime('2009-07-12')" ou "strftime('%Y',now)"
     RequestWithBinds( """INSERT INTO Periodes(PeriodeName,DateStart,DateEnd) VALUES (?,%s,%s)"""%(datestart,dateend), (periodname,) )
     return
 
-def delete_period(periodname):
+def period_delete(periodname):
     RequestWithBinds( """DELETE FROM Periodes WHERE PeriodeName=? """,(periodname,) )
     return
 
-def rename_period(periodname,newname,newdatestart,newdateend):
+def period_rename(periodname,newname,newdatestart,newdateend):
 
     RequestWithBinds( """UPDATE Periodes SET PeriodeName = ?,DateStart = datetime(?) , DateEnd = datetime(?) WHERE PeriodeName=? """,(newname,newdatestart,newdateend,periodname) )
     return
@@ -1040,7 +1041,7 @@ def delete_paths_from_root(path):
     common.log( "delete_paths_from_root",  """DELETE FROM folders WHERE idFolder='%s'"""%idpath)
     Request( """DELETE FROM folders WHERE idFolder='%s'"""%idpath)
 
-    for periodname,datestart,dateend in list_periods():
+    for periodname,datestart,dateend in periods_list():
         if Request( """SELECT count(*) FROM files WHERE datetime(ImageDateTime) BETWEEN '%s' AND '%s'"""%(datestart,dateend) )[0][0]==0:
             Request( """DELETE FROM Periodes WHERE PeriodeName='%s'"""%periodname )
     cleanup_keywords()

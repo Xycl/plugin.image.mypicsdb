@@ -400,6 +400,21 @@ msgctxt "#30161"
 msgid "%s pictures added in"
 msgstr "%s Bilder hinzugefügt in:"
 
+
+msgctxt "#30162"
+msgid "Import album from Picasa xml"
+msgstr "Importiere Album aus einer Picasa XML-Datei"
+
+msgctxt "#30163"
+msgid "Unable to read Picasa xml"
+msgstr "Lesen der Picasa XML-Datei fehlgeschlagen"
+
+msgctxt "#30164"
+msgid "Specify date range"
+msgstr "Such-Periode eingeben"
+
+#empty strings from id 30165 to 30179
+
 msgctxt "#30180"
 msgid "Choose the destination for the export"
 msgstr "Ziel für den Export wählen"
