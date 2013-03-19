@@ -693,10 +693,12 @@ class Main:
             importfile = dialog.browse(1, common.getstring(30162) , "files" ,".xml", True, False, "")
             if not importfile:
                 return
+            
+            not_imported= ""
             try:
-                file = open(importfile,'r')
-                importfile = file.read()
-                file.close()
+                fh = open(importfile,'r')
+                importfile = fh.read()
+                fh.close()
 
                 album = parseString(importfile)
 
@@ -715,17 +717,18 @@ class Main:
 
                     file_names =  album.getElementsByTagName("itemOriginalPath")   # Xycl get pictures with complete path name
                     for itemName in file_names: # iterate over the nodes
-                        file = itemName.firstChild.data.encode("utf-8").strip() # get data ("name of picture")
-                        filename = basename(file )
-                        pathname = dirname(file )                        
+                        filepath = itemName.firstChild.data.encode("utf-8").strip() # get data ("name of picture")
+                        filename = basename(filepath )
+                        pathname = dirname(filepath )                        
                         try:
                             # if no row returns then the [0][0] at the end of select below will raise an exception.
                             # easy test of existence of file in DB
-                            id_file = MPDB.RequestWithBinds("select idFile from files where strFilename = ? and strPath = ? ", 
+                            _ = MPDB.RequestWithBinds("select idFile from files where strFilename = ? and strPath = ? ", 
                                                             (filename, pathname ) )[0][0]
                             #dialog.ok("", "%s inserted"%file)
                             MPDB.collection_add_pic(collection_name, pathname,filename)
                         except:
+                            not_imported += common.getstring(30166)%(filename, pathname)
                             pass
                             #dialog.ok("", 'File "%s" doesn\'t exist in DB'%filename)
                     
@@ -733,6 +736,9 @@ class Main:
                 dialog.ok(common.getstring(30000),common.getstring(30163))
                 return
 
+            if not_imported != "":
+                not_imported = common.getstring(30165) + not_imported
+                viewer.Viewer(header = common.getstring(30167), text = not_imported)
             refresh=True
         #/herve502
         else:

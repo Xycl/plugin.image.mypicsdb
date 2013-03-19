@@ -439,7 +439,17 @@ msgctxt "#30164"
 msgid "Specify date range"
 msgstr ""
 
-#empty strings from id 30165 to 30179
+msgctxt "#30165"
+msgid "Following files are missing in MyPicsDB and could not be imported:[CR][CR]"
+msgstr ""
+
+msgctxt "#30166"
+msgid "Picture \"%s\" in \"%s\"[CR]"
+msgstr ""
+
+msgctxt "#30167"
+msgid "Import errors"
+msgstr ""
 
 msgctxt "#30180"
 msgid "Choose the destination for the export"
