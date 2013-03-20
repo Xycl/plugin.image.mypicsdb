@@ -91,7 +91,7 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
             self.getControl( TAGS_LIST ).setEnabled(False)
             self.getControl( TAGS_CONTENT_LIST ).setEnabled(False)
 
-            MPDB.save_filterwizard_filter( self.last_used_filter_name, self.active_tags, self.use_and, self.start_date, self.end_date)
+            MPDB.filterwizard_save_filter( self.last_used_filter_name, self.active_tags, self.use_and, self.start_date, self.end_date)
 
             self.close()
 
@@ -193,7 +193,7 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
         self.getControl( SAVE_FILTER ).setLabel( common.getstring(30617) )
         self.getControl( CLEAR_FILTER ).setLabel( common.getstring(30618) )
         self.getControl( DELETE_FILTER ).setLabel( common.getstring(30619) )
-        self.getControl( BUTTON_DATE ).setLabel( common.getstring(30117) )
+        self.getControl( BUTTON_DATE ).setLabel( common.getstring(30164) )
         if filtersettings != '':
             self.getControl( FILTER_NAME ).setLabel( common.getstring(30652) +' '+filtersettings)
         else:
@@ -215,10 +215,13 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
         
         # load last filter settings
         if filtersettings != "":
-            self.active_tags, self.use_and, self.start_date, self.end_date = MPDB.load_filterwizard_filter(filtersettings)
+            self.active_tags, self.use_and, self.start_date, self.end_date = MPDB.filterwizard_load_filter(filtersettings)
             if self.use_and:
                 self.getControl( BUTTON_MATCHALL ).setSelected(1)
-            self.getControl( BUTTON_DATE ).setLabel( self.start_date + ' ... ' + self.end_date )
+            if self.start_date != "" or self.end_date != "":
+                self.getControl( BUTTON_DATE ).setLabel( self.start_date + ' ... ' + self.end_date )
+            else:
+                self.getControl( BUTTON_DATE ).setLabel( common.getstring(30164) )
             self.getControl( BUTTON_DATE ).setVisible(False)
             self.getControl( BUTTON_DATE ).setVisible(True)                   
         
@@ -260,7 +263,7 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
 
         
     def show_filter_settings(self):
-        filters = MPDB.list_filterwizard_filters()
+        filters = MPDB.filterwizard_list_filters()
         dialog = xbmcgui.Dialog()
         ret = dialog.select(common.getstring(30608), filters)
         if ret > -1:
@@ -301,7 +304,7 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
         self.getControl( CHECKED_LABEL ).setVisible(False)
         self.getControl( CHECKED_LABEL ).setVisible(True)
         
-        self.getControl( BUTTON_DATE ).setLabel( common.getstring(30117) )
+        self.getControl( BUTTON_DATE ).setLabel( common.getstring(30164) )
         self.getControl( BUTTON_DATE ).setVisible(False)
         self.getControl( BUTTON_DATE ).setVisible(True)   
 
@@ -310,33 +313,41 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
         self.getControl( FILTER_NAME ).setVisible(True)   
 
     def delete_filter_settings(self):
-        filters = MPDB.list_filterwizard_filters()
+        filters = MPDB.filterwizard_list_filters()
         # don't delete the last used filter
         filters.remove(self.last_used_filter_name)
         dialog = xbmcgui.Dialog()
         ret = dialog.select(common.getstring(30608), filters)
         if ret > -1:
-            MPDB.delete_filterwizard_filter(filters[ret])
+            MPDB.filterwizard_delete_filter(filters[ret])
 
 
     def save_filter_settings(self):
         # Display a list of already saved filters to give the possibility to override a filter
         filters = []
         filters.append( common.getstring(30653) )
-        filters = filters + MPDB.list_filterwizard_filters()
+        filters = filters + MPDB.filterwizard_list_filters()
         filters.remove(self.last_used_filter_name)
         dialog = xbmcgui.Dialog()
         ret = dialog.select(common.getstring(30608), filters)
         if ret > 0:
-            MPDB.save_filterwizard_filter(filters[ret], self.active_tags, self.use_and, self.start_date, self.end_date)
+            MPDB.filterwizard_save_filter(filters[ret], self.active_tags, self.use_and, self.start_date, self.end_date)
         if ret == 0:
             kb = xbmc.Keyboard()
             kb.setHeading(common.getstring(30609))
             kb.doModal()
+            filtersettings = ""
             if (kb.isConfirmed()):
-                MPDB.save_filterwizard_filter(kb.getText(), self.active_tags, self.use_and, self.start_date, self.end_date)
+                filtersettings = kb.getText()
+                MPDB.filterwizard_save_filter(filtersettings, self.active_tags, self.use_and, self.start_date, self.end_date)
 
-
+                if filtersettings != '':
+                    self.getControl( FILTER_NAME ).setLabel( common.getstring(30652) +' '+filtersettings)
+                else:
+                    self.getControl( FILTER_NAME ).setLabel( '' )
+        self.getControl( FILTER_NAME ).setVisible(False)
+        self.getControl( FILTER_NAME ).setVisible(True)   
+        
     def set_filter_date(self):
     
         dialog = xbmcgui.Dialog()
@@ -365,6 +376,6 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
         if self.start_date != '' or self.end_date != '':
             self.getControl( BUTTON_DATE ).setLabel( self.start_date + ' ... ' + self.end_date )
         else:
-            self.getControl( BUTTON_DATE ).setLabel( common.getstring(30117) )
+            self.getControl( BUTTON_DATE ).setLabel( common.getstring(30164) )
         self.getControl( BUTTON_DATE ).setVisible(False)
         self.getControl( BUTTON_DATE ).setVisible(True)        

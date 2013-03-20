@@ -632,13 +632,13 @@ class Main:
                                 else:
                                     titreperiode = common.getstring(30109)%(datestart,dateend)
                                 #add the new period inside the database
-                                MPDB.add_period(common.smart_unicode(titreperiode),common.smart_unicode("datetime('%s')"%datestart),common.smart_unicode("datetime('%s')"%dateend) )
+                                MPDB.period_add(common.smart_unicode(titreperiode),common.smart_unicode("datetime('%s')"%datestart),common.smart_unicode("datetime('%s')"%dateend) )
                 update=True
             else:
                 common.log("show_period", "No pictures with an EXIF date stored in DB")
 
         #search for inbase periods and show periods
-        for periodname,dbdatestart,dbdateend in MPDB.list_periods():
+        for periodname,dbdatestart,dbdateend in MPDB.periods_list():
             periodname = common.smart_unicode(periodname)
             dbdatestart = common.smart_unicode(dbdatestart)
             dbdateend = common.smart_unicode(dbdateend)
@@ -664,6 +664,9 @@ class Main:
 
 
     def show_collection(self):
+        #herve502
+        from xml.dom.minidom import parseString
+        #/herve502
         common.log("show_collection", "started")
         if self.args.method=="setcollection":#ajout d'une collection
             kb = xbmc.Keyboard("",common.getstring(30155) , False)
@@ -675,8 +678,105 @@ class Main:
                 return
             #create the collection in the database
             common.log("show_collection", "setcollection = %s"%namecollection)
-            MPDB.new_collection(namecollection)
+            MPDB.collection_new(namecollection)
             refresh=True
+            
+        elif self.args.method=="importcollection_wizard": #import a collection from Filter Wizard Settings
+            filters = MPDB.filterwizard_list_filters()
+            dialog = xbmcgui.Dialog()
+            ret = dialog.select(common.getstring(30608), filters)
+            if ret > -1:
+                # ask user for name of new collection
+                collection_name = filters[ret]
+                kb = xbmc.Keyboard(collection_name,common.getstring(30155) , False)
+                kb.doModal()
+                if (kb.isConfirmed()):
+                    collection_name = kb.getText()
+
+                    # load the filter    
+                    active_tags, use_and, start_date, end_date = MPDB.filterwizard_load_filter(filters[ret])
+
+                    # divide active_tags into set and unset (green or red checkbox)
+                    set_tags = ""
+                    unset_tags = ""
+
+                    for key, value in active_tags.iteritems():
+                        if value == 1:
+                            if len(set_tags)==0:
+                                set_tags = key
+                            else:
+                                set_tags += "|||" + key                        
+
+                        if value == -1:
+                            if len(unset_tags)==0:
+                                unset_tags = key
+                            else:
+                                unset_tags += "|||" + key    
+
+                    rows = MPDB.filterwizard_result(set_tags, unset_tags, use_and, start_date, end_date)
+
+                    if rows != None:
+                        MPDB.collection_new(collection_name)
+                        for pathname, filename in rows:
+                            MPDB.collection_add_pic(collection_name, pathname,filename)
+                    else:
+                        common.log("show_collection", str(filters[ret]) + " is empty and therefore not created.", xbmc.LOGNOTICE)
+            refresh = True
+            
+        #herve502
+        elif self.args.method=="importcollection_picasa": #import xml from picasa
+            dialog = xbmcgui.Dialog()
+            importfile = dialog.browse(1, common.getstring(30162) , "files" ,".xml", True, False, "")
+            if not importfile:
+                return
+            
+            not_imported= ""
+            try:
+                fh = open(importfile,'r')
+                importfile = fh.read()
+                fh.close()
+
+                album = parseString(importfile)
+
+                collection_name=album.getElementsByTagName("albumName")[0].firstChild.data.encode("utf-8").strip()
+                
+                # ask user if title as new collection name is correct
+                kb = xbmc.Keyboard(collection_name,common.getstring(30155) , False)
+                kb.doModal()
+                if (kb.isConfirmed()):
+                    collection_name = kb.getText()
+
+                    #create the collection in the database
+                    common.log("show_collection", "setcollection = %s"%collection_name)
+
+                    MPDB.collection_new(collection_name)
+
+                    file_names =  album.getElementsByTagName("itemOriginalPath")   # Xycl get pictures with complete path name
+                    for itemName in file_names: # iterate over the nodes
+                        filepath = itemName.firstChild.data.encode("utf-8").strip() # get data ("name of picture")
+                        filename = basename(filepath )
+                        pathname = dirname(filepath )                        
+                        try:
+                            # if no row returns then the [0][0] at the end of select below will raise an exception.
+                            # easy test of existence of file in DB
+                            _ = MPDB.RequestWithBinds("select idFile from files where strFilename = ? and strPath = ? ", 
+                                                            (filename, pathname ) )[0][0]
+                            #dialog.ok("", "%s inserted"%file)
+                            MPDB.collection_add_pic(collection_name, pathname,filename)
+                        except:
+                            not_imported += common.getstring(30166)%(filename, pathname)
+                            pass
+                            #dialog.ok("", 'File "%s" doesn\'t exist in DB'%filename)
+                    
+            except:
+                dialog.ok(common.getstring(30000),common.getstring(30163))
+                return
+
+            if not_imported != "":
+                not_imported = common.getstring(30165) + not_imported
+                viewer.Viewer(header = common.getstring(30167), text = not_imported)
+            refresh=True
+        #/herve502
         else:
             refresh=False
             
@@ -686,8 +786,21 @@ class Main:
                     iconimage = join(PIC_PATH,"newcollection.png"),#icone
                     fanart    = join(PIC_PATH,"fanart-collection.png"),
                     contextmenu   = None)#menucontextuel
-
-        for collection in MPDB.list_collections():
+        self.add_directory(name      = common.getstring(30168),
+                    params    = [("method","importcollection_wizard"),("collect",""),("viewmode","view"),],#paramètres
+                    action    = "showcollection",#action
+                    iconimage = join(PIC_PATH,"newcollection.png"),#icone
+                    fanart    = join(PIC_PATH,"fanart-collection.png"),
+                    contextmenu   = None)#menucontextuel
+        #herve502
+        self.add_directory(name      = common.getstring(30162),
+                    params    = [("method","importcollection_picasa"),("collect",""),("viewmode","view"),],#paramètres
+                    action    = "showcollection",#action
+                    iconimage = join(PIC_PATH,"newcollection.png"),#icone
+                    fanart    = join(PIC_PATH,"fanart-collection.png"),
+                    contextmenu   = None)#menucontextuel
+        #/herve520
+        for collection in MPDB.collections_list():
             self.add_directory(name      = collection[0],
                         params    = [("method","collection"),("collect",collection[0]),("page","1"),("viewmode","view")],#paramètres
                         action    = "showpics",#action
@@ -922,11 +1035,11 @@ class Main:
 
     def remove_period(self):
 
-        MPDB.delete_period(self.args.periodname)
+        MPDB.period_delete(self.args.periodname)
         xbmc.executebuiltin( "Container.Update(\"%s?action='showperiod'&viewmode='view'&period=''\" , replace)"%sys.argv[0]  )
 
 
-    def rename_period(self):
+    def period_rename(self):
         #TODO : test if 'datestart' is before 'dateend'
         periodname = self.args.periodname
         datestart,dateend = MPDB.RequestWithBinds( """SELECT DateStart,DateEnd FROM Periodes WHERE PeriodeName=? """, (periodname,) )[0]
@@ -945,12 +1058,12 @@ class Main:
         else:
             titreperiode = periodname
 
-        MPDB.rename_period(self.args.periodname,titreperiode,datestart,dateend)
+        MPDB.period_rename(self.args.periodname,titreperiode,datestart,dateend)
         xbmc.executebuiltin( "Container.Update(\"%s?action='showperiod'&viewmode='view'&period=''\" , replace)"%sys.argv[0]  )
 
 
-    def add_to_collection(self):
-        listcollection = ["[[%s]]"%common.getstring(30157)]+[col[0] for col in MPDB.list_collections()]
+    def collection_add_pic(self):
+        listcollection = ["[[%s]]"%common.getstring(30157)]+[col[0] for col in MPDB.collections_list()]
 
         dialog = xbmcgui.Dialog()
         rets = dialog.select(common.getstring(30156),listcollection)
@@ -965,7 +1078,7 @@ class Main:
                 #il faut traiter l'annulation
                 return
             #2 créé la collection en base
-            MPDB.new_collection(namecollection)
+            MPDB.collection_new(namecollection)
         else: #dans tous les autres cas, une collection existente choisie
             namecollection = listcollection[rets]
         #3 associe en base l'id du fichier avec l'id de la collection
@@ -973,13 +1086,13 @@ class Main:
         path     = common.smart_unicode(self.args.path)
         filename = common.smart_unicode(self.args.filename)
 
-        MPDB.add_to_collection( namecollection, path, filename )
+        MPDB.collection_add_pic( namecollection, path, filename )
         common.show_notification(common.getstring(30000), common.getstring(30154)+ ' ' + namecollection,3000,join(home,"icon.png"))
         #xbmc.executebuiltin( "Notification(%s,%s %s,%s,%s)"%(common.getstring(30000).encode('utf-8'),common.getstring(30154).encode('utf-8'),namecollection.encode('utf-8'),3000,join(home,"icon.png").encode('utf-8')))
 
 
-    def add_folder_to_collection(self):
-        listcollection = ["[[%s]]"%common.getstring(30157)]+[col[0] for col in MPDB.list_collections()]
+    def collection_add_folder(self):
+        listcollection = ["[[%s]]"%common.getstring(30157)]+[col[0] for col in MPDB.collections_list()]
 
         dialog = xbmcgui.Dialog()
         rets = dialog.select(common.getstring(30156),listcollection)
@@ -993,7 +1106,7 @@ class Main:
             else:
                 # cancel
                 return
-            MPDB.new_collection(namecollection)
+            MPDB.collection_new(namecollection)
         else: # existing collection
             namecollection = listcollection[rets]
 
@@ -1003,29 +1116,29 @@ class Main:
         for path,filename in filelist: #on les ajoute une par une
             path           = common.smart_unicode(path)
             filename       = common.smart_unicode(filename)
-            MPDB.add_to_collection( namecollection,path,filename )
+            MPDB.collection_add_pic( namecollection,path,filename )
         common.show_notification(common.getstring(30000), common.getstring(30161)%len(filelist)+' '+namecollection,3000,join(home,"icon.png"))
         #xbmc.executebuiltin( "Notification(%s,%s %s,%s,%s)"%(common.getstring(30000).encode("utf8"), common.getstring(30161).encode("utf8")%len(filelist),namecollection.encode("utf8"), 3000,join(home,"icon.png").encode("utf8")) )
 
 
-    def remove_collection(self):
-        MPDB.delete_collection(self.args.collect)
+    def collection_delete(self):
+        MPDB.collection_delete(self.args.collect)
         xbmc.executebuiltin( "Container.Update(\"%s?action='showcollection'&viewmode='view'&collect=''&method='show'\" , replace)"%sys.argv[0] , )
 
 
-    def rename_collection(self):
+    def collection_rename(self):
         kb = xbmc.Keyboard(self.args.collect, common.getstring(30153), False)
         kb.doModal()
         if (kb.isConfirmed()):
             newname = kb.getText()
         else:
             newname = self.args.collect
-        MPDB.rename_collection(self.args.collect,newname)
+        MPDB.collection_rename(self.args.collect,newname)
         xbmc.executebuiltin( "Container.Update(\"%s?action='showcollection'&viewmode='view'&collect=''&method='show'\" , replace)"%sys.argv[0] , )
 
 
-    def del_pics_from_collection(self):
-        MPDB.delete_fro_collection(self.args.collect,self.args.path,self.args.filename)
+    def collection_del_pic(self):
+        MPDB.collection_del_pic(self.args.collect,self.args.path,self.args.filename)
         xbmc.executebuiltin( "Container.Update(\"%s?action='showpics'&viewmode='view'&page='1'&collect='%s'&method='collection'\" , replace)"%(sys.argv[0],common.quote_param(self.args.collect)) , )
 
 
@@ -1202,7 +1315,7 @@ class Main:
 
         # we are showing pictures for a TAG selection
         elif self.args.method == "wizard":
-            filelist = MPDB.search_filter_tags(self.args.kw.decode("utf8"), self.args.nkw.decode("utf8"), self.args.matchall, self.args.start, self.args.end)
+            filelist = MPDB.filterwizard_result(self.args.kw.decode("utf8"), self.args.nkw.decode("utf8"), self.args.matchall, self.args.start, self.args.end)
 
         # we are showing pictures for a TAG selection
         elif self.args.method == "tag":
@@ -1226,7 +1339,7 @@ class Main:
 
         elif self.args.method == "collection":
             picfanart = join(PIC_PATH,"fanart-collection.png")
-            filelist = MPDB.get_collection_pics(self.args.collect)
+            filelist = MPDB.collection_get_pics(self.args.collect)
 
         elif self.args.method == "search":
             picfanart = join(PIC_PATH,"fanart-collection.png")
@@ -1441,6 +1554,7 @@ class Main:
         xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_LABEL )
         
 
+
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 
@@ -1522,21 +1636,21 @@ if __name__=="__main__":
     elif m.args.action=='removeperiod':
         m.remove_period()
     elif m.args.action=='renameperiod':
-        m.rename_period()
+        m.period_rename()
     elif m.args.action=='showcollection':
         m.show_collection()
     elif m.args.action=='addtocollection':
-        m.add_to_collection()
+        m.collection_add_pic()
     elif m.args.action=='removecollection':
-        m.remove_collection()
+        m.collection_delete()
     elif m.args.action=='delfromcollection':
-        m.del_pics_from_collection()
+        m.collection_del_pic()
     elif m.args.action=='renamecollection':
-        m.rename_collection()
+        m.collection_rename()
     elif m.args.action=='globalsearch':
         m.global_search()
     elif m.args.action=='addfolder':
-        m.add_folder_to_collection()
+        m.collection_add_folder()
     elif m.args.action=='rootfolders':
         m.show_roots()
     elif m.args.action=='locate':

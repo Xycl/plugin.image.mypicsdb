@@ -13,10 +13,14 @@ b) Rescan the paths which contain these added exclude paths to remove the pictur
 
 2) General problems with MyPicsDB
 ==================================================================================
-If you have unexplainable problems like pictures don't get included into database and you're a long time user of MyPicsDB 
-then it will be a good decision to delete the database and start with a new one.
-To do this select "Pictures->Add-ons", press "C" and select "Add-on settings". Activate "Initialze the database at next startup" on tab "General" and press "OK".
-Then start MyPicsDB. All tables (except table rootpaths which includes your entered picture paths) are dropped and recreated. 
+If you have unexplainable problems like pictures don't get included into database and you're a long time user of MyPicsDB then it will be a good decision to delete the database and start with a new one.
+
+To do this select "Pictures->Add-ons", press "C" and select "Add-on settings". 
+Activate "Initialze the database at next startup" on tab "General" and press "OK".
+
+Then start MyPicsDB. 
+All tables (except table rootpaths which includes your entered picture paths) are dropped and recreated. 
+
 This means that the already entered paths are still available and that you can start a rescan with "Paths of picture folders"->"Scan all paths". 
 Because all pictures were deleted from database it doesn't matter what you select in the following dialog box.
 

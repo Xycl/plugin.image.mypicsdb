@@ -35,7 +35,7 @@ def getaddon_path():
 
 
 def getaddon_name():
-    __settings__.getAddonInfo('name')
+    return __settings__.getAddonInfo('name')
 
     
 def getaddon_info(parm):
