@@ -662,14 +662,7 @@ class Main:
         xbmcplugin.addSortMethod( int(sys.argv[1]), xbmcplugin.SORT_METHOD_UNSORTED )
         xbmcplugin.endOfDirectory( int(sys.argv[1]),updateListing=update )
 
-    #herve502
-    def getText(nodelist):
-        rc = []
-        for node in nodelist:
-            if node.nodeType == node.TEXT_NODE:
-                rc.append(node.data)
-        return ''.join(rc)
-    #/herve502
+
     def show_collection(self):
         #herve502
         from xml.dom.minidom import parseString
@@ -687,8 +680,51 @@ class Main:
             common.log("show_collection", "setcollection = %s"%namecollection)
             MPDB.collection_new(namecollection)
             refresh=True
+            
+        elif self.args.method=="importcollection_wizard": #import a collection from Filter Wizard Settings
+            filters = MPDB.filterwizard_list_filters()
+            dialog = xbmcgui.Dialog()
+            ret = dialog.select(common.getstring(30608), filters)
+            if ret > -1:
+                # ask user for name of new collection
+                collection_name = filters[ret]
+                kb = xbmc.Keyboard(collection_name,common.getstring(30155) , False)
+                kb.doModal()
+                if (kb.isConfirmed()):
+                    collection_name = kb.getText()
+
+                    # load the filter    
+                    active_tags, use_and, start_date, end_date = MPDB.filterwizard_load_filter(filters[ret])
+
+                    # divide active_tags into set and unset (green or red checkbox)
+                    set_tags = ""
+                    unset_tags = ""
+
+                    for key, value in active_tags.iteritems():
+                        if value == 1:
+                            if len(set_tags)==0:
+                                set_tags = key
+                            else:
+                                set_tags += "|||" + key                        
+
+                        if value == -1:
+                            if len(unset_tags)==0:
+                                unset_tags = key
+                            else:
+                                unset_tags += "|||" + key    
+
+                    rows = MPDB.filterwizard_result(set_tags, unset_tags, use_and, start_date, end_date)
+
+                    if rows != None:
+                        MPDB.collection_new(collection_name)
+                        for pathname, filename in rows:
+                            MPDB.collection_add_pic(collection_name, pathname,filename)
+                    else:
+                        common.log("show_collection", str(filters[ret]) + " is empty and therefore not created.", xbmc.LOGNOTICE)
+            refresh = True
+            
         #herve502
-        elif self.args.method=="importcollection": #import xml from picasa
+        elif self.args.method=="importcollection_picasa": #import xml from picasa
             dialog = xbmcgui.Dialog()
             importfile = dialog.browse(1, common.getstring(30162) , "files" ,".xml", True, False, "")
             if not importfile:
@@ -750,10 +786,15 @@ class Main:
                     iconimage = join(PIC_PATH,"newcollection.png"),#icone
                     fanart    = join(PIC_PATH,"fanart-collection.png"),
                     contextmenu   = None)#menucontextuel
-
+        self.add_directory(name      = common.getstring(30168),
+                    params    = [("method","importcollection_wizard"),("collect",""),("viewmode","view"),],#paramètres
+                    action    = "showcollection",#action
+                    iconimage = join(PIC_PATH,"newcollection.png"),#icone
+                    fanart    = join(PIC_PATH,"fanart-collection.png"),
+                    contextmenu   = None)#menucontextuel
         #herve502
         self.add_directory(name      = common.getstring(30162),
-                    params    = [("method","importcollection"),("collect",""),("viewmode","view"),],#paramètres
+                    params    = [("method","importcollection_picasa"),("collect",""),("viewmode","view"),],#paramètres
                     action    = "showcollection",#action
                     iconimage = join(PIC_PATH,"newcollection.png"),#icone
                     fanart    = join(PIC_PATH,"fanart-collection.png"),
