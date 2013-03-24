@@ -757,16 +757,27 @@ class Main:
                         filename = basename(filepath )
                         pathname = dirname(filepath )                        
                         try:
-                            # if no row returns then the [0][0] at the end of select below will raise an exception.
+                            # Path in DB can end with "/" or "\" or without the path delimiter.
+                            # Therefore it's a little bit tricky to test for exsistence of path.
+
+                            # At first we use what is stored in DB
+
+                            # if no row returns then the [0] at the end of select below will raise an exception.
                             # easy test of existence of file in DB
-                            _ = MPDB.RequestWithBinds("select idFile from files where strFilename = ? and strPath = ? ", 
-                                                            (filename, pathname ) )[0][0]
-                            #dialog.ok("", "%s inserted"%file)
+                            filename, pathname = MPDB.RequestWithBinds("select strFilename, strPath from files where lower(strFilename) = ? and lower(strPath) = ? ", 
+                                                            (filename.lower(), pathname.lower() ) )[0]
                             MPDB.collection_add_pic(collection_name, pathname,filename)
                         except:
-                            not_imported += common.getstring(30166)%(filename, pathname)
-                            pass
-                            #dialog.ok("", 'File "%s" doesn\'t exist in DB'%filename)
+                            try:
+                                # Secondly we use the stored path in DB without last character
+                                filename, pathname = MPDB.RequestWithBinds("select strFilename, strPath from files where lower(strFilename) = ? and substr(lower(strPath), 1, length(strPath)-1) = ? ", 
+                                                                (filename.lower(), pathname.lower() ) )[0]
+                                MPDB.collection_add_pic(collection_name, pathname,filename)
+
+                            except:
+                                not_imported += common.getstring(30166)%(filename, pathname)
+                                pass
+
                     
             except:
                 dialog.ok(common.getstring(30000),common.getstring(30163))
