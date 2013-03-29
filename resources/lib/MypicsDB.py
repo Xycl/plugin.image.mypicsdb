@@ -1203,6 +1203,9 @@ def default_tagtypes_translation():
     Request("update TagTypes set TagTranslation = '' where TagTranslation =  'Special instructions'")    
     Request("update TagTypes set TagTranslation = '' where TagTranslation =  'Credit'")    
     Request("update TagTypes set TagTranslation = '' where TagTranslation =  'Sub-location'")
+    
+    Request("vacuum")
+    Request("analyze")
 
 def list_TagTypes():
 
