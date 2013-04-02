@@ -50,7 +50,7 @@ sys_encoding = sys.getfilesystemencoding()
 
 if sys.modules.has_key("MypicsDB"):
     del sys.modules["MypicsDB"]
-import resources.lib.MypicsDB as MPDB
+import resources.lib.MypicsDB as MypicsDB
 import resources.lib.filterwizard as filterwizard
 import resources.lib.googlemaps as googlemaps
 import resources.lib.translationeditor as translationeditor
@@ -90,10 +90,12 @@ class _Info:
     def __setitem__(self,key,value):
         self.__dict__[key]=value
 
+global MPDB
     
 class Main:
     def __init__(self):
         self.get_args()
+        MPDB = MypicsDB.MyPictureDB()
 
     def get_args(self):
         common.log("Main.get_args", "MyPicturesDB plugin called :", xbmc.LOGNOTICE)
@@ -1578,12 +1580,13 @@ def filterwizard_delegate(ArrayTrue, ArrayFalse, MatchAll = False, start_date = 
 if __name__=="__main__":
 
     m=Main()
-
+    MPDB = MypicsDB.MyPictureDB()
+    
     if not sys.argv[ 2 ]: #pas de paramètres : affichage du menu principal
         #set the debugging for the library
-        MPDB.DEBUGGING = False
+        #MPDB.DEBUGGING = False
         # initialisation de la base :
-        MPDB.pictureDB = pictureDB
+        MypicsDB.pictureDB = pictureDB
         #   - efface les tables et les recréés
         if common.getaddon_setting("initDB") == "true":
             MPDB.make_new_base(pictureDB, True)
