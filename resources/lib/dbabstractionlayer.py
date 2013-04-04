@@ -151,7 +151,7 @@ class MysqlConnection(BaseConnection):
         
         
         self.connection = database.connect(db = db_name, user = db_user, passwd = db_pass, host = db_address) #, port = db_port)
-        #self.connection.set_charset('utf8')
+        self.connection.set_charset('utf8')
         self.connection.set_unicode(True)
         #print self.connection.is_connected()
 
@@ -162,7 +162,9 @@ class MysqlConnection(BaseConnection):
         
     def get_ddl_primary_key(self):
         return " auto_increment not null primary key "
-
+        
+    def get_backend(self):
+        return "mysql"
 
 class SqliteConnection(BaseConnection):
 
@@ -181,6 +183,9 @@ class SqliteConnection(BaseConnection):
 
     def get_ddl_primary_key(self):
         return " primary key not null "
+        
+    def get_backend(self):
+        return "sqlite"
 
 class BaseCursor(object):
 
@@ -195,14 +200,18 @@ class BaseCursor(object):
         self.cursor.close()
 
 
-    def execute(self, sql, bindvariables=None):
-        if bindvariables is not None and isinstance(self, MysqlCursor) == True:
+    def execute(self, sql, bindvariables=[]):
+        if bindvariables and isinstance(self, MysqlCursor) == True:
             sql = sql.replace('?', '%s')
-        if bindvariables is not None :
-            print "bindvariables"
-            print bindvariables
+        if bindvariables :
+            #print "bindvariables"
+            #print bindvariables
+            #print "sql"
+            #print sql
             self.cursor.execute(sql, bindvariables)
         else:
+            print "sql"
+            common.log("", sql )
             self.cursor.execute(sql)
 
     def fetchone(self):

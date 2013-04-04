@@ -180,8 +180,14 @@ class Main:
         common.log("Main.add_picture", "Name = %s"%fullfilepath)
         
         liz=xbmcgui.ListItem(picname,info)
+        common.log("",picpath)
+        common.log("",picname)
         date = MPDB.get_pic_date(picpath,picname)
-        date = date and strftime("%d.%m.%Y",strptime(date,"%Y-%m-%d %H:%M:%S")) or ""
+        try:
+            date = date and strftime("%d.%m.%Y",strptime(date,"%Y-%m-%d %H:%M:%S")) or ""
+        except Exception,msg:
+            common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+            date = None
         suffix=""
         rating=""
         coords=None
