@@ -191,7 +191,7 @@ class VFSScanner:
         # get currently stored files for 'path' from database.
         # needed for 'added', 'updated' or 'deleted' decision
         filesfromdb = self.mpdb.listdir(common.smart_unicode(path))
-        
+
         # scan pictures and insert them into database
         if filenames:
             for pic in filenames:

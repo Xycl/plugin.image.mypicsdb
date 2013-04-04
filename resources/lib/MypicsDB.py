@@ -14,16 +14,12 @@ from traceback import print_exc
 
 import  xbmc, xbmcgui
 import common
+import dbabstractionlayer as dblayer
 
 
 from time import strftime,strptime
 
 #base de donnée SQLITE
-try:
-    from sqlite3 import dbapi2 as sqlite
-except:
-    from pysqlite2 import dbapi2 as sqlite
-    pass
 
 
 home = common.getaddon_path()
@@ -53,24 +49,44 @@ class MyPictureDBException(Exception):
     pass
 
 class MyPictureDB(object):
+    
+    def __init__(self):
+        self.tagTypeDBKeys = {}
+        self.db_backend = common.getaddon_setting('db_backend')
+
+        if self.db_backend.lower() == 'sqlite':
+            self.db_name    = join(DB_PATH,common.getaddon_setting('db_name_sqlite'))
+            self.db_user    = ''
+            self.db_pass    = ''
+            self.db_address = ''
+            self.db_port    = ''
+        else:
+            self.db_name    = common.getaddon_setting('db_name')
+            self.db_user    = common.getaddon_setting('db_user')
+            self.db_pass    = common.getaddon_setting('db_pass')
+            self.db_address = common.getaddon_setting('db_address')
+            self.db_port    = common.getaddon_setting('db_port')     
+            
+        common.log('', "Used DB Backend = " + self.db_backend)
+        common.log('', "Path = " + self.db_name)
+        self.con = dblayer.DBFactory(self.db_backend, self.db_name, self.db_user, self.db_pass, self.db_address, self.db_port)
+        self.cur = self.con.cursor()
+        
     def version_table(self):
-        #table 'Version'
-        conn = sqlite.connect(pictureDB)
-        conn.text_factory = unicode #sqlite.OptimizedUnicode
-        cn=conn.cursor()
         
         # Test Version of DB
         try:
-            strVersion = self.Request("Select strVersion from DBVersion")[0][0]
-        except:
-            strVersion = '1.0.0'
+            strVersion = self.cur.request("Select strVersion from DBVersion")[0][0]
+        except Exception,msg:
+            common.log("Database abstraction layer",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )    
+            strVersion = '1.0.0'            
     
         common.log("MPDB.version_table", "MyPicsDB database version is %s"%str(strVersion) ) 
     
         # version of DB is greater/equal than 1.9.0 but less then 2.0.1
         if common.check_version(strVersion, DB_VERSION201)>0 and common.check_version(strVersion, DB_VERSION19) <=0:
             common.log("MPDB.version_table", "MyPicsDB database with version %s will be updated to version %s"%(str(strVersion),str(DB_VERSION)) ) 
-            self.version_201_tables(pictureDB)
+            self.version_201_tables()
             # update tags for new introduced yyyy-mm  tag
             self.update_yyyy_mm_tags()
             
@@ -79,7 +95,7 @@ class MyPictureDB(object):
             dialog = xbmcgui.Dialog()
             dialog.ok(common.getstring(30000).encode("utf8"), "Database will be updated", "You must re-scan your folders")
             common.log("MPDB.Versiversion_tableonTable", "MyPicsDB database will be updated", xbmc.LOGNOTICE )
-            self.make_new_base(pictureDB, True)
+            self.make_new_base(True)
             #VersionTable()
             
         # version of DB is less then current version
@@ -87,53 +103,50 @@ class MyPictureDB(object):
             # update tags for new introduced yyyy-mm  tag
             common.log("MPDB.version_table", "MyPicsDB database will be updated to version %s. New YYYY-MM tags will be inserted."%str(DB_VERSION), xbmc.LOGNOTICE )
             self.update_yyyy_mm_tags()
-            self.version_211_tables(pictureDB)         
-            cn.execute("update DBVersion set strVersion = '"+DB_VERSION+"'")
-            conn.commit()
+            self.version_211_tables()         
+            self.cur.execute("update DBVersion set strVersion = '"+DB_VERSION+"'")
+            self.con.commit()
         else:
             common.log("MPDB.version_table", "MyPicsDB database contains already current schema" )
             
-        cn.close()
+        #self.cur.close()
     
     # new tag type YYYY-MM in version 2.10
     def update_yyyy_mm_tags(self):   
-        conn = sqlite.connect(pictureDB)
-        cn=conn.cursor()
+
         dictionnary = {}
         common.show_notification(common.getstring(30000), 'DB-Update', 2000)
-        cn.execute("SELECT idFile, strFilename, strPath, ImageDateTime FROM files")
-        rows = [row for row in cn]
+        rows = [row for row in self.cur.request("SELECT idFile, strFilename, strPath, ImageDateTime FROM files")]
+        
         for row in rows:
             dictionnary['YYYY-MM'] = row[3][:7]
             try:
-                self.tags_insert(conn, cn, row[0], row[1], row[2], dictionnary)
+                self.tags_insert( row[0], row[1], row[2], dictionnary)
                 common.log( 'MPDB.update_yyyy_mm_tags()', 'Tag YYYY-MM with value %s inserted for "%s"'%(dictionnary['YYYY-MM'], row[1]) )
             except:
                 common.log( 'MPDB.update_yyyy_mm_tags()', 'Tag YYYY-MM with value %s NOT inserted for "%s"'%(dictionnary['YYYY-MM'], row[1]) )
                 
-        conn.commit()
-        cn.close()
+        self.con.commit()
+        #self.cur.close()
         return True
     
-    def version_211_tables(self, DBpath):
-        conn = sqlite.connect(DBpath)
-        cn=conn.cursor()    
+    def version_211_tables(self):
+  
         try:
-            cn.execute("drop table FilterWizard ")
-            cn.execute("drop table FilterWizardItems ")
+            self.cur.execute("drop table FilterWizard ")
+            self.cur.execute("drop table FilterWizardItems ")
         except:
             pass
            
-        cn.close()
-        self.version_201_tables(DBpath)
+        #self.cur.close()
+        self.version_201_tables()
             
     # new tables in version 2.0.1
-    def version_201_tables(self, DBpath):
+    def version_201_tables(self ):
         #table 'FilterWizard'
-        conn = sqlite.connect(DBpath)
-        cn=conn.cursor()    
+   
         try:
-            cn.execute("""create table FilterWizard (pkFilter integer primary key, strFilterName text unique, bMatchAll integer, StartDate date, EndDate date)""")
+            self.cur.execute("""create table FilterWizard (pkFilter integer primary key, strFilterName VARCHAR(255) unique, bMatchAll integer, StartDate date, EndDate date)""")
         except Exception,msg:
             if str(msg).find("already exists") > -1:
                 pass
@@ -143,7 +156,7 @@ class MyPictureDB(object):
     
         #table 'FilterWizardItems'
         try:
-            cn.execute("""create table FilterWizardItems (idItems integer primary key, fkFilter integer, strItem, nState integer, FOREIGN KEY(fkFilter) REFERENCES FilterWizard(pkFilter))""")
+            self.cur.execute("""create table FilterWizardItems (idItems integer primary key, fkFilter integer, strItem VARCHAR(255), nState integer, FOREIGN KEY(fkFilter) REFERENCES FilterWizard(pkFilter))""")
         except Exception,msg:
             if str(msg).find("already exists") > -1:
                 pass
@@ -151,114 +164,101 @@ class MyPictureDB(object):
                 common.log("MPDB.version_201_tables", "CREATE TABLE FilterWizardItems ...", xbmc.LOGERROR )
                 common.log("MPDB.version_201_tables", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
                 
-        cn.execute("update DBVersion set strVersion = '"+DB_VERSION+"'")
-        conn.commit()            
-        cn.close()
+        self.cur.close()
+        self.cur = self.con.cursor()                
+        self.cur.execute("update DBVersion set strVersion = '"+DB_VERSION+"'")
+        self.con.commit()            
+        #self.cur.close()
     
         
-    def make_new_base(self, DBpath,ecrase=True):
-    ##    if not(isfile(DBpath)):
-    ##        f=open("DBpath","w")
-    ##        f.close()
-        common.log("MPDB.make_new_base >> Picture database", "%s"%DBpath)
-        conn = sqlite.connect(DBpath)
-        cn=conn.cursor()
+    def make_new_base(self, ecrase=True):
+    
         if ecrase:
             #drop table
             for table in ['FilterWizard', 'FilterWizardItems', 'Persons', 'PersonsInFiles', 'tags', 'TagContent', 'TagContents', 'TagsInFiles', 'TagTypes',"files","keywords","folders","KeywordsInFiles","Collections","FilesInCollections","Periodes","CategoriesInFiles","Categories","SupplementalCategoriesInFiles","SupplementalCategories","CitiesInFiles","Cities","CountriesInFiles","Countries","DBVersion"]:
                 common.log("MPDB.make_new_base >> Dropping table", "%s"%table)
                 try:
-                    cn.execute("""DROP TABLE %s"""%table)
+                    self.cur.execute("""DROP TABLE %s"""%table)
                 except Exception,msg:
                     common.log("MPDB.make_new_base", "DROP TABLE %s"%table, xbmc.LOGERROR )
                     common.log("MPDB.make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
     
         # table: version
         try:
-            cn.execute("""CREATE TABLE DBVersion ( strVersion text)""")
+            self.cur.execute("""CREATE TABLE DBVersion ( strVersion VARCHAR(20))""")
         except Exception,msg:
             if str(msg).find("already exists") > -1:
                 pass
-            else: #sinon on imprime l'exception levée pour la traiter
+            else: 
                 common.log("MPDB.make_new_base", "CREATE TABLE files ...", xbmc.LOGERROR )
                 common.log("MPDB.make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )    
     
         try:
-            cn.execute("insert into DBVersion values('"+DB_VERSION+"')")
-            conn.commit()
+            self.cur.execute("insert into DBVersion values('"+DB_VERSION+"')")
+            self.con.commit()
         except:
             pass
             
         #table 'files'
         try:
-            cn.execute("""CREATE TABLE files ( idFile integer primary key, idFolder integer, strPath text, strFilename text, ftype text, DateAdded DATETIME, Thumb text,  ImageRating text, ImageDateTime DATETIME, Sha text, CONSTRAINT UNI_FILE UNIQUE (strPath,strFilename))""")
+            self.cur.execute("CREATE TABLE files ( idFile INTEGER %s, idFolder integer, strPath VARCHAR(255), strFilename VARCHAR(128), ftype VARCHAR(40), DateAdded DATETIME, Thumb VARCHAR(1024),  ImageRating VARCHAR(40), ImageDateTime DATETIME, Sha VARCHAR(100), CONSTRAINT UNI_FILE UNIQUE (strPath,strFilename))"%self.con.get_ddl_primary_key())
         except Exception,msg:
             if str(msg).find("already exists") > -1:
                 pass
-            else: #sinon on imprime l'exception levée pour la traiter
+            else: 
                 common.log("MPDB.make_new_base", "CREATE TABLE files ...", xbmc.LOGERROR )
                 common.log("MPDB.make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
     
         #table 'folders'
         try:
-            cn.execute("""CREATE TABLE folders (idFolder INTEGER primary key not null, FolderName TEXT, ParentFolder INTEGER, FullPath TEXT UNIQUE, HasPics INTEGER)""")
+            self.cur.execute("CREATE TABLE folders (idFolder INTEGER %s, FolderName VARCHAR(255), ParentFolder INTEGER, FullPath VARCHAR(255) UNIQUE, HasPics INTEGER)"%self.con.get_ddl_primary_key())
         except Exception,msg:
             if str(msg).find("already exists") > -1:
-                #cette exception survient lorsque la table existe déjà.
-                #   elle n'est pas une erreur, on la passe
                 pass
-            else: #sinon on imprime l'exception levée pour la traiter
+            else:
                 common.log("MPDB.make_new_base", "CREATE TABLE folders ...", xbmc.LOGERROR )
                 common.log("MPDB.make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
         #table 'Collections'
         try:
-            cn.execute("""CREATE TABLE Collections (idCol INTEGER PRIMARY KEY, CollectionName TEXT UNIQUE)""")
+            self.cur.execute("CREATE TABLE Collections (idCol INTEGER %s, CollectionName VARCHAR(128) UNIQUE)"%self.con.get_ddl_primary_key())
         except Exception,msg:
             if str(msg).find("already exists") > -1:
-                #cette exception survient lorsque la table existe déjà.
-                #   elle n'est pas une erreur, on la passe
                 pass
-            else: #sinon on imprime l'exception levée pour la traiter
+            else: 
                 common.log("MPDB.make_new_base", "CREATE TABLE Collections ...", xbmc.LOGERROR )
                 common.log("MPDB.make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
         #table 'FilesInCollections'
         try:
-            cn.execute("""CREATE TABLE FilesInCollections (idCol INTEGER NOT NULL, idFile INTEGER NOT NULL, Constraint UNI_COLLECTION UNIQUE (idCol,idFile))""")
+            self.cur.execute("CREATE TABLE FilesInCollections (idCol INTEGER %s, idFile INTEGER NOT NULL, Constraint UNI_COLLECTION UNIQUE (idCol,idFile))"%self.con.get_ddl_primary_key())
         except Exception,msg:
             if str(msg).find("already exists") > -1:
-                #cette exception survient lorsque la table existe déjà.
-                #   elle n'est pas une erreur, on la passe
                 pass
-            else: #sinon on imprime l'exception levée pour la traiter
+            else: 
                 common.log("MPDB.make_new_base", "CREATE TABLE FilesInCollections ...", xbmc.LOGERROR )
                 common.log("MPDB.make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
         #table 'periodes'
         try:
-            cn.execute("""CREATE TABLE periodes(idPeriode INTEGER  PRIMARY KEY NOT NULL, PeriodeName TEXT UNIQUE NOT NULL, DateStart DATETIME NOT NULL, DateEnd DATETIME NOT NULL, CONSTRAINT UNI_PERIODE UNIQUE (PeriodeName,DateStart,DateEnd) )""")
+            self.cur.execute("CREATE TABLE periodes(idPeriode INTEGER %s, PeriodeName VARCHAR(128) UNIQUE NOT NULL, DateStart DATETIME NOT NULL, DateEnd DATETIME NOT NULL, CONSTRAINT UNI_PERIODE UNIQUE (PeriodeName,DateStart,DateEnd) )"%self.con.get_ddl_primary_key())
         except Exception,msg:
             if str(msg).find("already exists") > -1:
-                #cette exception survient lorsque la table existe déjà.
-                #   elle n'est pas une erreur, on la passe
                 pass
-            else: #sinon on imprime l'exception levée pour la traiter
+            else: 
                 common.log("MPDB.make_new_base", "CREATE TABLE Periods ...", xbmc.LOGERROR )
                 common.log("MPDB.make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
         #table 'Rootpaths'
         try:
-            cn.execute("""CREATE TABLE Rootpaths (idRoot INTEGER PRIMARY KEY NOT NULL, Path TEXT UNIQUE NOT NULL, Recursive INTEGER NOT NULL, Remove INTEGER NOT NULL, Exclude INTEGER DEFAULT 0)""")
+            self.cur.execute("CREATE TABLE Rootpaths (idRoot INTEGER %s, Path VARCHAR(255) UNIQUE NOT NULL, Recursive INTEGER NOT NULL, Remove INTEGER NOT NULL, Exclude INTEGER DEFAULT 0)"%self.con.get_ddl_primary_key())
         except Exception,msg:
             if str(msg).find("already exists") > -1:
-                #cette exception survient lorsque la table existe déjà.
-                #   elle n'est pas une erreur, on la passe
                 pass
-            else: #sinon on imprime l'exception levée pour la traiter
+            else: 
                 common.log("MPDB.make_new_base", "CREATE TABLE RootPaths ...", xbmc.LOGERROR )
                 common.log("MPDB.make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
     
     
         #table 'TagTypes'
         try:
-            cn.execute("""CREATE TABLE TagTypes (idTagType INTEGER NOT NULL primary key, TagType TEXT, TagTranslation TEXT, CONSTRAINT UNI_TAG UNIQUE(TagType) )""")
+            self.cur.execute("CREATE TABLE TagTypes (idTagType INTEGER %s, TagType VARCHAR(128), TagTranslation VARCHAR(128), CONSTRAINT UNI_TAG UNIQUE(TagType) )"%self.con.get_ddl_primary_key())
         except Exception,msg:
             if str(msg).find("already exists") > -1:
                 pass
@@ -268,7 +268,7 @@ class MyPictureDB(object):
     
         #table 'TagContent'
         try:
-            cn.execute("""CREATE TABLE TagContents (idTagContent INTEGER NOT NULL primary key, idTagType INTEGER, TagContent TEXT, CONSTRAINT UNI_TAG UNIQUE(idTagType, TagContent) )""")
+            self.cur.execute("CREATE TABLE TagContents (idTagContent INTEGER %s, idTagType INTEGER, TagContent VARCHAR(255), CONSTRAINT UNI_TAG UNIQUE(idTagType, TagContent) )"%self.con.get_ddl_primary_key())
         except Exception,msg:
             if str(msg).find("already exists") > -1:
                 pass
@@ -278,7 +278,7 @@ class MyPictureDB(object):
     
         #table 'TagsInFiles'
         try:
-            cn.execute("""CREATE TABLE TagsInFiles (idTagContent INTEGER NOT NULL, idFile INTEGER NOT NULL)""")
+            self.cur.execute("CREATE TABLE TagsInFiles (idTagContent INTEGER %s, idFile INTEGER NOT NULL)"%self.con.get_ddl_primary_key())
         except Exception,msg:
             if str(msg).find("already exists") > -1:
                 pass
@@ -286,50 +286,49 @@ class MyPictureDB(object):
                 common.log("MPDB.make_new_base", "CREATE TABLE TagsInFiles ...", xbmc.LOGERROR )
                 common.log("MPDB.make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
     
-    
-        self.version_201_tables(DBpath)
+        self.version_201_tables()
         
         try:
-            cn.execute("CREATE INDEX idxFilesInCollections1 ON FilesInCollections(idCol)")
+            self.cur.execute("CREATE INDEX idxFilesInCollections1 ON FilesInCollections(idCol)")
         except Exception,msg:
             pass
     
     
         # Index creation for new tag tables
         try:
-            cn.execute("CREATE INDEX idxTagTypes1 ON TagTypes(idTagType)")
+            self.cur.execute("CREATE INDEX idxTagTypes1 ON TagTypes(idTagType)")
         except Exception,msg:
             pass
     
         try:
-            cn.execute("CREATE INDEX idxTagContent1 ON TagContents(idTagContent)")
+            self.cur.execute("CREATE INDEX idxTagContent1 ON TagContents(idTagContent)")
         except Exception,msg:
             pass
     
         try:
-            cn.execute("CREATE INDEX idxTagsInFiles1 ON TagsInFiles(idTagContent)")
-            cn.execute("CREATE INDEX idxTagsInFiles2 ON TagsInFiles(idFile)")
+            self.cur.execute("CREATE INDEX idxTagsInFiles1 ON TagsInFiles(idTagContent)")
+            self.cur.execute("CREATE INDEX idxTagsInFiles2 ON TagsInFiles(idFile)")
         except Exception,msg:
             pass
     
         try:
-            cn.execute("CREATE INDEX idxFolders1 ON Folders(idFolder)")
-            cn.execute("CREATE INDEX idxFolders2 ON Folders(ParentFolder)")
+            self.cur.execute("CREATE INDEX idxFolders1 ON Folders(idFolder)")
+            self.cur.execute("CREATE INDEX idxFolders2 ON Folders(ParentFolder)")
         except Exception,msg:
             pass
     
         try:
-            cn.execute("CREATE INDEX idxFiles1 ON Files(idFile, idFolder)")
-            cn.execute("CREATE INDEX idxFilesInCollections ON FilesInCollections (idFile)")
+            self.cur.execute("CREATE INDEX idxFiles1 ON Files(idFile, idFolder)")
+            self.cur.execute("CREATE INDEX idxFilesInCollections ON FilesInCollections (idFile)")
         except Exception,msg:
             pass
     
-        conn.commit()
+        self.con.commit()
     
-        cn.close()
+        #self.cur.close()
     """
     columnList = []
-    def addColumn(table,colheader,formatstring="text"):
+    def addColumn(table,colheader,formatstring="VARCHAR(1024)"):
         global columnList
         key = table + '||' + colheader + '||' + formatstring
         try:
@@ -339,106 +338,83 @@ class MyPictureDB(object):
             conn = sqlite.connect(pictureDB)
             cn=conn.cursor()
             try:
-                cn.execute('ALTER TABLE %s ADD "%s" %s'%(table,colheader,formatstring))
+                self.cur.execute('ALTER TABLE %s ADD "%s" %s'%(table,colheader,formatstring))
             except Exception,msg:
                 if not msg.args[0].startswith("duplicate column name"):
                     common.log("MPDB.addColumn", 'EXCEPTION  %s,%s,%s'%(table,colheader,formatstring), xbmc.LOGERROR )
                     common.log("MPDB.addColumn", "\t%s - %s"%(Exception,msg), xbmc.LOGERROR )
     
-            conn.commit()
-            cn.close()
+            self.con.commit()
+            self.cur.close()
             columnList.append(key)
     """
     
     def cleanup_keywords(self):
-        conn = sqlite.connect(pictureDB)
-        cn=conn.cursor()
-        conn.text_factory = unicode #sqlite.OptimizedUnicode
     
         try:
-            # in old version something went wrong with deleteing old unused folders
-            for _ in range(1,10):
-                cn.execute('delete from folders where ParentFolder not in (select idFolder from folders) and ParentFolder is not null')
-    
-            cn.execute('delete from files where idFolder not in( select idFolder from folders)')
-    
-    
-            cn.execute( "delete from TagsInFiles where idFile not in(select idFile from Files )")
-            cn.execute( "delete from TagContents where idTagContent not in (select idTagContent from TagsInFiles)")
+
+            self.cur.execute('delete from files where idFolder not in( select idFolder from folders)')
+            self.cur.execute( "delete from TagsInFiles where idFile not in(select idFile from Files )")
+            self.cur.execute( "delete from TagContents where idTagContent not in (select idTagContent from TagsInFiles)")
             # Only delete tags which are not translated!
-            cn.execute( "delete from TagTypes where idTagType not in (select idTagType from TagContents) and TagType = TagTranslation")
+            self.cur.execute( "delete from TagTypes where idTagType not in (select idTagType from TagContents) and TagType = TagTranslation")
     
         except Exception,msg:
             common.log("MPDB.cleanup_keywords", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
-            cn.close()
+            self.cur.close()
             raise
     
-        conn.commit()
-        cn.close()
+        self.con.commit()
+        #self.cur.close()
     
     def pic_exists(self, picpath, picfile):
         """
         Check wether or not a file exists in the DB
         """
-        conn = sqlite.connect(pictureDB)
-        cn=conn.cursor()
     
         try:
-            cn.execute("""SELECT strPath, strFilename FROM "main"."files" WHERE strPath = (?) AND strFilename = (?);""",(picpath,picfile,) )
+            count = self.cur.request("SELECT count(*) FROM files WHERE strPath = ? AND strFilename = ?",(picpath,picfile,) )
         except Exception,msg:
             common.log("MPDB.pic_exists", "EXCEPTION >> pic_exists %s,%s"%(picpath,picfile), xbmc.LOGERROR )
             common.log("MPDB.pic_exists", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
             raise Exception, msg
-        if len(cn.fetchmany())==0:
-    
+        if count==0:
             retour= False
         else:
             retour= True
-        cn.close()
+        #self.cur.close()
         return retour
     
     def listdir(self, path):
         """
         List files from DB where path
         """
-    
-        conn = sqlite.connect(pictureDB)
-        cn=conn.cursor()
-        conn.text_factory = unicode #sqlite.OptimizedUnicode
-    
+
         try:
-            cn.execute( u"SELECT f.strFilename FROM files f,folders p WHERE f.idFolder=p.idFolder AND p.FullPath=(?)",(path,))
+            retour = [row[0] for row in self.cur.request( u"SELECT f.strFilename FROM files f,folders p WHERE f.idFolder=p.idFolder AND p.FullPath=(?)",(path,))]
         except Exception,msg:
             common.log( "listdir", "path = "%path, xbmc.LOGERROR )
             common.log( "listdir", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
-            cn.close()
+            self.cur.close()
             raise
     
-        retour = [row[0] for row in cn]
+        
         #print retour
-        cn.close()
+        #self.cur.close()
         return retour
     
-    tagTypeDBKeys = {}
     def file_insert(self, path,filename,dictionnary,update=False, sha=0):
         """
         insert into file database the dictionnary values into the dictionnary keys fields
         keys are DB fields ; values are DB values
         """
-        global tagTypeDBKeys
     
         if update :#si update alors on doit updater et non pas insert
             if self.pic_exists(path,filename):
                 #print "file exists in database and rescan is set to true..."
-                self.RequestWithBinds(""" DELETE FROM files WHERE idFolder = (SELECT idFolder FROM folders WHERE FullPath=?) AND strFilename=? """,(path,filename))
+                self.cur.request_with_binds(""" DELETE FROM files WHERE idFolder = (SELECT idFolder FROM folders WHERE FullPath=?) AND strFilename=? """,(path,filename))
                 self.cleanup_keywords()
-        conn = sqlite.connect(pictureDB)
-        cn=conn.cursor()
-    
-    
-        #idFile integer primary key, idFolder integer, strPath text, strFilename text, ftype text, DateAdded DATETIME,  Thumb text,  "ImageRating" text, 
-    
-        conn.text_factory = unicode#sqlite.OptimizedUnicode
+
         try:
             imagedatetime = ""
             if  "EXIF DateTimeOriginal" in dictionnary:
@@ -456,31 +432,30 @@ class MyPictureDB(object):
             except:
                 pass
             
-            cn.execute( """INSERT INTO files(idFolder, strPath, strFilename, ftype, DateAdded,  Thumb,  ImageRating, ImageDateTime, Sha) values (?, ?, ?, ?, ?, ?, ?, ?, ?)""", 
+            self.cur.execute( """INSERT INTO files(idFolder, strPath, strFilename, ftype, DateAdded,  Thumb,  ImageRating, ImageDateTime, Sha) values (?, ?, ?, ?, ?, ?, ?, ?, ?)""", 
                           ( dictionnary["idFolder"],  dictionnary["strPath"], dictionnary["strFilename"], dictionnary["ftype"], dictionnary["DateAdded"], dictionnary["Thumb"], dictionnary["ImageRating"], imagedatetime, sha ) )
-            conn.commit()
+            self.con.commit()
         except Exception,msg:
     
             common.log("file_insert", "path = %s"%common.smart_unicode(filename).encode('utf-8'), xbmc.LOGERROR)
             common.log("file_insert",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
             common.log( "file_insert", """INSERT INTO files('%s') values (%s)""" % ( "','".join(dictionnary.keys()) , ",".join(["?"]*len(dictionnary.values())) ), xbmc.LOGERROR )
-            conn.commit()
-            cn.close()
+            self.con.commit()
+            #self.cur.close()
             raise MyPictureDBException
     
     
         # meta table inserts
-        cn.execute("SELECT idFile FROM files WHERE strPath = ? AND strFilename = ?",(path,filename,) )
-        idfile = [row[0] for row in cn][0]
-        self.tags_insert(conn, cn, idfile, filename, path, dictionnary)
+        idfile = idfile = [row[0] for row in self.cur.request("SELECT idFile FROM files WHERE strPath = ? AND strFilename = ?",(path,filename,) )] [0]
+        self.tags_insert(idfile, filename, path, dictionnary)
     
-        conn.commit()
-        cn.close()
+        self.con.commit()
+        #self.cur.close()
         return True
     
     
-    def tags_insert(self, conn, cn, idfile, filename, path, dictionnary):
-    
+    def tags_insert(self, idfile, filename, path, dictionnary):
+
         # loop over tags dictionary
         for tag_type, value in dictionnary.iteritems():
     
@@ -497,68 +472,57 @@ class MyPictureDB(object):
     
                     for value in tag_values:
     
-                        # change dates
-                        if tag_type == 'EXIF DateTimeOriginal':
-                            value = value[:10]
-    
-                        # first make sure that the tag exists in table TagTypes
-                        # is it already in our list?
-                        if not tag_type in tagTypeDBKeys:
-    
-                            # not in list therefore insert into table TagTypes
+                        if len(value.strip()) > 0:
+                            # change dates
+                            if tag_type == 'EXIF DateTimeOriginal':
+                                value = value[:10]
+        
+                            # first make sure that the tag exists in table TagTypes
+                            # is it already in our list?
+                            if not tag_type in self.tagTypeDBKeys:
+        
+                                # not in list therefore insert into table TagTypes
+                                try:
+                                    self.cur.execute(" INSERT INTO TagTypes(tagType, TagTranslation) VALUES(?, ?) ",(tag_type,tag_type))
+                                except Exception,msg:
+                                    if str(msg)=="column TagType is not unique" or "Duplicate entry" in str(msg):
+                                        pass
+                                    else:
+                                        common.log("tags_insert", "path = %s"%common.smart_unicode(filename).encode('utf-8'), xbmc.LOGERROR)
+                                        common.log("tags_insert",  'tagType = %s'%tag_type, xbmc.LOGERROR )
+                                        common.log("tags_insert",  "\t%s - %s"%(Exception,msg), xbmc.LOGERROR )
+        
+                                # select the key of the tag from table TagTypes
+                                id_tag_type= [row[0] for row in self.cur.request("SELECT min(idTagType) FROM TagTypes WHERE TagType = ? ",(tag_type,) )][0]
+                                self.tagTypeDBKeys[tag_type] = id_tag_type
+                            else :
+                                id_tag_type = self.tagTypeDBKeys[tag_type]
+        
                             try:
-                                cn.execute(""" INSERT INTO TagTypes(tagType, TagTranslation) VALUES(?, ?) """,(tag_type,tag_type))
+                                self.cur.execute(" INSERT INTO TagContents(idTagType,TagContent) VALUES(?,?) ",(id_tag_type,value))
                             except Exception,msg:
-                                if str(msg)=="column TagType is not unique":
+                                if str(msg)=="columns idTagType, TagContent are not unique" or "Duplicate entry" in str(msg):
                                     pass
                                 else:
                                     common.log("tags_insert", "path = %s"%common.smart_unicode(filename).encode('utf-8'), xbmc.LOGERROR)
-                                    common.log("tags_insert",  'tagType = %s'%tag_type, xbmc.LOGERROR )
-                                    common.log("tags_insert",  "\t%s - %s"%(Exception,msg), xbmc.LOGERROR )
-    
-                            # select the key of the tag from table TagTypes
-                            cn.execute("SELECT min(idTagType) FROM TagTypes WHERE TagType = ? ",(tag_type,) )
-                            id_tag_type= [row[0] for row in cn][0]
-                            tagTypeDBKeys[tag_type] = id_tag_type
-                        else :
-                            id_tag_type = tagTypeDBKeys[tag_type]
-    
-                        try:
-                            cn.execute(""" INSERT INTO TagContents(idTagType,TagContent) VALUES(?,?) """,(id_tag_type,value))
-                        except Exception,msg:
-                            if str(msg)=="columns idTagType, TagContent are not unique":
-                                pass
-                            else:
-                                common.log("tags_insert", "path = %s"%common.smart_unicode(filename).encode('utf-8'), xbmc.LOGERROR)
-                                common.log("tags_insert", 'EXCEPTION >> tags', xbmc.LOGERROR )
-                                common.log("tags_insert", 'tagType = %s'%tag_type, xbmc.LOGERROR )
-                                common.log("tags_insert", 'tagValue = %s'%common.smart_utf8(value), xbmc.LOGERROR )
-                                common.log("tags_insert", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
-    
-                        # this block should be obsolet now!!!
-    
-                        #Then, add the corresponding id of file and id of tag inside the TagsInFiles database
-                        try:
-                            cn.execute(""" INSERT INTO TagsInFiles(idTagContent,idFile) SELECT t.idTagContent, %d FROM TagContents t WHERE t.idTagType=%d AND t.TagContent = ? """%(idfile,id_tag_type), (value,))
-    
-    
-                        # At first column was named idTag then idTagContent
-                        except Exception,msg:
-                            if str(msg)=="table TagsInFiles has no column named idTagContent":
-                                try:
-                                    cn.execute("DROP TABLE TagsInFiles")
-                                    cn.execute('CREATE TABLE "TagsInFiles" ("idTagContent" INTEGER NOT NULL, "idFile" INTEGER NOT NULL)')
-    
-                                    cn.execute(""" INSERT INTO TagsInFiles(idTagContent,idFile) SELECT t.idTagContent, %d FROM TagContents t WHERE t.idTagType=%d AND t.TagContent = ? """%(idfile,id_tag_type), (value,))
-                                except:
-                                    common.log("tags_insert", "Error while ALTER TABLE TagsInFiles ", xbmc.LOGERROR)
-                                    common.log("tags_insert", "%s - %s"% (Exception,msg), xbmc.LOGERROR )
-                            else:
-                                common.log("tags_insert", "Error while adding TagsInFiles")
-                                common.log("tags_insert", "%s - %s"% (Exception,msg) )
-                                common.log("tags_insert", "%s %s - %s"%(idfile,id_tag_type,common.smart_utf8(value)))
-                                #print """ INSERT INTO TagsInFiles(idTagContent,idFile) SELECT t.idTagContent, %d FROM TagContents t WHERE t.idTagType=%d AND t.TagContent = '%s' """%(idFile,id_tag_type,value)
-    
+                                    common.log("tags_insert", 'EXCEPTION >> tags', xbmc.LOGERROR )
+                                    common.log("tags_insert", 'tagType = %s'%tag_type, xbmc.LOGERROR )
+                                    common.log("tags_insert", 'tagValue = %s'%common.smart_utf8(value), xbmc.LOGERROR )
+                                    common.log("tags_insert", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+        
+       
+                            #Then, add the corresponding id of file and id of tag inside the TagsInFiles database
+                            try:
+                                self.cur.execute(" INSERT INTO TagsInFiles(idTagContent,idFile) SELECT t.idTagContent, %d FROM TagContents t WHERE t.idTagType=%d AND t.TagContent = ? "%(idfile,id_tag_type), (value,))
+
+                            # At first column was named idTag then idTagContent
+                            except Exception,msg:
+                                if str(msg)=="PRIMARY KEY must be unique" or "Duplicate entry" in str(msg):
+                                    pass
+                                else:
+                                    common.log("tags_insert", "Error while adding TagsInFiles")
+                                    common.log("tags_insert", "%s - %s"% (Exception,msg) )
+                                    common.log("tags_insert", "%s %s - %s"%(idfile,id_tag_type,common.smart_utf8(value)))
     
         return True
     
@@ -566,29 +530,26 @@ class MyPictureDB(object):
     def folder_insert(self, foldername, folderpath, parentfolderID, haspic):
         """insert into folders database, the folder name, folder parent, full path and if has pics
             Return the id of the folder inserted"""
-        conn = sqlite.connect(pictureDB)
-        cn=conn.cursor()
-        conn.text_factory = sqlite.OptimizedUnicode
     
         #insert in the folders database
         try:
-            cn.execute("""INSERT INTO folders(FolderName,ParentFolder,FullPath,HasPics) VALUES (?,?,?,?) """,(foldername,parentfolderID,folderpath,haspic))
-        except sqlite.IntegrityError:
+            self.cur.execute("""INSERT INTO folders(FolderName,ParentFolder,FullPath,HasPics) VALUES (?,?,?,?) """,(foldername,parentfolderID,folderpath,haspic))
+        except:
             pass
-        conn.commit()
+        self.con.commit()
         #return the id of the folder inserted
-        cn.execute("""SELECT idFolder FROM folders where FullPath= ?""",(folderpath,))
+        
         try:
-            retour = [row for (row,) in cn][0]
+            retour = [row for (row,) in self.cur.request("""SELECT idFolder FROM folders where FullPath= ?""",(folderpath,))][0]
         except:
             retour = 0
-        cn.close()
+        #self.cur.close()
         return retour
     
     def get_children(self, folderid):
         #print "get_children(" + str(folderid) + ")"
         """search all children folders ids for the given folder id"""
-        childrens=[c[0] for c in self.RequestWithBinds("SELECT idFolder FROM folders WHERE ParentFolder=? ", (folderid,))]
+        childrens=[c[0] for c in self.cur.request_with_binds("SELECT idFolder FROM folders WHERE ParentFolder=? ", (folderid,))]
         list_child=[]
         list_child.extend(childrens)
         for idchild in childrens:
@@ -601,15 +562,15 @@ class MyPictureDB(object):
         if picfile:
             #on supprime le fichier de la base
             #print """DELETE FROM files WHERE idFolder = (SELECT idFolder FROM folders WHERE FullPath="%s") AND strFilename="%s" """%(picpath,picfile)
-            self.RequestWithBinds("""DELETE FROM files WHERE idFolder = (SELECT idFolder FROM folders WHERE FullPath=?) AND strFilename=? """,(picpath,picfile))
+            self.cur.request_with_binds("""DELETE FROM files WHERE idFolder = (SELECT idFolder FROM folders WHERE FullPath=?) AND strFilename=? """,(picpath,picfile))
     
         else:
     
             try:
                 if picpath:
-                    idpath = self.RequestWithBinds("""SELECT idFolder FROM folders WHERE FullPath = ? """, (picpath,))[0][0]#le premier du tuple à un élément
+                    idpath = self.cur.request_with_binds("""SELECT idFolder FROM folders WHERE FullPath = ? """, (picpath,))[0][0]#le premier du tuple à un élément
                 else:
-                    idpath = self.Request("""SELECT idFolder FROM folders WHERE FullPath is null""")[0][0]#le premier du tuple à un élément
+                    idpath = self.cur.request("""SELECT idFolder FROM folders WHERE FullPath is null""")[0][0]#le premier du tuple à un élément
     
                 common.log( "del_pic", "(%s,%s)"%( common.smart_utf8(picpath),common.smart_utf8(picfile)) )
     
@@ -617,9 +578,9 @@ class MyPictureDB(object):
                 deletelist.append(idpath)#le dossier en paramètres est aussi à supprimer
                 deletelist.extend(self.get_children(str(idpath)))#on ajoute tous les enfants en sous enfants du dossier
     
-                self.Request( """DELETE FROM files WHERE idFolder in ("%s")"""%""" "," """.join([str(i) for i in deletelist]) )
+                self.cur.request( """DELETE FROM files WHERE idFolder in ("%s")"""%""" "," """.join([str(i) for i in deletelist]) )
                 common.log( "del_pic", """DELETE FROM folders WHERE idFolder in ("%s") """%""" "," """.join([str(i) for i in deletelist]))
-                self.Request( """DELETE FROM folders WHERE idFolder in ("%s") """%""" "," """.join([str(i) for i in deletelist]) )
+                self.cur.request( """DELETE FROM folders WHERE idFolder in ("%s") """%""" "," """.join([str(i) for i in deletelist]) )
             except:
                 pass
     
@@ -663,13 +624,13 @@ class MyPictureDB(object):
     def stored_sha (self, path, filename): 
         #return the SHA in DB for the given picture
         try:
-            return [row for row in self.RequestWithBinds( """select sha from files where strPath=? and strFilename=? """,(path, filename))][0][0]
+            return [row for row in self.cur.request_with_binds( """select sha from files where strPath=? and strFilename=? """,(path, filename))][0][0]
         except:
             return "0"
     """
     def getFileMtime(path,filename):   
         #return the modification time 'mtime' in DB for the given picture
-        return [row for row in self.RequestWithBinds( "select mtime from files where strPath=? and strFilename=? "%(path,filename))][0][0]
+        return [row for row in self.cur.request_with_binds( "select mtime from files where strPath=? and strFilename=? "%(path,filename))][0][0]
     
     def DB_deltree(picpath):
         pass
@@ -677,7 +638,7 @@ class MyPictureDB(object):
     
     def get_rating(self, path, filename):   
         try:
-            return [row for row in self.RequestWithBinds( """SELECT files.ImageRating FROM files WHERE strPath=? AND strFilename=? """, (path, filename) )][0][0]
+            return [row for row in self.cur.request_with_binds( """SELECT files.ImageRating FROM files WHERE strPath=? AND strFilename=? """, (path, filename) )][0][0]
         except IndexError:
             return None
     
@@ -785,34 +746,34 @@ class MyPictureDB(object):
             outer_select = 'Select strPath,strFilename from (' + outer_select + ' ) '
                 
         common.log('filterwizard_result', outer_select, xbmc.LOGDEBUG)
-        return [row for row in self.Request(outer_select)]
+        return [row for row in self.cur.request(outer_select)]
     
     
     def filterwizard_list_filters(self):
         filterarray = []
-        for row in self.Request( """select strFilterName from FilterWizard order by 1"""):
+        for row in self.cur.request( """select strFilterName from FilterWizard order by 1"""):
             filterarray.append(row[0])
         return filterarray
     
     
     def filterwizard_delete_filter(self, filter_name):
-        self.RequestWithBinds( "delete from FilterWizard where strFilterName = ? ",(filter_name, ))
+        self.cur.request_with_binds( "delete from FilterWizard where strFilterName = ? ",(filter_name, ))
     
     
     def filterwizard_save_filter(self, filter_name, items, bmatch_all, start_date ='', end_date = ''):
     
         match_all = (1 if bmatch_all == True else 0)
-        if [row for row in self.RequestWithBinds( "select count(*) from FilterWizard where strFilterName = ? ",(filter_name, ))] [0][0] == 0:
-            self.RequestWithBinds( "insert into FilterWizard(strFilterName, bMatchAll, StartDate, EndDate) values (?, ?, ?, ?) ",(filter_name, match_all, start_date, end_date ))
+        if [row for row in self.cur.request_with_binds( "select count(*) from FilterWizard where strFilterName = ? ",(filter_name, ))] [0][0] == 0:
+            self.cur.request_with_binds( "insert into FilterWizard(strFilterName, bMatchAll, StartDate, EndDate) values (?, ?, ?, ?) ",(filter_name, match_all, start_date, end_date ))
         else:
-            self.RequestWithBinds( "update FilterWizard set bMatchAll = ?, StartDate = ?, EndDate = ? where strFiltername = ? ",(match_all, start_date, end_date, filter_name ))
+            self.cur.request_with_binds( "update FilterWizard set bMatchAll = ?, StartDate = ?, EndDate = ? where strFiltername = ? ",(match_all, start_date, end_date, filter_name ))
         
-        filter_key = [row for row in self.RequestWithBinds( "select pkFilter from FilterWizard where strFilterName = ? ",(filter_name, ))] [0][0]
+        filter_key = [row for row in self.cur.request_with_binds( "select pkFilter from FilterWizard where strFilterName = ? ",(filter_name, ))] [0][0]
         #common.log("MPDB.filterwizard_save_filter", "filter_key = %d"%filter_key, xbmc.LOGNOTICE )
-        self.RequestWithBinds("delete from FilterWizardItems where fkfilter = ?", (filter_key, ))
+        self.cur.request_with_binds("delete from FilterWizardItems where fkfilter = ?", (filter_key, ))
         for item, state in items.iteritems():
             if state != 0:
-                self.RequestWithBinds("insert into FilterWizardItems(fkFilter, strItem, nState) values(?, ?, ?)", (filter_key, item, state))
+                self.cur.request_with_binds("insert into FilterWizardItems(fkFilter, strItem, nState) values(?, ?, ?)", (filter_key, item, state))
            
             
     def filterwizard_load_filter(self, filter_name):
@@ -821,9 +782,9 @@ class MyPictureDB(object):
         start_date = ''
         end_date = ''
         #
-        if [row for row in self.RequestWithBinds( "select count(*) from FilterWizard where strFilterName = ? ",(filter_name, ))] [0][0] > 0:
-            filter_key, match_all, start_date, end_date = [row for row in self.RequestWithBinds( "select pkFilter, bMatchAll, StartDate, EndDate from FilterWizard where strFilterName = ? ",(filter_name, ))] [0]
-            for state, item in self.RequestWithBinds( "select nState, strItem from FilterWizardItems where fkFilter = ?", (filter_key,)):
+        if [row for row in self.cur.request_with_binds( "select count(*) from FilterWizard where strFilterName = ? ",(filter_name, ))] [0][0] > 0:
+            filter_key, match_all, start_date, end_date = [row for row in self.cur.request_with_binds( "select pkFilter, bMatchAll, StartDate, EndDate from FilterWizard where strFilterName = ? ",(filter_name, ))] [0]
+            for state, item in self.cur.request_with_binds( "select nState, strItem from FilterWizardItems where fkFilter = ?", (filter_key,)):
                 items[item] = state
     
         return items, (True if match_all == 1 else False), start_date, end_date
@@ -834,13 +795,13 @@ class MyPictureDB(object):
     #####################################
     def collections_list(self):
         """List all available collections"""
-        return [row for row in self.Request( """SELECT CollectionName FROM Collections""")]
+        return [row for row in self.cur.request( """SELECT CollectionName FROM Collections""")]
     
     
     def collection_new(self, colname):
         """Add a new collection"""       
         if colname :
-            self.RequestWithBinds( "INSERT INTO Collections(CollectionName) VALUES (?) ",(colname, ))
+            self.cur.request_with_binds( "INSERT INTO Collections(CollectionName) VALUES (?) ",(colname, ))
         else:
             common.log( "collection_new", "User did not specify a name for the collection.")
             
@@ -849,21 +810,21 @@ class MyPictureDB(object):
         """delete a collection"""
         common.log( "collection_delete", "Name = %s"%colname)
         if colname:
-            self.RequestWithBinds( """DELETE FROM FilesInCollections WHERE idCol=(SELECT idCol FROM Collections WHERE CollectionName=?)""", (colname,))
-            self.RequestWithBinds( """DELETE FROM Collections WHERE CollectionName=? """,(colname,) )
+            self.cur.request_with_binds( """DELETE FROM FilesInCollections WHERE idCol=(SELECT idCol FROM Collections WHERE CollectionName=?)""", (colname,))
+            self.cur.request_with_binds( """DELETE FROM Collections WHERE CollectionName=? """,(colname,) )
         else:
             common.log( "collection_delete",  "User did not specify a name for the collection" )
     
     
     def collection_get_pics(self, colname):      
         """List all pics associated to the Collection given as Colname"""
-        return [row for row in self.RequestWithBinds( """SELECT strPath,strFilename FROM Files WHERE idFile IN (SELECT idFile FROM FilesInCollections WHERE idCol IN (SELECT idCol FROM Collections WHERE CollectionName=?)) ORDER BY ImageDateTime ASC""",(colname,))]
+        return [row for row in self.cur.request_with_binds( """SELECT strPath,strFilename FROM Files WHERE idFile IN (SELECT idFile FROM FilesInCollections WHERE idCol IN (SELECT idCol FROM Collections WHERE CollectionName=?)) ORDER BY ImageDateTime ASC""",(colname,))]
     
     
     def collection_rename(self, colname,newname):   
         """rename give collection"""
         if colname:
-            self.RequestWithBinds( """UPDATE Collections SET CollectionName = ? WHERE CollectionName=? """, (newname, colname) )
+            self.cur.request_with_binds( """UPDATE Collections SET CollectionName = ? WHERE CollectionName=? """, (newname, colname) )
         else:
             common.log( "collection_rename",  "User did not specify a name for the collection")
     
@@ -876,12 +837,12 @@ class MyPictureDB(object):
         #ces points sont solutionnés partiellement car les champs ne peuvent être NULL
         #   3- l'association idCol et idFile peut apparaitre plusieurs fois...
         #print """(SELECT idFile FROM files WHERE strPath="%s" AND strFilename="%s")"""%(filepath,filename)
-        self.RequestWithBinds( """INSERT INTO FilesInCollections(idCol,idFile) VALUES ( (SELECT idCol FROM Collections WHERE CollectionName=?) , (SELECT idFile FROM files WHERE strPath=? AND strFilename=?) )""",(colname,filepath,filename) )
+        self.cur.request_with_binds( """INSERT INTO FilesInCollections(idCol,idFile) VALUES ( (SELECT idCol FROM Collections WHERE CollectionName=?) , (SELECT idFile FROM files WHERE strPath=? AND strFilename=?) )""",(colname,filepath,filename) )
     
     
     def collection_del_pic(self, colname, filepath, filename):
         common.log("collection_del_pic","%s, %s, %s"%(colname, filepath, filename))
-        self.RequestWithBinds( """DELETE FROM FilesInCollections WHERE idCol=(SELECT idCol FROM Collections WHERE CollectionName=?) AND idFile=(SELECT idFile FROM files WHERE strPath=? AND strFilename=?)""",(colname, filepath, filename) )
+        self.cur.request_with_binds( """DELETE FROM FilesInCollections WHERE idCol=(SELECT idCol FROM Collections WHERE CollectionName=?) AND idFile=(SELECT idFile FROM files WHERE strPath=? AND strFilename=?)""",(colname, filepath, filename) )
     
     
     ####################
@@ -889,35 +850,35 @@ class MyPictureDB(object):
     #####################
     def periods_list(self):
         """List all periodes"""
-        return [row for row in self.Request( """SELECT PeriodeName,DateStart,DateEnd FROM Periodes""")]
+        return [row for row in self.cur.request( """SELECT PeriodeName,DateStart,DateEnd FROM Periodes""")]
     
     def period_add(self, periodname, datestart, dateend):
         #datestart et dateend doivent être au format string ex.: "datetime('2009-07-12')" ou "strftime('%Y',now)"
-        self.RequestWithBinds( """INSERT INTO Periodes(PeriodeName,DateStart,DateEnd) VALUES (?,%s,%s)"""%(datestart,dateend), (periodname,) )
+        self.cur.request_with_binds( """INSERT INTO Periodes(PeriodeName,DateStart,DateEnd) VALUES (?,%s,%s)"""%(datestart,dateend), (periodname,) )
         return
     
     def period_delete(self, periodname):
-        self.RequestWithBinds( """DELETE FROM Periodes WHERE PeriodeName=? """,(periodname,) )
+        self.cur.request_with_binds( """DELETE FROM Periodes WHERE PeriodeName=? """,(periodname,) )
         return
     
     def period_rename(self, periodname, newname, newdatestart, newdateend):
     
-        self.RequestWithBinds( """UPDATE Periodes SET PeriodeName = ?,DateStart = datetime(?) , DateEnd = datetime(?) WHERE PeriodeName=? """,(newname,newdatestart,newdateend,periodname) )
+        self.cur.request_with_binds( """UPDATE Periodes SET PeriodeName = ?,DateStart = datetime(?) , DateEnd = datetime(?) WHERE PeriodeName=? """,(newname,newdatestart,newdateend,periodname) )
         return
     
     """Get pics for the given period name"""
     """
     def get_pics_in_period(periodname):    
         
-        period = self.RequestWithBinds( "SELECT DateStart,DateEnd FROM Periodes WHERE PeriodeName=?", (periodname,) )
-        return [row for row in self.RequestWithBinds( "SELECT strPath,strFilename FROM files WHERE datetime(ImageDateTime) BETWEEN ? AND ? ORDER BY ImageDateTime ASC",period )]
+        period = self.cur.request_with_binds( "SELECT DateStart,DateEnd FROM Periodes WHERE PeriodeName=?", (periodname,) )
+        return [row for row in self.cur.request_with_binds( "SELECT strPath,strFilename FROM files WHERE datetime(ImageDateTime) BETWEEN ? AND ? ORDER BY ImageDateTime ASC",period )]
     """
     
     def search_in_files(self, tag_type, tagvalue, count=False):
         val = tagvalue.lower().replace("'", "''")
     
         if count:
-            return [row for row in self.RequestWithBinds( """select count(distinct fi.strFilename||fi.strPath)
+            return [row for row in self.cur.request_with_binds( """select count(distinct fi.strFilename||fi.strPath)
                                                           from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
                                                          where tt.idTagType = tc.idTagType
                                                            and tc.idTagContent = tif.idTagContent
@@ -925,7 +886,7 @@ class MyPictureDB(object):
                                                            and lower(tc.TagContent) LIKE '%%%s%%'
                                                            and tif.idFile = fi.idFile"""%val, (tag_type,))][0][0]
         else:
-            return [row for row in self.RequestWithBinds( """select distinct fi.strPath, fi.strFilename
+            return [row for row in self.cur.request_with_binds( """select distinct fi.strPath, fi.strFilename
                                                           from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
                                                          where tt.idTagType = tc.idTagType
                                                            and tc.idTagContent = tif.idTagContent
@@ -936,28 +897,28 @@ class MyPictureDB(object):
     
     def get_gps(self, filepath, filename):
     
-        latR = self.RequestWithBinds( """select tc.TagContent from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
+        latR = self.cur.request_with_binds( """select tc.TagContent from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
                                     where tt.TagType = 'GPS GPSLatitudeRef'
                                       and tt.idTagType = tc.idTagType
                                       and tc.idTagContent = tif.idTagContent
                                       and tif.idFile = fi.idFile
                                       and fi.strPath = ?
                                       and fi.strFilename = ?""",  (filepath,filename) )
-        lat = self.RequestWithBinds( """select tc.TagContent from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
+        lat = self.cur.request_with_binds( """select tc.TagContent from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
                                     where tt.TagType = 'GPS GPSLatitude'
                                       and tt.idTagType = tc.idTagType
                                       and tc.idTagContent = tif.idTagContent
                                       and tif.idFile = fi.idFile
                                       and fi.strPath = ?
                                       and fi.strFilename = ?""",  (filepath,filename) )
-        lonR = self.RequestWithBinds( """select tc.TagContent from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
+        lonR = self.cur.request_with_binds( """select tc.TagContent from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
                                     where tt.TagType = 'GPS GPSLongitudeRef'
                                       and tt.idTagType = tc.idTagType
                                       and tc.idTagContent = tif.idTagContent
                                       and tif.idFile = fi.idFile
                                       and fi.strPath = ?
                                       and fi.strFilename = ?""",  (filepath,filename) )
-        lon = self.RequestWithBinds( """select tc.TagContent from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
+        lon = self.cur.request_with_binds( """select tc.TagContent from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
                                     where tt.TagType = 'GPS GPSLongitude'
                                       and tt.idTagType = tc.idTagType
                                       and tc.idTagContent = tif.idTagContent
@@ -994,18 +955,18 @@ class MyPictureDB(object):
     
     def get_all_root_folders(self):
         "return folders which are root for scanning pictures"
-        return [row for row in self.Request( """SELECT path,recursive,remove,exclude FROM Rootpaths ORDER BY path""")]
+        return [row for row in self.cur.request( """SELECT path,recursive,remove,exclude FROM Rootpaths ORDER BY path""")]
     
     def add_root_folder(self, path, recursive, remove, exclude):
         "add the path root inside the database. Recursive is 0/1 for recursive scan, remove is 0/1 for removing files that are not physically in the place"
         self.cleanup_keywords()
-        self.RequestWithBinds( """INSERT INTO Rootpaths(path,recursive,remove,exclude) VALUES (?,?,?,?)""",(common.smart_unicode(path),recursive,remove,exclude) )
+        self.cur.request_with_binds( """INSERT INTO Rootpaths(path,recursive,remove,exclude) VALUES (?,?,?,?)""",(common.smart_unicode(path),recursive,remove,exclude) )
         common.log( "add_root_folder", "%s"%common.smart_utf8(path))
     
     def get_root_folders(self, path):
         common.log( "get_root_folders", "%s"%common.smart_utf8(path))
         #print common.smart_utf8(path)
-        return [row for row in self.RequestWithBinds( """SELECT path,recursive,remove,exclude FROM Rootpaths WHERE path=? """, (common.smart_unicode(path),) )][0]
+        return [row for row in self.cur.request_with_binds( """SELECT path,recursive,remove,exclude FROM Rootpaths WHERE path=? """, (common.smart_unicode(path),) )][0]
     
     
     def delete_root(self, path):
@@ -1015,7 +976,7 @@ class MyPictureDB(object):
         self.delete_paths_from_root(path)
         #then remove the rootpath itself
         common.log( "delete_root",   """DELETE FROM Rootpaths WHERE path='%s' """%common.smart_utf8(path))
-        self.RequestWithBinds( """DELETE FROM Rootpaths WHERE path=? """, (common.smart_unicode(path),) )
+        self.cur.request_with_binds( """DELETE FROM Rootpaths WHERE path=? """, (common.smart_unicode(path),) )
     
     
     def delete_paths_from_root(self, path):
@@ -1023,193 +984,157 @@ class MyPictureDB(object):
         common.log( "delete_paths_from_root", "name = %s"%common.smart_utf8(path))
         #cptremoved = 0
         try:
-            idpath = self.RequestWithBinds( """SELECT idFolder FROM folders WHERE FullPath = ?""",(common.smart_unicode(path),) )[0][0]
+            idpath = self.cur.request_with_binds( """SELECT idFolder FROM folders WHERE FullPath = ?""",(common.smart_unicode(path),) )[0][0]
         except:
             common.log( "delete_paths_from_root",  "Path %s not found"%path)
             return 0
     
-        cptremoved = self.Request( """SELECT count(*) FROM files WHERE idFolder='%s'"""%idpath )[0][0]
+        cptremoved = self.cur.request( """SELECT count(*) FROM files WHERE idFolder='%s'"""%idpath )[0][0]
         common.log( "delete_paths_from_root",  """DELETE FROM files WHERE idFolder='%s'"""%idpath)
-        self.Request( """DELETE FROM files WHERE idFolder='%s'"""%idpath)
+        self.cur.request( """DELETE FROM files WHERE idFolder='%s'"""%idpath)
     
         for idchild in self.all_children_of_folder(idpath):
     
-            self.Request( """DELETE FROM FilesInCollections WHERE idFile in (SELECT idFile FROM files WHERE idFolder='%s')"""%idchild )
-            cptremoved = cptremoved + self.Request( """SELECT count(*) FROM files WHERE idFolder='%s'"""%idchild)[0][0]
-            self.Request( """DELETE FROM files WHERE idFolder='%s'"""%idchild)
-            self.Request( """DELETE FROM folders WHERE idFolder='%s'"""%idchild)
+            self.cur.request( """DELETE FROM FilesInCollections WHERE idFile in (SELECT idFile FROM files WHERE idFolder='%s')"""%idchild )
+            cptremoved = cptremoved + self.cur.request( """SELECT count(*) FROM files WHERE idFolder='%s'"""%idchild)[0][0]
+            self.cur.request( """DELETE FROM files WHERE idFolder='%s'"""%idchild)
+            self.cur.request( """DELETE FROM folders WHERE idFolder='%s'"""%idchild)
             
         common.log( "delete_paths_from_root",  """DELETE FROM folders WHERE idFolder='%s'"""%idpath)
-        self.Request( """DELETE FROM folders WHERE idFolder='%s'"""%idpath)
+        self.cur.request( """DELETE FROM folders WHERE idFolder='%s'"""%idpath)
     
         for periodname,datestart,dateend in self.periods_list():
-            if self.Request( """SELECT count(*) FROM files WHERE datetime(ImageDateTime) BETWEEN '%s' AND '%s'"""%(datestart,dateend) )[0][0]==0:
-                self.Request( """DELETE FROM Periodes WHERE PeriodeName='%s'"""%periodname )
+            if self.cur.request( """SELECT count(*) FROM files WHERE datetime(ImageDateTime) BETWEEN '%s' AND '%s'"""%(datestart,dateend) )[0][0]==0:
+                self.cur.request( """DELETE FROM Periodes WHERE PeriodeName='%s'"""%periodname )
         self.cleanup_keywords()
         return cptremoved
     
     """
     def MakeRequest(field,comparator,value):
-        return self.Request( "SELECT p.FullPath,f.strFilename FROM files f,folders p WHERE f.idFolder=p.idFolder AND %s %s %s "%(field,comparator,value))
+        return self.cur.request( "SELECT p.FullPath,f.strFilename FROM files f,folders p WHERE f.idFolder=p.idFolder AND %s %s %s "%(field,comparator,value))
     """
-    
-    def Request(self, SQLrequest):
-        binds = []
-        return self.RequestWithBinds(SQLrequest, binds)
-    
-    def RequestWithBinds(self, SQLrequest, bindVariablesOrg):
-        conn = sqlite.connect(pictureDB)
-        conn.text_factory = unicode #sqlite.OptimizedUnicode
-        cn=conn.cursor()
-        bindVariables = []
-        for value in bindVariablesOrg:
-            if type(value) == type('str'):
-                bindVariables.append(common.smart_unicode(value))
-            else:
-                bindVariables.append(value)
-        try:
-            cn.execute( SQLrequest, bindVariables )
-            conn.commit()
-            retour = [row for row in cn]
-        except Exception,msg:
-            if msg.args[0].startswith("no such column: files.GPS GPSLatitudeRef"):
-                pass
-            else:
-                try:
-                    common.log( "RequestWithBinds", "The request failed :", xbmc.LOGERROR )
-                    common.log( "RequestWithBinds", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
-                    common.log( "RequestWithBinds",  "SQL RequestWithBinds > %s"%SQLrequest, xbmc.LOGERROR)
-                    i = 1
-                    for var in bindVariables:
-                        common.log( "RequestWithBinds", "SQL RequestWithBinds %d> %s"%(i,var), xbmc.LOGERROR)
-                        i=i+1
-                except:
-                    pass
-            retour= []
-        cn.close()
-        return retour
     
     
     def search_tag(self, tag=None,tag_type='a',limit=-1,offset=-1):
         """Look for given keyword and return the list of pictures.
     If tag is not given, pictures with no keywords are returned"""
         if tag is not None: #si le mot clé est fourni
-            return [row for row in self.RequestWithBinds( """SELECT distinct strPath,strFilename FROM files f, TagContents tc, TagsInFiles tif, TagTypes tt WHERE f.idFile = tif.idFile AND tif.idTagContent = tc.idTagContent AND tc.TagContent = ? and tc.idTagType = tt.idTagType  and length(trim(tt.TagTranslation))>0 and tt.TagTranslation = ?  order by imagedatetime LIMIT %s OFFSET %s """%(limit,offset), (tag.encode("utf8"),tag_type.encode("utf8")) )]
+            return [row for row in self.cur.request_with_binds( "SELECT distinct strPath,strFilename FROM files f, TagContents tc, TagsInFiles tif, TagTypes tt WHERE f.idFile = tif.idFile AND tif.idTagContent = tc.idTagContent AND tc.TagContent = ? and tc.idTagType = tt.idTagType  and length(trim(tt.TagTranslation))>0 and tt.TagTranslation = ?  order by imagedatetime ",(tag.encode("utf8"),tag_type.encode("utf8")) )]
         else: #sinon, on retourne toutes les images qui ne sont pas associées à des mots clés
-            return [row for row in self.Request( """SELECT distinct strPath,strFilename FROM files WHERE idFile NOT IN (SELECT DISTINCT idFile FROM TagsInFiles) order by imagedatetime LIMIT %s OFFSET %s"""%(limit,offset) )]
+            return [row for row in self.cur.request( "SELECT distinct strPath,strFilename FROM files WHERE idFile NOT IN (SELECT DISTINCT idFile FROM TagsInFiles) order by imagedatetime " )]
     
     
     def default_tagtypes_translation(self):
     
         """Return a list of all keywords in database """
         
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Country/primary location name'", (common.getstring(30700),))
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Photoshop:Country'", (common.getstring(30700),))
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpExt:CountryName'", (common.getstring(30700),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Country/primary location name'", (common.getstring(30700),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Photoshop:Country'", (common.getstring(30700),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpExt:CountryName'", (common.getstring(30700),))
     
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Country/primary location code'", (common.getstring(30701),))
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpCore:CountryCode'", (common.getstring(30701),))
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpCore:Country'", (common.getstring(30701),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Country/primary location code'", (common.getstring(30701),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpCore:CountryCode'", (common.getstring(30701),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpCore:Country'", (common.getstring(30701),))
     
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Province/state'", (common.getstring(30702),))
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Photoshop:State'", (common.getstring(30702),))
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpExt:ProvinceState'", (common.getstring(30702),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Province/state'", (common.getstring(30702),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Photoshop:State'", (common.getstring(30702),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpExt:ProvinceState'", (common.getstring(30702),))
     
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation = 'Photoshop:City'", (common.getstring(30703),))
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation = 'Iptc4xmpExt:City'", (common.getstring(30703),))
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation = 'City'", (common.getstring(30703),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'Photoshop:City'", (common.getstring(30703),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'Iptc4xmpExt:City'", (common.getstring(30703),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'City'", (common.getstring(30703),))
     
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpCore:Location'", (common.getstring(30704),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpCore:Location'", (common.getstring(30704),))
     
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation = 'Iptc4xmpExt:Event'", (common.getstring(30705),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'Iptc4xmpExt:Event'", (common.getstring(30705),))
     
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'DateAdded'", (common.getstring(30706),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'DateAdded'", (common.getstring(30706),))
         
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'EXIF DateTimeOriginal'", (common.getstring(30707),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'EXIF DateTimeOriginal'", (common.getstring(30707),))
         
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Photoshop:DateCreated'", (common.getstring(30708),))
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Image DateTime'", (common.getstring(30708),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Photoshop:DateCreated'", (common.getstring(30708),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Image DateTime'", (common.getstring(30708),))
     
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation = 'Caption/abstract'", (common.getstring(30709),))
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation = 'Dc:description'", (common.getstring(30709),))
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation = 'Iptc4xmpCore:Description'", (common.getstring(30709),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'Caption/abstract'", (common.getstring(30709),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'Dc:description'", (common.getstring(30709),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'Iptc4xmpCore:Description'", (common.getstring(30709),))
     
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation = 'Iptc4xmpCore:Headline'", (common.getstring(30710),))
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Photoshop:Headline'", (common.getstring(30710),))
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Headline'", (common.getstring(30710),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'Iptc4xmpCore:Headline'", (common.getstring(30710),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Photoshop:Headline'", (common.getstring(30710),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Headline'", (common.getstring(30710),))
     
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation = 'Object name'", (common.getstring(30711),))
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation = 'Dc:title'", (common.getstring(30711),))
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation = 'Iptc4xmpCore:Title'", (common.getstring(30711),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'Object name'", (common.getstring(30711),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'Dc:title'", (common.getstring(30711),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'Iptc4xmpCore:Title'", (common.getstring(30711),))
     
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation = 'Writer/editor'", (common.getstring(30712),))
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation = 'By-line'", (common.getstring(30712),))
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation = 'Dc:creator'", (common.getstring(30712),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'Writer/editor'", (common.getstring(30712),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'By-line'", (common.getstring(30712),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'Dc:creator'", (common.getstring(30712),))
         
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation = 'By-line title'", (common.getstring(30713),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'By-line title'", (common.getstring(30713),))
     
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation = 'Dc:rights'", (common.getstring(30714),))
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation = 'Copyright notice'", (common.getstring(30714),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'Dc:rights'", (common.getstring(30714),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'Copyright notice'", (common.getstring(30714),))
     
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Xmp:Label'", (common.getstring(30715),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Xmp:Label'", (common.getstring(30715),))
         
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Xmp:Rating'", (common.getstring(30716),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Xmp:Rating'", (common.getstring(30716),))
     
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'MicrosoftPhoto:LastKeywordIPTC'", (common.getstring(30717),))
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'MicrosoftPhoto:LastKeywordXMP'", (common.getstring(30717),))
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Dc:subject'", (common.getstring(30717),))
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpCore:Keywords'", (common.getstring(30717),))
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Keywords'", (common.getstring(30717),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'MicrosoftPhoto:LastKeywordIPTC'", (common.getstring(30717),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'MicrosoftPhoto:LastKeywordXMP'", (common.getstring(30717),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Dc:subject'", (common.getstring(30717),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpCore:Keywords'", (common.getstring(30717),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Keywords'", (common.getstring(30717),))
     
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Category'", (common.getstring(30718),))
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Photoshop:Category'", (common.getstring(30718),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Category'", (common.getstring(30718),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Photoshop:Category'", (common.getstring(30718),))
         
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Photoshop:SupplementalCategories'", (common.getstring(30719),))
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Supplemental category'", (common.getstring(30719),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Photoshop:SupplementalCategories'", (common.getstring(30719),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Supplemental category'", (common.getstring(30719),))
     
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'MPReg:PersonDisplayName'", (common.getstring(30720),))
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpExt:PersonInImage'", (common.getstring(30720),))
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Mwg-rs:RegionList:Face'", (common.getstring(30720),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'MPReg:PersonDisplayName'", (common.getstring(30720),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpExt:PersonInImage'", (common.getstring(30720),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Mwg-rs:RegionList:Face'", (common.getstring(30720),))
     
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'EXIF ExifImageWidth'", (common.getstring(30721),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'EXIF ExifImageWidth'", (common.getstring(30721),))
         
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'EXIF ExifImageLength'", (common.getstring(30722),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'EXIF ExifImageLength'", (common.getstring(30722),))
         
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'EXIF SceneCaptureType'", (common.getstring(30723),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'EXIF SceneCaptureType'", (common.getstring(30723),))
         
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'EXIF Flash'", (common.getstring(30724),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'EXIF Flash'", (common.getstring(30724),))
     
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Image Model'", (common.getstring(30725),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Image Model'", (common.getstring(30725),))
         
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Image Make'", (common.getstring(30726),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Image Make'", (common.getstring(30726),))
         
-        self.RequestWithBinds("update TagTypes set TagTranslation = ? where TagTranslation =  'Image Artist'", (common.getstring(30727),))
+        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Image Artist'", (common.getstring(30727),))
     
         # default to not visible
-        self.Request("update TagTypes set TagTranslation = '' where TagTranslation =  'EXIF DateTimeDigitized'")
-        self.Request("update TagTypes set TagTranslation = '' where TagTranslation =  'EXIF DigitalZoomRatio'")
-        self.Request("update TagTypes set TagTranslation = '' where TagTranslation =  'EXIF ExifVersion'")
-        self.Request("update TagTypes set TagTranslation = '' where TagTranslation =  'EXIF FileSource'")
-        self.Request("update TagTypes set TagTranslation = '' where TagTranslation =  'Image Orientation'")
-        self.Request("update TagTypes set TagTranslation = '' where TagTranslation =  'Image ResolutionUnit'")
-        self.Request("update TagTypes set TagTranslation = '' where TagTranslation =  'Image XResolution'")
-        self.Request("update TagTypes set TagTranslation = '' where TagTranslation =  'Image YResolution'")
-        self.Request("update TagTypes set TagTranslation = '' where TagTranslation =  'GPS GPSLatitude'")
-        self.Request("update TagTypes set TagTranslation = '' where TagTranslation =  'GPS GPSLatitudeRef'")
-        self.Request("update TagTypes set TagTranslation = '' where TagTranslation =  'GPS GPSLongitude'")
-        self.Request("update TagTypes set TagTranslation = '' where TagTranslation =  'GPS GPSLongitudeRef'")
-        self.Request("update TagTypes set TagTranslation = '' where TagTranslation =  'Original transmission reference'")
-        self.Request("update TagTypes set TagTranslation = '' where TagTranslation =  'Photoshop:CaptionWriter'")
-        self.Request("update TagTypes set TagTranslation = '' where TagTranslation =  'Photoshop:Instructions'")
-        self.Request("update TagTypes set TagTranslation = '' where TagTranslation =  'Special instructions'")    
-        self.Request("update TagTypes set TagTranslation = '' where TagTranslation =  'Credit'")    
-        self.Request("update TagTypes set TagTranslation = '' where TagTranslation =  'Sub-location'")
+        self.cur.request("update TagTypes set TagTranslation = '' where TagTranslation =  'EXIF DateTimeDigitized'")
+        self.cur.request("update TagTypes set TagTranslation = '' where TagTranslation =  'EXIF DigitalZoomRatio'")
+        self.cur.request("update TagTypes set TagTranslation = '' where TagTranslation =  'EXIF ExifVersion'")
+        self.cur.request("update TagTypes set TagTranslation = '' where TagTranslation =  'EXIF FileSource'")
+        self.cur.request("update TagTypes set TagTranslation = '' where TagTranslation =  'Image Orientation'")
+        self.cur.request("update TagTypes set TagTranslation = '' where TagTranslation =  'Image ResolutionUnit'")
+        self.cur.request("update TagTypes set TagTranslation = '' where TagTranslation =  'Image XResolution'")
+        self.cur.request("update TagTypes set TagTranslation = '' where TagTranslation =  'Image YResolution'")
+        self.cur.request("update TagTypes set TagTranslation = '' where TagTranslation =  'GPS GPSLatitude'")
+        self.cur.request("update TagTypes set TagTranslation = '' where TagTranslation =  'GPS GPSLatitudeRef'")
+        self.cur.request("update TagTypes set TagTranslation = '' where TagTranslation =  'GPS GPSLongitude'")
+        self.cur.request("update TagTypes set TagTranslation = '' where TagTranslation =  'GPS GPSLongitudeRef'")
+        self.cur.request("update TagTypes set TagTranslation = '' where TagTranslation =  'Original transmission reference'")
+        self.cur.request("update TagTypes set TagTranslation = '' where TagTranslation =  'Photoshop:CaptionWriter'")
+        self.cur.request("update TagTypes set TagTranslation = '' where TagTranslation =  'Photoshop:Instructions'")
+        self.cur.request("update TagTypes set TagTranslation = '' where TagTranslation =  'Special instructions'")    
+        self.cur.request("update TagTypes set TagTranslation = '' where TagTranslation =  'Credit'")    
+        self.cur.request("update TagTypes set TagTranslation = '' where TagTranslation =  'Sub-location'")
         
-        self.Request("vacuum")
+        self.cur.request("vacuum")
     
     def list_TagTypes(self):
     
-        return [row for (row,) in self.Request( """SELECT distinct tt.TagTranslation FROM TagTypes tt, TagContents tc, TagsInFiles tif 
+        return [row for (row,) in self.cur.request( """SELECT distinct tt.TagTranslation FROM TagTypes tt, TagContents tc, TagsInFiles tif 
     where length(trim(TagTranslation))>0 
     and tt.idTagType = tc.idTagType
     and tc.idTagContent = tif.idTagContent
@@ -1217,63 +1142,64 @@ class MyPictureDB(object):
     
     def list_tagtypes_count(self):
     
-        return [row for row in self.Request( """
+        return [row for row in self.cur.request( """
     SELECT tt.TagTranslation, count(distinct tagcontent)
-      FROM TagTypes tt, TagContents tc, TagsInFiles tf --, Files fi
+      FROM TagTypes tt, TagContents tc, TagsInFiles tf 
      where length(trim(TagTranslation)) > 0 
        and tf.idTagContent              = tc.idTagContent
-       -- and tf.idFile                   = fi.idFile
        and tt.idTagType                 = tc.idTagType
     group by tt.tagtranslation """   )]
     
     def count_tagtypes(self, tagType, limit=-1, offset=-1):
         if tagType is not None:
-            return self.RequestWithBinds("""SELECT count(distinct TagContent) FROM tagsInFiles tif, TagContents tc, TagTypes tt WHERE tif.idTagContent = tc.idTagContent AND tc.idTagType = tt.idTagType and length(trim(tt.TagTranslation))>0 and tt.idTagType =? """, (tagType,) )[0][0]
+            return self.cur.request_with_binds("""SELECT count(distinct TagContent) FROM tagsInFiles tif, TagContents tc, TagTypes tt WHERE tif.idTagContent = tc.idTagContent AND tc.idTagType = tt.idTagType and length(trim(tt.TagTranslation))>0 and tt.idTagType =? """, (tagType,) )[0][0]
         else:
-            return self.Request("""SELECT count(*) FROM TagTypes where length(trim(TagTranslation))>0""" )[0][0]
+            return self.cur.request("""SELECT count(*) FROM TagTypes where length(trim(TagTranslation))>0""" )[0][0]
     
     def set_tagtype_translation(self, TagType, TagTranslation):
-        self.RequestWithBinds("Update TagTypes set TagTranslation = ? where TagType = ? ",(TagTranslation.encode('utf-8'), TagType.encode('utf-8')))
+        self.cur.request_with_binds("Update TagTypes set TagTranslation = ? where TagType = ? ",(TagTranslation.encode('utf-8'), TagType.encode('utf-8')))
     
     def get_tagtypes_translation(self):
-        return [row for row in self.Request('select TagType, TagTranslation from TagTypes order by 2,1')]
+        return [row for row in self.cur.request('select TagType, TagTranslation from TagTypes order by 2,1')]
     
     def list_tags(self,tagType):
         """Return a list of all tags in database"""
-        return [row for (row,) in self.Request( """select distinct TagContent from TagContents tc, TagsInFiles tif, TagTypes tt  where tc.idTagContent = tif.idTagContent and tc.idTagType = tt.idTagType and tt.TagTranslation='%s' ORDER BY LOWER(TagContent) ASC"""%tagType.encode("utf8") )]
+        return [row for (row,) in self.cur.request( """select distinct TagContent from TagContents tc, TagsInFiles tif, TagTypes tt  where tc.idTagContent = tif.idTagContent and tc.idTagType = tt.idTagType and tt.TagTranslation='%s' ORDER BY LOWER(TagContent) ASC"""%tagType.encode("utf8") )]
     
     def list_tags_count(self, tagType):
         """Return a list of all tags in database"""
-        return [row for row in self.RequestWithBinds( """
+        return [row for row in self.cur.request_with_binds( """
         select TagContent, count(distinct idFile) 
       from TagContents tc, TagsInFiles tif, TagTypes tt  
      where tc.idTagContent = tif.idTagContent
        and tc.idTagType = tt.idTagType 
-       and tt.TagTranslation=? 
+       and tt.TagTranslation = ? 
     group BY TagContent""",(tagType.encode("utf8"),) )]
     
     def count_tags(self, kw, tagType, limit=-1, offset=-1):
         if kw is not None:
-            return self.RequestWithBinds("""select count(distinct idFile) from  TagContents tc, TagsInFiles tif, TagTypes tt  where tc.idTagContent = tif.idTagContent and tc.TagContent = ? and tc.idTagType = tt.idTagType and tt.TagTranslation = ? """,(kw, tagType))[0][0]
+            return self.cur.request_with_binds("""select count(distinct idFile) from  TagContents tc, TagsInFiles tif, TagTypes tt  where tc.idTagContent = tif.idTagContent and tc.TagContent = ? and tc.idTagType = tt.idTagType and tt.TagTranslation = ? """,(kw, tagType))[0][0]
         else:
-            return self.Request("""SELECT count(*) FROM files WHERE idFile not in (SELECT DISTINCT idFile FROM TagsInFiles)""" )[0][0]
+            return self.cur.request("""SELECT count(*) FROM files WHERE idFile not in (SELECT DISTINCT idFile FROM TagsInFiles)""" )[0][0]
     
     
     def count_pics_in_folder(self,folderid):
         # new part
-        folderPath = self.RequestWithBinds("""Select FullPath from Folders where idFolder = ?""", (folderid,))[0][0]
+        folderPath = self.cur.request_with_binds("""Select FullPath from Folders where idFolder = ?""", (folderid,))[0][0]
         # mask the apostrophe
         folderPath = folderPath.replace("'", "''")
-        count = self.Request("""select count(*) from files f, folders p where f.idFolder=p.idFolder and p.FullPath like '%s%%' """%folderPath)[0][0]
+        count = self.cur.request("""select count(*) from files f, folders p where f.idFolder=p.idFolder and p.FullPath like '%s%%' """%folderPath)[0][0]
+        print count
+        
         return count
     
         # old part
     
         children = self.all_children_of_folder(folderid)
     
-        cpt = self.Request("SELECT count(*) FROM files f,folders p WHERE f.idFolder=p.idFolder AND f.idFolder='%s'"%folderid)[0][0]
+        cpt = self.cur.request("SELECT count(*) FROM files f,folders p WHERE f.idFolder=p.idFolder AND f.idFolder='%s'"%folderid)[0][0]
         for idchild in children:
-            cpt = cpt + self.Request("SELECT count(*) FROM files f,folders p WHERE f.idFolder=p.idFolder AND f.idFolder='%s'"%idchild)[0][0]
+            cpt = cpt + self.cur.request("SELECT count(*) FROM files f,folders p WHERE f.idFolder=p.idFolder AND f.idFolder='%s'"%idchild)[0][0]
         return cpt#Request("SELECT count(*) FROM files f,folders p WHERE f.idFolder=p.idFolder AND f.idFolder='%s'"%folderid)[0][0]
     
     def count_pics_in_period(self, period, value):
@@ -1302,12 +1228,12 @@ class MyPictureDB(object):
     
     """
     def list_cam_models():
-        return [row for (row,) in self.Request('SELECT DISTINCT "Image Model" FROM files WHERE "Image Model" NOT NULL')]
+        return [row for (row,) in self.cur.request('SELECT DISTINCT "Image Model" FROM files WHERE "Image Model" NOT NULL')]
     """
     
     def list_path(self):
         """retourne la liste des chemins en base de données"""
-        return [row for (row,) in self.Request( """SELECT DISTINCT strPath FROM files""" )]
+        return [row for (row,) in self.cur.request( """SELECT DISTINCT strPath FROM files""" )]
     
     
     def all_children_of_folder(self, rootid):
@@ -1322,7 +1248,7 @@ class MyPictureDB(object):
             except:
                 #fin
                 break
-            chlist = [row for (row,) in self.Request( """SELECT idFolder FROM folders WHERE ParentFolder='%s'"""%id )]#2,10,17
+            chlist = [row for (row,) in self.cur.request( """SELECT idFolder FROM folders WHERE ParentFolder='%s'"""%id )]#2,10,17
             childrens=childrens+chlist
             enfants=enfants+chlist
     
@@ -1352,7 +1278,7 @@ class MyPictureDB(object):
     
         #SELECT strPath,strFilename FROM files WHERE strftime('%Y-%m-%d %H:%M:%S', "EXIF DateTimeOriginal") BETWEEN strftime('%Y-%m-%d %H:%M:%S','2007-01-01 00:00:01') AND strftime('%Y-%m-%d %H:%M:%S','2007-12-31 23:59:59') ORDER BY "EXIF DateTimeOriginal" ASC
         request = """SELECT strPath,strFilename FROM files WHERE datetime(ImageDateTime) BETWEEN datetime('%s',%s) AND datetime('%s',%s) ORDER BY ImageDateTime ASC"""%(DS,Smodifier,DE,Emodifier)
-        return [row for row in self.Request(request)]
+        return [row for row in self.cur.request(request)]
     
     def pics_for_period(self, periodtype, date):
     
@@ -1365,28 +1291,28 @@ class MyPictureDB(object):
             #log ("pics_for_period ( periodtype = ['date'|'month'|'year'] , date = corresponding to the period (year|year-month|year-month-day)")
         request = """SELECT strPath,strFilename FROM files WHERE datetime(ImageDateTime) BETWEEN datetime('%s','%s') AND datetime('%s','%s','%s') ORDER BY ImageDateTime ASC;"""%(sdate,modif1,
                                                                                                                                                                                                       sdate,modif1,modif2)
-        return [row for row in self.Request(request)]
+        return [row for row in self.cur.request(request)]
     
     def get_years(self):
-        return [t for (t,) in self.Request("""SELECT DISTINCT strftime("%Y",ImageDateTime) FROM files where ImageDateTime NOT NULL ORDER BY ImageDateTime ASC""")]
+        return [t for (t,) in self.cur.request("""SELECT DISTINCT strftime("%Y",ImageDateTime) FROM files where ImageDateTime NOT NULL ORDER BY ImageDateTime ASC""")]
     
     def get_months(self, year):
-        return [t for (t,) in self.Request("""SELECT distinct strftime("%%Y-%%m",ImageDateTime) FROM files where strftime("%%Y",ImageDateTime) = '%s' ORDER BY ImageDateTime ASC"""%year)]
+        return [t for (t,) in self.cur.request("""SELECT distinct strftime("%%Y-%%m",ImageDateTime) FROM files where strftime("%%Y",ImageDateTime) = '%s' ORDER BY ImageDateTime ASC"""%year)]
     
     def get_dates(self, year_month):
-        return [t for (t,) in self.Request("""SELECT distinct strftime("%%Y-%%m-%%d",ImageDateTime) FROM files where strftime("%%Y-%%m",ImageDateTime) = '%s' ORDER BY ImageDateTime ASC"""%year_month)]
+        return [t for (t,) in self.cur.request("""SELECT distinct strftime("%%Y-%%m-%%d",ImageDateTime) FROM files where strftime("%%Y-%%m",ImageDateTime) = '%s' ORDER BY ImageDateTime ASC"""%year_month)]
     
     def search_all_dates(self):# TODO check if it is really usefull (check 'get_pics_dates' to see if it is not the same)
         """return all files from database sorted by 'EXIF DateTimeOriginal' """
-        return [t for t in self.Request("""SELECT strPath,strFilename FROM files ORDER BY ImageDateTime ASC""")]
+        return [t for t in self.cur.request("""SELECT strPath,strFilename FROM files ORDER BY ImageDateTime ASC""")]
     
     def get_pics_dates(self):
         """return all different dates from 'EXIF DateTimeOriginal'"""
-        return [t for (t,) in self.Request("""SELECT DISTINCT strftime("%Y-%m-%d",ImageDateTime) FROM files WHERE length(trim(ImageDateTime))>0  ORDER BY ImageDateTime ASC""")]
+        return [t for (t,) in self.cur.request("""SELECT DISTINCT strftime("%Y-%m-%d",ImageDateTime) FROM files WHERE length(trim(ImageDateTime))>0  ORDER BY ImageDateTime ASC""")]
     
     def get_pic_date(self, path, filename):
         try:
-            return [row for row in self.RequestWithBinds( """SELECT files.ImageDateTime FROM files WHERE strPath=? AND strFilename=? """,(path,filename) )][0][0]
+            return [row for row in self.cur.request_with_binds( "SELECT ImageDateTime FROM files WHERE strPath=? AND strFilename=? ",(path,filename) )][0][0]
         except IndexError:
             return None
 
