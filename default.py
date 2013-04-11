@@ -1360,12 +1360,18 @@ class Main:
         elif self.args.method == "lastmonth":
             #show pics taken within last month
             picfanart = join(PIC_PATH,"fanart-date.png")
-            filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM files WHERE datetime(ImageDateTime) BETWEEN datetime('now','-1 months') AND datetime('now') ORDER BY ImageDateTime ASC LIMIT %s OFFSET %s"""%(limit,offset))]
+            if MPDB.con.get_backend() == "mysql":
+                filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM files WHERE datetime(ImageDateTime) BETWEEN SysDate() - INTERVAL 1 MONTH AND SysDate() ORDER BY ImageDateTime ASC LIMIT %s OFFSET %s"""%(limit,offset))]
+            else:
+                filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM files WHERE datetime(ImageDateTime) BETWEEN datetime('now','-1 months') AND datetime('now') ORDER BY ImageDateTime ASC LIMIT %s OFFSET %s"""%(limit,offset))]
 
         elif self.args.method == "recentpicsdb":#pictures added to database within x last days __OK
             picfanart = join(PIC_PATH,"fanart-date.png")
             numberofdays = common.getaddon_setting("recentnbdays")
-            filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM files WHERE DateAdded IN (SELECT DISTINCT DateAdded FROM files WHERE DateAdded>=datetime('now','start of day','-%s days'))  ORDER BY DateAdded ASC LIMIT %s OFFSET %s"""%(numberofdays,limit,offset))]
+            if MPDB.con.get_backend() == "mysql":
+                filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM files WHERE DateAdded IN (SELECT DISTINCT DateAdded FROM files WHERE DateAdded>=SysDate() - INTERVAL %s DAY)  ORDER BY DateAdded ASC LIMIT %s OFFSET %s"""%(numberofdays,limit,offset))]
+            else:
+                filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM files WHERE DateAdded IN (SELECT DISTINCT DateAdded FROM files WHERE DateAdded>=datetime('now','start of day','-%s days'))  ORDER BY DateAdded ASC LIMIT %s OFFSET %s"""%(numberofdays,limit,offset))]
 
         elif self.args.method =="lastpicsshooted":#X last pictures shooted __OK
             picfanart = join(PIC_PATH,"fanart-date.png")
