@@ -1,3 +1,6 @@
+2013/04/11 --> v 2.2.2
+Update: First MySql release for UAT
+
 2013/03/28 --> v 2.2.1
 Update: Language files from Transifex
 

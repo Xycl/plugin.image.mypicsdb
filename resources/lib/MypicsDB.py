@@ -739,21 +739,30 @@ class MyPictureDB(object):
         # test if start or end_date is set
         if start_date != '' or end_date != '':
             dates_set = 0
-            outer_select = 'Select strPath,strFilename from (' + outer_select + ' ) '
+            outer_select = 'Select strPath,strFilename from (' + outer_select + ' ) mainset '
             
             if start_date != '':
                 dates_set += 1
-                outer_select += " where ImageDateTime >= date('%s') "%(start_date,)
+                if self.con.get_backend() == "mysql":
+                    outer_select += " where ImageDateTime >= date_format('%s', '%%Y-%%m-%%d') "%(start_date,)
+                else:
+                    outer_select += " where ImageDateTime >= date('%s') "%(start_date,)
             
             if end_date != '':
                 dates_set += 1
                 if dates_set == 1:
-                    outer_select += " where ImageDateTime <= date('%s') "%(end_date,)
+                    if self.con.get_backend() == "mysql":
+                        outer_select += " where ImageDateTime <= date_format('%s', '%%Y-%%m-%%d') "%(end_date,)
+                    else:
+                        outer_select += " where ImageDateTime <= date('%s') "%(end_date,)
                 else:
-                    outer_select += " and ImageDateTime <= date('%s') "%(end_date,)
+                    if self.con.get_backend() == "mysql":   
+                        outer_select += " and ImageDateTime <= date_format('%s', '%%Y-%%m-%%d') "%(end_date,)
+                    else:
+                        outer_select += " and ImageDateTime <= date('%s') "%(end_date,)
                     
         else:
-            outer_select = 'Select strPath,strFilename from (' + outer_select + ' ) '
+            outer_select = 'Select strPath,strFilename from (' + outer_select + ' ) maindateset '
                 
         common.log('filterwizard_result', outer_select, xbmc.LOGDEBUG)
         return [row for row in self.cur.request(outer_select)]
@@ -879,8 +888,15 @@ class MyPictureDB(object):
         return [row for row in self.cur.request( """SELECT PeriodeName,DateStart,DateEnd FROM Periodes""")]
     
     def period_add(self, periodname, datestart, dateend):
-        #datestart et dateend doivent être au format string ex.: "datetime('2009-07-12')" ou "strftime('%Y',now)"
-        self.cur.request_with_binds( """INSERT INTO Periodes(PeriodeName,DateStart,DateEnd) VALUES (?,%s,%s)"""%(datestart,dateend), (periodname,) )
+        if self.con.get_backend() == "mysql":
+          datestart = "date_format('%s', '%%%%Y-%%%%m-%%%%d %%%%H:%%%%i:%%%%S')"%datestart
+          dateend   = "date_format('%s', '%%%%Y-%%%%m-%%%%d %%%%H:%%%%i:%%%%S')"%dateend
+        else:
+          datestart = "datetime(%s)"%datestart
+          dateend   = "datetime(%s)"%dateend
+        
+        select = """INSERT INTO Periodes(PeriodeName,DateStart,DateEnd) VALUES (?,%s,%s)"""%(datestart,dateend)
+        self.cur.request_with_binds( select, (periodname,) )
         return
     
     def period_delete(self, periodname):
@@ -888,10 +904,19 @@ class MyPictureDB(object):
         return
     
     def period_rename(self, periodname, newname, newdatestart, newdateend):
-    
-        self.cur.request_with_binds( """UPDATE Periodes SET PeriodeName = ?,DateStart = datetime(?) , DateEnd = datetime(?) WHERE PeriodeName=? """,(newname,newdatestart,newdateend,periodname) )
+        if self.con.get_backend() == "mysql":
+            self.cur.request_with_binds( """UPDATE Periodes SET PeriodeName = ?,DateStart = date_format(?, '%%Y-%%m-%%d') , DateEnd = date_format(?, '%%Y-%%m-%%d') WHERE PeriodeName=? """,(newname,newdatestart,newdateend,periodname) )
+        else:
+            self.cur.request_with_binds( """UPDATE Periodes SET PeriodeName = ?,DateStart = datetime(?) , DateEnd = datetime(?) WHERE PeriodeName=? """,(newname,newdatestart,newdateend,periodname) )
         return
     
+    def period_dates_get_pics(self, dbdatestart, dbdateend):
+        if self.con.get_backend() == "mysql":
+            return self.cur.request("SELECT date_format('%s', '%%Y-%%m-%%d'),date_format(date_format('%s', '%%Y-%%m-%%d') + INTERVAL 1 DAY - INTERVAL 1 SECOND, '%%Y-%%m-%%d')"%(dbdatestart,dbdateend))[0]    
+        else:
+            return self.cur.request("SELECT strftime('%%Y-%%m-%%d',('%s')),strftime('%%Y-%%m-%%d',datetime('%s','+1 days','-1.0 seconds'))"%(dbdatestart,dbdateend))[0]    
+
+
     """Get pics for the given period name"""
     """
     def get_pics_in_period(periodname):    
@@ -1285,17 +1310,19 @@ class MyPictureDB(object):
             else:
                 filelist = []
         return len(filelist)
-    
+
+
     """
     def list_cam_models():
         return [row for (row,) in self.cur.request('SELECT DISTINCT "Image Model" FROM files WHERE "Image Model" NOT NULL')]
     """
-    
+
+
     def list_path(self):
         """retourne la liste des chemins en base de données"""
         return [row for (row,) in self.cur.request( """SELECT DISTINCT strPath FROM files""" )]
-    
-    
+
+
     def all_children_of_folder(self, rootid):
         """liste les id des dossiers enfants"""
         #A REVOIR : Ne fonctionne pas correctement !
@@ -1313,75 +1340,103 @@ class MyPictureDB(object):
             enfants=enfants+chlist
     
         return enfants
-    
-    
-    
-    #def search_between_dates(datestart='2007-01-01 00:00:01',dateend='2008-01-01 00:00:01'):
+
+
     def search_between_dates(self, DateStart=("2007","%Y"),DateEnd=("2008","%Y")):
         """Cherche les photos qui ont été prises entre 'datestart' et 'dateend'."""
         common.log( "search_between_dates", DateStart)
         common.log( "search_between_dates", DateEnd)
         DS = strftime("%Y-%m-%d %H:%M:%S",strptime(DateStart[0],DateStart[1]))
         DE = strftime("%Y-%m-%d %H:%M:%S",strptime(DateEnd[0],DateEnd[1]))
-        if DateEnd[1]=="%Y-%m-%d":
-            Emodifier = "'start of day','+1 days','-1 minutes'"
-            Smodifier = "'start of day'"
-        elif DateEnd[1]=="%Y-%m":
-            Emodifier = "'start of month','+1 months','-1 minutes'"
-            Smodifier = "'start of month'"
-        elif DateEnd[1]=="%Y":
-            Emodifier = "'start of year','+1 years',-1 minutes'"
-            Smodifier = "'start of year'"
+        if self.con.get_backend() == "mysql":
+            if DateEnd[1]=="%Y-%m-%d":
+                Emodifier = "date_format(date_format('%s', '%%Y-%%m-%%d') + INTERVAL 1 DAY - INTERVAL 1 MINUTE, '%%Y-%%m-%%d %%H:%%i:%%S')"%DateEnd[0]
+                Smodifier = "date_format('%s', '%%Y-%%m-%%d')"%DateStart[0]
+            elif DateEnd[1]=="%Y-%m":
+                Emodifier = "date_format(date_format('%s-01', '%%Y-%%m-%%d') + INTERVAL 1 MONTH - INTERVAL 1 MINUTE, '%%Y-%%m-%%d %%H:%%i:%%S')"%DateEnd[0]
+                Smodifier = "date_format('%s-01', '%%Y-%%m%%d')"%DateStart[0]
+            elif DateEnd[1]=="%Y":
+                Emodifier = "date_format(date_format('%s-01-01', '%%Y-%%m-%%d') + INTERVAL 1 YEAR - INTERVAL 1 MINUTE, '%%Y-%%m-%%d %%H:%%i:%%S')"%DateEnd[0]
+                Smodifier = "date_format('%s-01-01', '%%Y-%%m-%%d')"%DateStart[0]
+            else:
+                Emodifier = "''"
+                Smodifier = "''"
+        
+            request = """SELECT strPath,strFilename FROM files WHERE ImageDateTime BETWEEN %s AND %s ORDER BY ImageDateTime ASC"""%(Smodifier, Emodifier)
         else:
-            Emodifier = "''"
-            Smodifier = "''"
-    
-        #SELECT strPath,strFilename FROM files WHERE strftime('%Y-%m-%d %H:%M:%S', "EXIF DateTimeOriginal") BETWEEN strftime('%Y-%m-%d %H:%M:%S','2007-01-01 00:00:01') AND strftime('%Y-%m-%d %H:%M:%S','2007-12-31 23:59:59') ORDER BY "EXIF DateTimeOriginal" ASC
-        request = """SELECT strPath,strFilename FROM files WHERE datetime(ImageDateTime) BETWEEN datetime('%s',%s) AND datetime('%s',%s) ORDER BY ImageDateTime ASC"""%(DS,Smodifier,DE,Emodifier)
+            if DateEnd[1]=="%Y-%m-%d":
+                Emodifier = "'start of day','+1 days','-1 minutes'"
+                Smodifier = "'start of day'"
+            elif DateEnd[1]=="%Y-%m":
+                Emodifier = "'start of month','+1 months','-1 minutes'"
+                Smodifier = "'start of month'"
+            elif DateEnd[1]=="%Y":
+                Emodifier = "'start of year','+1 years',-1 minutes'"
+                Smodifier = "'start of year'"
+            else:
+                Emodifier = "''"
+                Smodifier = "''"
+        
+            request = """SELECT strPath,strFilename FROM files WHERE datetime(ImageDateTime) BETWEEN datetime('%s',%s) AND datetime('%s',%s) ORDER BY ImageDateTime ASC"""%(DS,Smodifier,DE,Emodifier)
         return [row for row in self.cur.request(request)]
-    
+
+
     def pics_for_period(self, periodtype, date):
-    
-        try:
-            sdate,modif1,modif2 = {'year' :['%s-01-01'%date,'start of year','+1 years'],
-                                   'month':['%s-01'%date,'start of month','+1 months'],
-                                   'date' :['%s'%date,'start of day','+1 days']}[periodtype]
-        except:
-            print_exc()
-            #log ("pics_for_period ( periodtype = ['date'|'month'|'year'] , date = corresponding to the period (year|year-month|year-month-day)")
-        request = """SELECT strPath,strFilename FROM files WHERE datetime(ImageDateTime) BETWEEN datetime('%s','%s') AND datetime('%s','%s','%s') ORDER BY ImageDateTime ASC;"""%(sdate,modif1,
-                                                                                                                                                                                                      sdate,modif1,modif2)
+        if self.con.get_backend() == "mysql":
+            try:
+                sdate,edate = {'year' :["date_format('%s-01-01', '%%Y-%%m-%%d')"%date,"date_format(date_format('%s-01-01', '%%Y-%%m-%%d') + INTERVAL 1 YEAR - INTERVAL 1 MINUTE, '%%Y-%%m-%%d %%H:%%i:%%S')"%date],
+                               'month':["date_format('%s-01', '%%Y-%%m-%%d')"%date,"date_format(date_format('%s-01', '%%Y-%%m-%%d') + INTERVAL 1 MONTH - INTERVAL 1 MINUTE, '%%Y-%%m-%%d %%H:%%i:%%S')"%date],
+                               'date' :["date_format('%s', '%%Y-%%m-%%d')"%date,"date_format(date_format('%s', '%%Y-%%m-%%d') + INTERVAL 1 DAY - INTERVAL 1 MINUTE, '%%Y-%%m-%%d %%H:%%i:%%S')"%date]}[periodtype]
+            except:
+                print_exc()
+                #log ("pics_for_period ( periodtype = ['date'|'month'|'year'] , date = corresponding to the period (year|year-month|year-month-day)")
+            request = """SELECT strPath,strFilename FROM files WHERE ImageDateTime BETWEEN %s AND %s ORDER BY ImageDateTime ASC"""%(sdate,edate)
+        else:
+            try:
+                sdate,modif1,modif2 = {'year' :['%s-01-01'%date,'start of year','+1 years'],
+                                       'month':['%s-01'%date,'start of month','+1 months'],
+                                       'date' :['%s'%date,'start of day','+1 days']}[periodtype]
+            except:
+                print_exc()
+                #log ("pics_for_period ( periodtype = ['date'|'month'|'year'] , date = corresponding to the period (year|year-month|year-month-day)")
+            request = """SELECT strPath,strFilename FROM files WHERE datetime(ImageDateTime) BETWEEN datetime('%s','%s') AND datetime('%s','%s','%s') ORDER BY ImageDateTime ASC;"""%(sdate,modif1,sdate,modif1,modif2)
         return [row for row in self.cur.request(request)]
-    
+
+
     def get_years(self):
         if self.con.get_backend() == "mysql":    
             return [t for (t,) in self.cur.request("""SELECT DISTINCT date_format(ImageDateTime, '%Y') FROM files where ImageDateTime is NOT NULL ORDER BY ImageDateTime ASC""")]
         else:
             return [t for (t,) in self.cur.request("""SELECT DISTINCT strftime("%Y",ImageDateTime) FROM files where ImageDateTime NOT NULL ORDER BY ImageDateTime ASC""")]
-    
+
+
     def get_months(self, year):
         if self.con.get_backend() == "mysql":    
             return [t for (t,) in self.cur.request("""SELECT distinct date_format(ImageDateTime, '%%Y-%%m') FROM files where date_format(ImageDateTime, '%%Y') = '%s' ORDER BY ImageDateTime ASC"""%year)]
         else:
             return [t for (t,) in self.cur.request("""SELECT distinct strftime("%%Y-%%m",ImageDateTime) FROM files where strftime("%%Y",ImageDateTime) = '%s' ORDER BY ImageDateTime ASC"""%year)]
-    
+
+
     def get_dates(self, year_month):
         if self.con.get_backend() == "mysql":    
-            return [t for (t,) in self.cur.request("""SELECT distinct date_format(ImageDateTime, '%%Y-%%m-%%d') FROM files where date_format(ImageDateTime, '%%Y-%%m',ImageDateTime) = '%s' ORDER BY ImageDateTime ASC"""%year_month)]
+            return [t for (t,) in self.cur.request("""SELECT distinct date_format(ImageDateTime, '%%Y-%%m-%%d') FROM files where date_format(ImageDateTime, '%%Y-%%m') = '%s' ORDER BY ImageDateTime ASC"""%year_month)]
         else:
             return [t for (t,) in self.cur.request("""SELECT distinct strftime("%%Y-%%m-%%d",ImageDateTime) FROM files where strftime("%%Y-%%m",ImageDateTime) = '%s' ORDER BY ImageDateTime ASC"""%year_month)]
-    
+
+
     def search_all_dates(self):# TODO check if it is really usefull (check 'get_pics_dates' to see if it is not the same)
         """return all files from database sorted by 'EXIF DateTimeOriginal' """
         return [t for t in self.cur.request("""SELECT strPath,strFilename FROM files ORDER BY ImageDateTime ASC""")]
-    
+
+
     def get_pics_dates(self):
         """return all different dates from 'EXIF DateTimeOriginal'"""
         if self.con.get_backend() == "mysql":
             return [t for (t,) in self.cur.request("""SELECT DISTINCT date_format(ImageDateTime, '%Y-%m-%d') FROM files WHERE length(trim(ImageDateTime))>0  ORDER BY ImageDateTime ASC""")]
         else:
             return [t for (t,) in self.cur.request("""SELECT DISTINCT strftime("%Y-%m-%d",ImageDateTime) FROM files WHERE length(trim(ImageDateTime))>0  ORDER BY ImageDateTime ASC""")]
-    
+
+
     def get_pic_date(self, path, filename):
         try:
             (rows, ) = [row for (row,) in self.cur.request_with_binds( "SELECT ImageDateTime FROM files WHERE strPath=? AND strFilename=? ",(path,filename) )]
@@ -1390,6 +1445,7 @@ class MyPictureDB(object):
         except Exception,msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
             return None
+
 
 if __name__=="__main__":
     pass

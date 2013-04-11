@@ -229,28 +229,12 @@ class BaseCursor(object):
     def request(self, statement, bindvariables = []):
     
         return self.request_with_binds(statement, bindvariables)
-        
-        try:
-            self.execute( statement )
-            try:
-                retour = self.fetchall()
-            except:
-                pass
-            self.connection.commit()
-        except Exception,msg:
-            common.log("Database abstraction layer",  "The request failed :", xbmc.LOGERROR )
-            common.log("Database abstraction layer",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
-            common.log("Database abstraction layer",  "SQL Request> %s"%statement, xbmc.LOGERROR)
-            common.log("Database abstraction layer",  "---", xbmc.LOGERROR )
-            
-
-        return retour
 
 
     def request_with_binds(self, statement, bindvariables = []):
 
         binds = []
-        retour= []
+        return_value= []
         try:
             try:
                 if len(bindvariables) > 0:
@@ -261,7 +245,7 @@ class BaseCursor(object):
                             binds.append(value)
                     self.execute( statement, binds )
                     try:
-                        retour = self.fetchall()
+                        return_value = self.fetchall()
                     except:
                         pass
 
@@ -269,7 +253,7 @@ class BaseCursor(object):
                 else:
                     self.execute( statement, binds )
                     try:
-                        retour = self.fetchall()
+                        return_value = self.fetchall()
                     except:
                         pass
                 self.connection.commit()
@@ -286,9 +270,8 @@ class BaseCursor(object):
                 try:
                     i = 1
                     for var in binds:
-                        common.log ("SQL RequestWithBinds %d> %s"%(i,var), xbmc.LOGERROR)
+                        common.log ("SQL RequestWithBinds numvar = %d  content = %s"%(i,var), xbmc.LOGERROR)
                         i=i+1
-                    common.log("Database abstraction layer",  "---", xbmc.LOGERROR )
                 except:
                     pass
         except Exception,msg:
@@ -298,7 +281,7 @@ class BaseCursor(object):
             except:
                 pass
 
-        return retour
+        return return_value
 
 
 

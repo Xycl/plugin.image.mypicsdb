@@ -630,7 +630,7 @@ class Main:
                                 else:
                                     titreperiode = common.getstring(30109)%(datestart,dateend)
                                 #add the new period inside the database
-                                MPDB.period_add(common.smart_unicode(titreperiode),common.smart_unicode("datetime('%s')"%datestart),common.smart_unicode("datetime('%s')"%dateend) )
+                                MPDB.period_add(common.smart_unicode(titreperiode),common.smart_unicode(datestart),common.smart_unicode(dateend) )
                 update=True
             else:
                 common.log("show_period", "No pictures with an EXIF date stored in DB")
@@ -641,7 +641,8 @@ class Main:
             dbdatestart = common.smart_unicode(dbdatestart)
             dbdateend = common.smart_unicode(dbdateend)
 
-            datestart,dateend = MPDB.cur.request("SELECT strftime('%%Y-%%m-%%d',('%s')),strftime('%%Y-%%m-%%d',datetime('%s','+1 days','-1.0 seconds'))"%(dbdatestart,dbdateend))[0]
+            #datestart,dateend = MPDB.cur.request("SELECT strftime('%%Y-%%m-%%d',('%s')),strftime('%%Y-%%m-%%d',datetime('%s','+1 days','-1.0 seconds'))"%(dbdatestart,dbdateend))[0]
+            datestart, dateend = MPDB.period_dates_get_pics(dbdatestart,dbdateend)
             datestart = common.smart_unicode(datestart)
             dateend   = common.smart_unicode(dateend)
             self.add_directory(name      = "%s [COLOR=C0C0C0C0](%s)[/COLOR]"%(periodname,
@@ -1052,12 +1053,13 @@ class Main:
         #TODO : test if 'datestart' is before 'dateend'
         periodname = self.args.periodname
         datestart,dateend = MPDB.cur.request_with_binds( """SELECT DateStart,DateEnd FROM Periodes WHERE PeriodeName=? """, (periodname,) )[0]
-
+        common.log("", "datestart = %s"%datestart)
+        common.log("", "dateend = %s"%dateend)
         dialog = xbmcgui.Dialog()
-        d = dialog.numeric(1, "Input start date for period" ,strftime("%d/%m/%Y",strptime(datestart,"%Y-%m-%d %H:%M:%S")) )
+        d = dialog.numeric(1, "Input start date for period" ,strftime("%d/%m/%Y",strptime(str(datestart),"%Y-%m-%d %H:%M:%S")) )
         datestart = strftime("%Y-%m-%d",strptime(d.replace(" ","0"),"%d/%m/%Y"))
 
-        d = dialog.numeric(1, "Input end date for period" ,strftime("%d/%m/%Y",strptime(dateend,"%Y-%m-%d %H:%M:%S")) )
+        d = dialog.numeric(1, "Input end date for period" ,strftime("%d/%m/%Y",strptime(str(dateend),"%Y-%m-%d %H:%M:%S")) )
         dateend = strftime("%Y-%m-%d",strptime(d.replace(" ","0"),"%d/%m/%Y"))
 
         kb = xbmc.Keyboard(common.smart_unicode(periodname), common.getstring(30110), False)
@@ -1115,6 +1117,7 @@ class Main:
             else:
                 # cancel
                 return
+            common.log("", namecollection)
             MPDB.collection_new(namecollection)
         else: # existing collection
             namecollection = listcollection[rets]
