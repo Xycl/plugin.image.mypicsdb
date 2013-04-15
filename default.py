@@ -1605,7 +1605,7 @@ if __name__=="__main__":
         MypicsDB.pictureDB = pictureDB
         #   - efface les tables et les recréés
         if common.getaddon_setting("initDB") == "true":
-            MPDB.make_new_base(pictureDB, True)
+            MPDB.make_new_base(True)
             common.setaddon_setting("initDB","false")
         else:
             MPDB.version_table()

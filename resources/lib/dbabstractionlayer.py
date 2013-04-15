@@ -85,6 +85,7 @@ def DBFactory(backend, db_name, *args):
             
     # default is to use Sqlite
     else:
+        backend = 'sqlite'
         #print "Sqlite"
         try:
             from sqlite3 import dbapi2 as database
@@ -119,19 +120,6 @@ class MysqlConnection(BaseConnection):
     def __init__(self, *args):
         self.connect(*args)
 
-    """
-    def connect(self, database=None, user='', password='',
-            host='127.0.0.1', port=3306, unix_socket=None,
-            use_unicode=True, charset='utf8', collation=None,
-            autocommit=False,
-            time_zone=None, sql_mode=None,
-            get_warnings=False, raise_on_warnings=False,
-            connection_timeout=None, client_flags=0,
-            buffered=False, raw=False,
-            ssl_ca=None, ssl_cert=None, ssl_key=None,
-            passwd=None, db=None, connect_timeout=None, dsn=None):
-            
-    """
     
     def connect( self, db_name, db_user, db_pass, db_address='127.0.0.1', db_port=3306):
         self.db_name  = db_name
@@ -142,18 +130,9 @@ class MysqlConnection(BaseConnection):
         else:
             self.db_address = db_address
 
-        print db_name
-        print  db_user
-        print         db_pass
-        print  db_address 
-        print db_port
-
-        
-        
         self.connection = database.connect(db = db_name, user = db_user, passwd = db_pass, host = db_address) #, port = db_port)
         self.connection.set_charset('utf8')
         self.connection.set_unicode(True)
-        #print self.connection.is_connected()
 
 
     def cursor(self):        
@@ -162,6 +141,9 @@ class MysqlConnection(BaseConnection):
         
     def get_ddl_primary_key(self):
         return " auto_increment not null primary key "
+        
+    def get_ddl_varchar(self, length):
+        return " varchar(%d) "%length
         
     def get_backend(self):
         return "mysql"
@@ -183,6 +165,9 @@ class SqliteConnection(BaseConnection):
 
     def get_ddl_primary_key(self):
         return " primary key not null "
+
+    def get_ddl_varchar(self, length):
+        return " text "
         
     def get_backend(self):
         return "sqlite"

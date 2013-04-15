@@ -54,18 +54,19 @@ class MyPictureDB(object):
         self.tagTypeDBKeys = {}
         self.db_backend = common.getaddon_setting('db_backend')
 
-        if self.db_backend.lower() == 'sqlite':
-            self.db_name    = join(DB_PATH,common.getaddon_setting('db_name_sqlite'))
-            self.db_user    = ''
-            self.db_pass    = ''
-            self.db_address = ''
-            self.db_port    = ''
-        else:
+        if self.db_backend.lower() == 'mysql':
             self.db_name    = common.getaddon_setting('db_name')
             self.db_user    = common.getaddon_setting('db_user')
             self.db_pass    = common.getaddon_setting('db_pass')
             self.db_address = common.getaddon_setting('db_address')
             self.db_port    = common.getaddon_setting('db_port')     
+
+        else:
+            self.db_name    = join(DB_PATH,common.getaddon_setting('db_name_sqlite'))
+            self.db_user    = ''
+            self.db_pass    = ''
+            self.db_address = ''
+            self.db_port    = ''
             
         common.log('', "Used DB Backend = " + self.db_backend)
         common.log('', "Path = " + self.db_name)
@@ -201,7 +202,17 @@ class MyPictureDB(object):
             
         #table 'files'
         try:
-            self.cur.execute("CREATE TABLE files ( idFile INTEGER %s, idFolder integer, strPath VARCHAR(255), strFilename VARCHAR(128), ftype VARCHAR(40), DateAdded DATETIME, Thumb VARCHAR(1024),  ImageRating VARCHAR(40), ImageDateTime DATETIME, Sha VARCHAR(100), CONSTRAINT UNI_FILE UNIQUE (strPath,strFilename))"%self.con.get_ddl_primary_key())
+            self.cur.execute("""CREATE TABLE files ( idFile INTEGER %s, 
+                                                   idFolder integer, 
+                                                   strPath %s, 
+                                                   strFilename %s, 
+                                                   ftype %s,
+                                                   DateAdded DATETIME, 
+                                                   Thumb %s,  
+                                                   ImageRating %s,
+                                                   ImageDateTime DATETIME, 
+                                                   Sha %s, 
+                                                   CONSTRAINT UNI_FILE UNIQUE (strPath,strFilename))"""%(self.con.get_ddl_primary_key(), self.con.get_ddl_varchar(255), self.con.get_ddl_varchar(128), self.con.get_ddl_varchar(40), self.con.get_ddl_varchar(1024), self.con.get_ddl_varchar(40), self.con.get_ddl_varchar(100)))
         except Exception,msg:
             if str(msg).find("already exists") > -1:
                 pass
@@ -211,7 +222,7 @@ class MyPictureDB(object):
     
         #table 'folders'
         try:
-            self.cur.execute("CREATE TABLE folders (idFolder INTEGER %s, FolderName VARCHAR(255), ParentFolder INTEGER, FullPath VARCHAR(255) UNIQUE, HasPics INTEGER)"%self.con.get_ddl_primary_key())
+            self.cur.execute("CREATE TABLE folders (idFolder INTEGER %s, FolderName %s, ParentFolder INTEGER, FullPath %s UNIQUE, HasPics INTEGER)"%(self.con.get_ddl_primary_key(), self.con.get_ddl_varchar(255), self.con.get_ddl_varchar(255)))
         except Exception,msg:
             if str(msg).find("already exists") > -1:
                 pass
@@ -220,7 +231,7 @@ class MyPictureDB(object):
                 common.log("MPDB.make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
         #table 'Collections'
         try:
-            self.cur.execute("CREATE TABLE Collections (idCol INTEGER %s, CollectionName VARCHAR(128) UNIQUE)"%self.con.get_ddl_primary_key())
+            self.cur.execute("CREATE TABLE Collections (idCol INTEGER %s, CollectionName %s UNIQUE)"%(self.con.get_ddl_primary_key(), self.con.get_ddl_varchar(255)))
         except Exception,msg:
             if str(msg).find("already exists") > -1:
                 pass
@@ -238,7 +249,7 @@ class MyPictureDB(object):
                 common.log("MPDB.make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
         #table 'periodes'
         try:
-            self.cur.execute("CREATE TABLE periodes(idPeriode INTEGER %s, PeriodeName VARCHAR(128) UNIQUE NOT NULL, DateStart DATETIME NOT NULL, DateEnd DATETIME NOT NULL, CONSTRAINT UNI_PERIODE UNIQUE (PeriodeName,DateStart,DateEnd) )"%self.con.get_ddl_primary_key())
+            self.cur.execute("CREATE TABLE periodes(idPeriode INTEGER %s, PeriodeName %s UNIQUE NOT NULL, DateStart DATETIME NOT NULL, DateEnd DATETIME NOT NULL, CONSTRAINT UNI_PERIODE UNIQUE (PeriodeName,DateStart,DateEnd) )"%(self.con.get_ddl_primary_key(), self.con.get_ddl_varchar(255)))
         except Exception,msg:
             if str(msg).find("already exists") > -1:
                 pass
@@ -247,7 +258,7 @@ class MyPictureDB(object):
                 common.log("MPDB.make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
         #table 'Rootpaths'
         try:
-            self.cur.execute("CREATE TABLE Rootpaths (idRoot INTEGER %s, Path VARCHAR(255) UNIQUE NOT NULL, Recursive INTEGER NOT NULL, Remove INTEGER NOT NULL, Exclude INTEGER DEFAULT 0)"%self.con.get_ddl_primary_key())
+            self.cur.execute("CREATE TABLE Rootpaths (idRoot INTEGER %s, Path %s UNIQUE NOT NULL, Recursive INTEGER NOT NULL, Remove INTEGER NOT NULL, Exclude INTEGER DEFAULT 0)"%(self.con.get_ddl_primary_key(), self.con.get_ddl_varchar(255)))
         except Exception,msg:
             if str(msg).find("already exists") > -1:
                 pass
@@ -258,7 +269,7 @@ class MyPictureDB(object):
     
         #table 'TagTypes'
         try:
-            self.cur.execute("CREATE TABLE TagTypes (idTagType INTEGER %s, TagType VARCHAR(128), TagTranslation VARCHAR(128), CONSTRAINT UNI_TAG UNIQUE(TagType) )"%self.con.get_ddl_primary_key())
+            self.cur.execute("CREATE TABLE TagTypes (idTagType INTEGER %s, TagType %s, TagTranslation %s, CONSTRAINT UNI_TAG UNIQUE(TagType) )"%(self.con.get_ddl_primary_key(), self.con.get_ddl_varchar(128), self.con.get_ddl_varchar(128)))
         except Exception,msg:
             if str(msg).find("already exists") > -1:
                 pass
@@ -268,7 +279,7 @@ class MyPictureDB(object):
     
         #table 'TagContent'
         try:
-            self.cur.execute("CREATE TABLE TagContents (idTagContent INTEGER %s, idTagType INTEGER, TagContent VARCHAR(255), CONSTRAINT UNI_TAG UNIQUE(idTagType, TagContent) )"%self.con.get_ddl_primary_key())
+            self.cur.execute("CREATE TABLE TagContents (idTagContent INTEGER %s, idTagType INTEGER, TagContent %s, CONSTRAINT UNI_TAG UNIQUE(idTagType, TagContent) )"%(self.con.get_ddl_primary_key(), self.con.get_ddl_varchar(255)))
         except Exception,msg:
             if str(msg).find("already exists") > -1:
                 pass
