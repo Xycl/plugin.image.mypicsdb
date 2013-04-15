@@ -11,7 +11,21 @@ a) Add the exclude path(s) via menu "Paths of pictures folders".
 b) Rescan the paths which contain these added exclude paths to remove the pictures from MyPicsDB
 
 
-2) General problems with MyPicsDB
+2) MySql
+==================================================================================
+a) You must create a database:
+CREATE DATABASE MyPicsDB CHARACTER SET utf8 COLLATE utf8_general_ci;
+
+b) Create a user (if not already done for music and movies):
+CREATE USER 'xbmc' IDENTIFIED BY 'xbmc';
+
+c) give him rights
+GRANT ALL ON *.* TO 'xbmc';
+
+d) Go to plugin settings and enable MySql. Database MyPicsDB with user XBMC and password XBMC is preconfigured.
+
+
+3) General problems with MyPicsDB
 ==================================================================================
 If you have unexplainable problems like pictures don't get included into database and you're a long time user of MyPicsDB then it will be a good decision to delete the database and start with a new one.
 
@@ -25,7 +39,7 @@ This means that the already entered paths are still available and that you can s
 Because all pictures were deleted from database it doesn't matter what you select in the following dialog box.
 
 
-3) Auto-update  MyPicsDB
+4) Auto-update  MyPicsDB
 ==================================================================================
    Idea from Fungify 
    
@@ -41,7 +55,7 @@ Because all pictures were deleted from database it doesn't matter what you selec
    wget --directory-prefix=tmp --http-user=<xbmc username> --http-passwd=<xbmc password> "http://Servername:Portnumber/xbmcCmds/xbmcHttp?command=ExecBuiltIn&parameter=XBMC.RunScript("<full path to plugin>\plugin.image.mypicsdb\scanpath.py",--database)
 
    
-4) For skinners
+5) For skinners
 ==================================================================================
   Done by MikeBZH44
 
