@@ -39,8 +39,6 @@ DB_VERSION19 = '1.9.12'
 DB_VERSION201 = '2.0.1'
 DB_VERSION = '2.1.1'
 
-global pictureDB
-pictureDB = join(DB_PATH,"MyPictures.db")
 sys_enc = sys.getfilesystemencoding()
 
 lists_separator = "||"
@@ -54,6 +52,9 @@ class MyPictureDB(object):
         self.tagTypeDBKeys = {}
         self.db_backend = common.getaddon_setting('db_backend')
 
+        if not self.db_backend:
+            self.db_backend = 'sqlite'
+            
         if self.db_backend.lower() == 'mysql':
             self.db_name    = common.getaddon_setting('db_name')
             self.db_user    = common.getaddon_setting('db_user')
@@ -62,7 +63,10 @@ class MyPictureDB(object):
             self.db_port    = common.getaddon_setting('db_port')     
 
         else:
-            self.db_name    = join(DB_PATH,common.getaddon_setting('db_name_sqlite'))
+            db_name         = common.getaddon_setting('db_name_sqlite')
+            if not db_name:
+                db_name = 'MyPictures.db'
+            self.db_name    = join(DB_PATH,db_name)
             self.db_user    = ''
             self.db_pass    = ''
             self.db_address = ''

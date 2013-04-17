@@ -1,3 +1,6 @@
+2013/04/12 --> v 2.2.4
+Fix:    Fixed missing settings after update from an old release
+
 2013/04/12 --> v 2.2.3
 Fix:    Recent pictures for MySql fixed
 

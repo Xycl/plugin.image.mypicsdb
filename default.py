@@ -72,10 +72,6 @@ RunningOS = sys.platform
 
 cache = StorageServer.StorageServer("MyPicsDB",1)
 
-global pictureDB
-
-pictureDB = join(DB_PATH,"MyPictures.db")
-
 files_fields_description={"strFilename":common.getstring(30300),
                           "strPath":common.getstring(30301),
                           "Thumb":common.getstring(30302)
@@ -1598,25 +1594,16 @@ if __name__=="__main__":
     m=Main()
     MPDB = MypicsDB.MyPictureDB()
     
-    if not sys.argv[ 2 ]: #pas de paramètres : affichage du menu principal
-        #set the debugging for the library
-        #MPDB.DEBUGGING = False
-        # initialisation de la base :
-        MypicsDB.pictureDB = pictureDB
-        #   - efface les tables et les recréés
+    if not sys.argv[ 2 ]: 
         if common.getaddon_setting("initDB") == "true":
             MPDB.make_new_base(True)
             common.setaddon_setting("initDB","false")
         else:
             MPDB.version_table()
             
-        #scan les répertoires lors du démarrage (selon setting)
         if common.getaddon_setting('bootscan')=='true':
             if not(xbmc.getInfoLabel( "Window.Property(DialogAddonScan.IsAlive)" ) == "true"):
-                #si un scan n'est pas en cours, on lance le scan
                 common.run_script("%s,--database"%join( home, "scanpath.py") )
-                #xbmc.executebuiltin( "RunScript(%s,--database) "%join( home, "scanpath.py").encode("utf8") )
-                #puis on rafraichi le container sans remplacer le contenu, avec un paramètre pour dire d'afficher le menu
                 xbmc.executebuiltin( "Container.Update(\"%s?action='showhome'&viewmode='view'\" ,)"%(sys.argv[0]) , )
         else:
             m.show_home()
