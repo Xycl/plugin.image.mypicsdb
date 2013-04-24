@@ -1,16 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
-"""
-TODO :
-  - test a silent background scanning behaviour. May probably be done as the plugin still works while scanning.
-  - upgrade iptcinfo library (need some unicode improvement)
-  - 'add to collections' context menu from any folder in sort by date view
-  - 'add to collections' context menu from any folder in sort by folders view
-  - test if a 'collection' or 'period' or 'keyword' view doesn't contain any pictures : remove these from the database when deleting pictures
-  - Scan : need to fix parameters sending. Right now, recursive or update things are not handled (everything is recursive and updating for new/deleted pics)
-  - Set a parameter to prevent small pics to be added to the database (use EXIF_ImageWidth and EXIF_ImageLength metas)
-  - Les photos depuis x jours avec x configurable dans les options
-"""
+
 
 __addonname__ = 'plugin.image.mypicsdb'
 
@@ -26,7 +16,6 @@ from traceback import print_exc
 
 import xbmc, xbmcplugin,xbmcgui
 
-#from xbmcgui import Window
 
 # MikeBZH44
 try:
@@ -62,7 +51,7 @@ home = common.getaddon_path()
 BASE_RESOURCE_PATH = join( home, "resources" )
 DATA_PATH = common.getaddon_info('profile')
 PIC_PATH = join( BASE_RESOURCE_PATH, "images")
-DB_PATH = xbmc.translatePath( "special://database/")
+
 
 #catching the OS :
 #   win32 -> win
@@ -1453,22 +1442,18 @@ class Main:
                 if error: msg = common.getstring(30069)%(error,len(filelist))   #"%s Errors while zipping %s files"
                 else: msg = common.getstring(30070)%len(filelist)               #%s files successfully Zipped !!
             common.show_notification(common.getstring(30000),msg,3000,join(home,"icon.png"))
-            #xbmc.executebuiltin( "Notification(%s,%s,%s,%s)"%(common.getstring(30000).encode('utf-8'),msg.encode('utf-8'),3000,join(home,"icon.png").encode('utf-8')) )
             return
+
 
         if self.args.viewmode=="export":
             #1- ask for destination
             dialog = xbmcgui.Dialog()
             dstpath = dialog.browse(3, common.getstring(30180),"files" ,"", True, False, "")#Choose the destination for exported pictures
             dstpath = common.smart_unicode(dstpath)
-            #pour créer un dossier dans la destination, on peut utiliser le nom  self.args.name
+
             if dstpath == "":
                 return
-            #3- use the  name to export to that folder
-            #   a- ask the user if subfolder has to be created
-            #   a-1/ yes : show the keyboard for a possible value for a folder name (using m.args.name as base name)
-            #               repeat as long as input value is not correct for a folder name or dialog has been canceled
-            #   a-2/ no : simply go on with copy ...
+
             ok = dialog.yesno(common.getstring(30000),common.getstring(30181),"(%s)"%self.args.name)#do you want to create a folder for exported pictures ?
             if ok:
                 dirok=False
@@ -1487,10 +1472,8 @@ class Main:
                             dialog.ok(common.getstring(30000),"Error#%s : %s"%msg.args)
                     else:
                         common.show_notification(common.getstring(30000),common.getstring(30183),3000,join(home,"icon.png"))
-                        #xbmc.executebuiltin( "Notification(%s,%s,%s,%s )"%(common.getstring(30000).encode('utf-8'),common.getstring(30183).encode('utf-8'),3000,join(home,"icon.png").encode('utf-8')) )
                         return
 
-            #browse(type, heading, shares[, mask, useThumbs, treatAsFolder, default])
             from shutil import copy
             pDialog = xbmcgui.DialogProgress()
             pDialog.create(common.getstring(30000),common.getstring(30184))# 'Copying files...')
@@ -1503,8 +1486,6 @@ class Main:
 
                 pDialog.update(int(100*i/len(filelist)),common.getstring(30185)%join(path,filename),dstpath)#"Copying '%s' to :"
                 i=i+1.0
-                #2- does the destination have the file ? shall we overwrite it ?
-                #TODO : rename a file if it already exists, rather than asking to overwrite it
                 if isfile(join(dstpath,filename)):
                     ok = dialog.yesno(common.getstring(30000),common.getstring(30186)%filename,dstpath,common.getstring(30187))#File %s already exists in... overwrite ?
                     if not ok:
@@ -1514,36 +1495,30 @@ class Main:
             pDialog.update(100,common.getstring(30188),dstpath)#"Copying Finished !
             xbmc.sleep(1000)
             common.show_notification(common.getstring(30000),common.getstring(30189)%(cpt,dstpath),3000,join(home,"icon.png"))
-            #xbmc.executebuiltin( "Notification(%s,%s,%s,%s )"%(common.getstring(30000).encode('utf-8'),(common.getstring(30189)%(cpt,dstpath)).encode('utf-8'),3000,join(home,"icon.png").encode('utf-8')) )
             dialog.browse(2, common.getstring(30188).encode('utf-8'),"files" ,"", True, False, dstpath.encode('utf-8'))#show the folder which contain pictures exported
             return
 
-        #ajout des boutons de pagination
-        if len(filelist)>=limit:#alors on ajoute les paginations
-            #faire un menu contextuel afin de régler le nombre d'items par pages
-            if int(page)>1:#à partir de la page 2
+        if len(filelist)>=limit:
+            if int(page)>1:
                 common.log("show_pics >> pagination",  "TODO  : display previous page item")
             if (page*limit)<(len(filelist)):
                 common.log("show_pics >> pagination",  "TODO  : display next page item")
-                #on affiche un bouton page suivante
+
 
         # fill the pictures list
         count = 0
         for path,filename in filelist:
             path     = common.smart_unicode(path)
             filename = common.smart_unicode(filename)        
-            #création du menu contextuel selon les situasions
             context=[]
             count += 1
-            # - diaporama
-            #context.append( (common.getstring(30303),"SlideShow(%s%s,recursive,notrandom)"%(sys.argv[0],common.quote_param(self.parm)) ) )
             # - add to collection
             context.append( ( common.getstring(30152),"XBMC.RunPlugin(\"%s?action='addtocollection'&viewmode='view'&path='%s'&filename='%s'\")"%(sys.argv[0],
                                                                                                                          common.quote_param(path.encode('utf-8')),
                                                                                                                          common.quote_param(filename.encode('utf-8')))
                               )
                             )
-            # - del pic from collection : seulement les images des collections
+            # - del pic from collection : 
             if self.args.method=="collection":
                 context.append( ( common.getstring(30151),"XBMC.RunPlugin(\"%s?action='delfromcollection'&viewmode='view'&collect='%s'&path='%s'&filename='%s'\")"%(sys.argv[0],
                                                                                                                                              common.quote_param(self.args.collect),
@@ -1552,10 +1527,10 @@ class Main:
                                   )
                                 )
 
-            #3 - montrer où est localisé physiquement la photo
+            #3 - 
             context.append( (common.getstring(30060),"XBMC.RunPlugin(\"%s?action='locate'&filepath='%s'&viewmode='view'\" ,)"%(sys.argv[0],common.quote_param(join(path,filename).encode('utf-8')) ) ) )
 
-            #5 - les infos de la photo
+            #5 - infos
             #context.append( ( "paramètres de l'addon","XBMC.ActivateWindow(virtualkeyboard)" ) )
             self.add_picture(filename,
                         path,
@@ -1610,77 +1585,95 @@ if __name__=="__main__":
 
 
     elif m.args.action=='showhome':
-        #display home menu
         m.show_home()
-    #les sélections sur le menu d'accueil :
-    #   Tri par dates
+
     elif m.args.action=='showdate':
         m.show_date()
-    #   Tri par dossiers
+
     elif m.args.action=='showfolder':
         m.show_folders()
-    #   Tri par mots clés
+
     elif m.args.action=='showkeywords':
         m.show_keywords()
-    # tags submenu
+
     elif m.args.action=="showtranslationeditor":
         m.show_translationeditor()
+
     elif m.args.action=="help":
         m.show_help()
+    
     elif m.args.action=='showwizard':
         m.show_wizard()
+    
     elif m.args.action=='showtagtypes':
         m.show_tagtypes()
+    
     elif m.args.action=='showtags':
         m.show_tags()
-    #   Affiche les images
+
     elif m.args.action=='showpics':
         m.show_pics()
-    #affiche la sélection de période
+
     elif m.args.action=='showperiod':
         m.show_period()
+
     elif m.args.action=='removeperiod':
         m.remove_period()
+
     elif m.args.action=='renameperiod':
         m.period_rename()
+
     elif m.args.action=='showcollection':
         m.show_collection()
+    
     elif m.args.action=='addtocollection':
         m.collection_add_pic()
+    
     elif m.args.action=='removecollection':
         m.collection_delete()
+    
     elif m.args.action=='delfromcollection':
         m.collection_del_pic()
+    
     elif m.args.action=='renamecollection':
         m.collection_rename()
+    
     elif m.args.action=='globalsearch':
         m.global_search()
+    
     elif m.args.action=='addfolder':
         m.collection_add_folder()
+    
     elif m.args.action=='rootfolders':
         m.show_roots()
+    
     elif m.args.action=='locate':
         dialog = xbmcgui.Dialog()
         dstpath = dialog.browse(2, common.getstring(30071),"files" ,"", True, False, m.args.filepath)
+    
     elif m.args.action=='geolocate':
         m.show_map()
+    
     elif m.args.action=='diapo':
         m.show_diaporama()
+    
     elif m.args.action=='alea':
         #TODO : afficher une liste aléatoire de photos
         pass
     elif m.args.action=='lastshot':
-        #TODO : afficher une liste des X dernières photos prise selon la date de prise de vue
         m.show_lastshots()
+        
     elif m.args.action=='request':
-        #TODO : afficher le résultat d'une requête
         pass
+
     # MikeBZH44 : Method to query database and store result in Windows properties and CommonCache table
     elif m.args.action=='setproperties':
         m.set_properties()
+    
     # MikeBZH44 : Method to get pictures from CommonCache and start slideshow
     elif m.args.action=='slideshow':
         m.set_slideshow()
+    
     else:
         m.show_home()
 
