@@ -1,3 +1,6 @@
+2013/04/21 --> v 2.2.5
+Update: Language files from Transifex
+
 2013/04/12 --> v 2.2.4
 Fix:    Fixed missing settings after update from an old release
 
