@@ -86,7 +86,6 @@ def DBFactory(backend, db_name, *args):
     # default is to use Sqlite
     else:
         backend = 'sqlite'
-        #print "Sqlite"
         try:
             from sqlite3 import dbapi2 as database
         except:
@@ -189,14 +188,8 @@ class BaseCursor(object):
         if bindvariables and isinstance(self, MysqlCursor) == True:
             sql = sql.replace('?', '%s')
         if bindvariables :
-            #print "bindvariables"
-            #print bindvariables
-            #print "sql"
-            #print sql
             self.cursor.execute(sql, bindvariables)
         else:
-            print "sql"
-            common.log("", sql )
             self.cursor.execute(sql)
 
     def fetchone(self):
@@ -211,18 +204,18 @@ class BaseCursor(object):
         return [row for row in self.cursor.fetchall()]
 
 
-    def request(self, statement, bindvariables = []):
-    
-        return self.request_with_binds(statement, bindvariables)
-
-
     def request_with_binds(self, statement, bindvariables = []):
+    
+        return self.request(statement, bindvariables)
+
+
+    def request(self, statement, bindvariables = []):
 
         binds = []
         return_value= []
         try:
             try:
-                if len(bindvariables) > 0:
+                if bindvariables > 0:
                     for value in bindvariables:
                         if type(value).__name__ == 'str':
                             binds.append(common.smart_unicode(value))

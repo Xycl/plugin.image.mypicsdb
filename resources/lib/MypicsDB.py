@@ -7,32 +7,22 @@ Todo :
 
 
 """
-#import os
-import sys
+
+import sys 
+from os.path import join
+from traceback import print_exc
+from time import strftime,strptime
+
 import  xbmc, xbmcgui
 import common
 import dbabstractionlayer as dblayer
 
-from os.path import join
-from traceback import print_exc
-from time import strftime, strptime
 
-home = common.getaddon_path()
+#home = common.getaddon_path()
 
-
-"""
-BASE_RESOURCE_PATH = join( home, "resources" )
-sys.path.append( os.path.join( BASE_RESOURCE_PATH, "lib" ) )
-# append the proper platforms folder to our path, xbox is the same as win32
-env = ( os.environ.get( "OS", "win32" ), "win32", )[ os.environ.get( "OS", "win32" ) == "xbox" ]
-sys.path.append( os.path.join( BASE_RESOURCE_PATH, "platform_libraries", env ) )
-"""
-
-DB_VERSION19 = '1.9.12'
+DB_VERSION19  = '1.9.12'
 DB_VERSION201 = '2.0.1'
-DB_VERSION = '2.1.1'
-
-sys_enc = sys.getfilesystemencoding()
+DB_VERSION    = '2.1.1'
 
 lists_separator = "||"
 
@@ -53,7 +43,7 @@ class MyPictureDB(object):
             self.db_user    = common.getaddon_setting('db_user')
             self.db_pass    = common.getaddon_setting('db_pass')
             self.db_address = common.getaddon_setting('db_address')
-            self.db_port    = common.getaddon_setting('db_port')
+            self.db_port    = common.getaddon_setting('db_port')     
 
         else:
             db_name         = common.getaddon_setting('db_name_sqlite')
@@ -288,7 +278,7 @@ class MyPictureDB(object):
     
         #table 'TagsInFiles'
         try:
-            self.cur.execute("CREATE TABLE TagsInFiles (idTagContent INTEGER %s, idFile INTEGER NOT NULL)"%self.con.get_ddl_primary_key())
+            self.cur.execute("CREATE TABLE TagsInFiles (idTagContent INTEGER, idFile INTEGER NOT NULL)")
         except Exception,msg:
             if str(msg).find("already exists") > -1:
                 pass
@@ -366,16 +356,15 @@ class MyPictureDB(object):
             self.cur.execute('delete from files where idFolder not in( select idFolder from folders)')
             self.cur.execute( "delete from TagsInFiles where idFile not in(select idFile from Files )")
             self.cur.execute( "delete from TagContents where idTagContent not in (select idTagContent from TagsInFiles)")
-            
             # Only delete tags which are not translated!
             self.cur.execute( "delete from TagTypes where idTagType not in (select idTagType from TagContents) and TagType = TagTranslation")
     
         except Exception,msg:
             common.log("MPDB.cleanup_keywords", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
-            self.cur.close()
+            #self.cur.close()
             raise
     
-        self.con.commit()
+        #self.con.commit()
         #self.cur.close()
     
     def pic_exists(self, picpath, picfile):
@@ -420,22 +409,23 @@ class MyPictureDB(object):
         keys are DB fields ; values are DB values
         """
     
-        if update :
+        if update :#si update alors on doit updater et non pas insert
             if self.pic_exists(path,filename):
                 #print "file exists in database and rescan is set to true..."
-                self.cur.request_with_binds(""" DELETE FROM files WHERE idFolder = (SELECT idFolder FROM folders WHERE FullPath=?) AND strFilename=? """,(path,filename))
+                self.cur.request(""" DELETE FROM files WHERE idFolder = (SELECT idFolder FROM folders WHERE FullPath=?) AND strFilename=? """,(path,filename))
                 self.cleanup_keywords()
 
         try:
-            imagedatetime = ""
+            imagedatetime = "null"
             if  "EXIF DateTimeOriginal" in dictionnary:
                 imagedatetime = dictionnary["EXIF DateTimeOriginal"]
-
+                #print "1 = " + str(imagedatetime)
             if len(imagedatetime.strip()) < 10 and "ImageDateTime" in dictionnary:
                 imagedatetime = dictionnary["ImageDateTime"]
-
+                #print "2 = " + str(imagedatetime)
             if len(imagedatetime.strip()) < 10 and "EXIF DateTimeDigitized" in dictionnary:
                 imagedatetime = dictionnary["EXIF DateTimeDigitized"]
+                #print "3 = " + str(imagedatetime)
              
             try:
                 dictionnary['YYYY-MM'] = imagedatetime[:7]
@@ -444,23 +434,20 @@ class MyPictureDB(object):
             
             self.cur.execute( """INSERT INTO files(idFolder, strPath, strFilename, ftype, DateAdded,  Thumb,  ImageRating, ImageDateTime, Sha) values (?, ?, ?, ?, ?, ?, ?, ?, ?)""", 
                           ( dictionnary["idFolder"],  dictionnary["strPath"], dictionnary["strFilename"], dictionnary["ftype"], dictionnary["DateAdded"], dictionnary["Thumb"], dictionnary["ImageRating"], imagedatetime, sha ) )
-            self.con.commit()
+            #self.con.commit()
         except Exception,msg:
     
             common.log("file_insert", "path = %s"%common.smart_unicode(filename).encode('utf-8'), xbmc.LOGERROR)
             common.log("file_insert",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
             common.log( "file_insert", """INSERT INTO files('%s') values (%s)""" % ( "','".join(dictionnary.keys()) , ",".join(["?"]*len(dictionnary.values())) ), xbmc.LOGERROR )
-            self.con.commit()
+            #self.con.commit()
             #self.cur.close()
             raise MyPictureDBException
     
     
         # meta table inserts
         try:
-            idfile = idfile = [row[0] for row in self.cur.request("SELECT idFile FROM files WHERE strPath = ? AND strFilename = ?",(path,filename,) )] [0]
-        except Exception,msg:
-            common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )             
-        try:
+            idfile = [row[0] for row in self.cur.request("SELECT idFile FROM files WHERE strPath = ? AND strFilename = ?",(path,filename,) )] [0]
             self.tags_insert(idfile, filename, path, dictionnary)
         except Exception,msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )             
@@ -497,6 +484,8 @@ class MyPictureDB(object):
                             # is it already in our list?
                             if not tag_type in self.tagTypeDBKeys:
         
+                                common.log("tags_insert", "tag_type %s not in self.tagTypeDBKeys"%tag_type)
+                                
                                 # not in list therefore insert into table TagTypes
                                 try:
                                     self.cur.execute(" INSERT INTO TagTypes(tagType, TagTranslation) VALUES(?, ?) ",(tag_type,tag_type))
@@ -515,9 +504,11 @@ class MyPictureDB(object):
                                     common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )             
 
                                 self.tagTypeDBKeys[tag_type] = id_tag_type
+                                common.log("tags_insert", 'self.tagTypeDBKeys["%s"] = %s'%(tag_type, id_tag_type))
                             else :
                                 id_tag_type = self.tagTypeDBKeys[tag_type]
-        
+                                common.log("tags_insert", '%s = self.tagTypeDBKeys["%s"]'%(id_tag_type, tag_type))
+                                
                             try:
                                 self.cur.execute(" INSERT INTO TagContents(idTagType,TagContent) VALUES(?,?) ",(id_tag_type,value))
                             except Exception,msg:
@@ -551,11 +542,13 @@ class MyPictureDB(object):
         """insert into folders database, the folder name, folder parent, full path and if has pics
             Return the id of the folder inserted"""
     
+        #insert in the folders database
         try:
             self.cur.execute("""INSERT INTO folders(FolderName,ParentFolder,FullPath,HasPics) VALUES (?,?,?,?) """,(foldername,parentfolderID,folderpath,haspic))
         except:
             pass
         self.con.commit()
+        #return the id of the folder inserted
         
         try:
             retour = [row for (row,) in self.cur.request("""SELECT idFolder FROM folders where FullPath= ?""",(folderpath,))][0]
@@ -565,26 +558,29 @@ class MyPictureDB(object):
         return retour
     
     def get_children(self, folderid):
+        #print "get_children(" + str(folderid) + ")"
         """search all children folders ids for the given folder id"""
-        childrens=[c[0] for c in self.cur.request_with_binds("SELECT idFolder FROM folders WHERE ParentFolder=? ", (folderid,))]
+        childrens=[c[0] for c in self.cur.request("SELECT idFolder FROM folders WHERE ParentFolder=? ", (folderid,))]
         list_child=[]
         list_child.extend(childrens)
         for idchild in childrens:
             list_child.extend(self.get_children(idchild))
         return list_child
     
-    def del_pic(self, picpath, picfile=None):
+    def del_pic(self, picpath, picfile=None): #TODO : revoir la vérif du dossier inutile
         """Supprime le chemin/fichier de la base. Si aucun fichier n'est fourni, toutes les images du chemin sont supprimées de la base"""
     
         if picfile:
-            self.cur.request_with_binds("""DELETE FROM files WHERE idFolder = (SELECT idFolder FROM folders WHERE FullPath=?) AND strFilename=? """,(picpath,picfile))
+            #on supprime le fichier de la base
+            #print """DELETE FROM files WHERE idFolder = (SELECT idFolder FROM folders WHERE FullPath="%s") AND strFilename="%s" """%(picpath,picfile)
+            self.cur.request("""DELETE FROM files WHERE idFolder = (SELECT idFolder FROM folders WHERE FullPath=?) AND strFilename=? """,(picpath,picfile))
     
         else:
     
             try:
                 if picpath:
                     try:
-                        idpath = self.cur.request_with_binds("""SELECT idFolder FROM folders WHERE FullPath = ? """, (picpath,))[0][0]
+                        idpath = self.cur.request("""SELECT idFolder FROM folders WHERE FullPath = ? """, (picpath,))[0][0]
                     except Exception,msg:
                         common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )             
 
@@ -646,14 +642,14 @@ class MyPictureDB(object):
     def stored_sha (self, path, filename): 
         #return the SHA in DB for the given picture
         try:
-            return [row for row in self.cur.request_with_binds( """select sha from files where strPath=? and strFilename=? """,(path, filename))][0][0]
+            return [row for row in self.cur.request( """select sha from files where strPath=? and strFilename=? """,(path, filename))][0][0]
         except:
             return "0"
 
     
     def get_rating(self, path, filename):   
         try:
-            return [row for row in self.cur.request_with_binds( """SELECT files.ImageRating FROM files WHERE strPath=? AND strFilename=? """, (path, filename) )][0][0]
+            return [row for row in self.cur.request( """SELECT files.ImageRating FROM files WHERE strPath=? AND strFilename=? """, (path, filename) )][0][0]
         except IndexError:
             return None
     
@@ -668,9 +664,8 @@ class MyPictureDB(object):
             return
         
         set_tags_array = set_tags.split("|||")
-    
         unset_tags_array = unset_tags.split("|||")    
-    
+
         outer_select = "SELECT distinct strPath,strFilename, ImageDateTime FROM FILES WHERE 1=1 "
     
         # These selects are joined with IN clause
@@ -781,35 +776,51 @@ class MyPictureDB(object):
     
     
     def filterwizard_delete_filter(self, filter_name):
-        self.cur.request_with_binds( "delete from FilterWizard where strFilterName = ? ",(filter_name, ))
-    
-    
+        self.cur.request( "delete from FilterWizard where strFilterName = ? ",(filter_name, ))
+        self.cur.request("delete from FilterWizardItems where fkFilter not in (select pkFilter from FilterWizard)")
+        if self.db_backend.lower() == 'mysql':
+            self.cur.request("analyze table FilterWizard")
+            self.cur.request("analyze table FilterWizardItems")
+        else:
+            self.cur.request("analyze")           
+
+        self.con.commit()
+        
     def filterwizard_save_filter(self, filter_name, items, bmatch_all, start_date ='', end_date = ''):
     
         match_all = (1 if bmatch_all == True else 0)
         
         try:
-            rows = [row for row in self.cur.request_with_binds( "select count(*) from FilterWizard where strFilterName = ? ",(filter_name, ))] [0][0]
+            rows = [row for row in self.cur.request( "select count(*) from FilterWizard where strFilterName = ? ",(filter_name, ))] [0][0]
         except Exception,msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )             
             rows = 0
             
         if rows == 0:
-            self.cur.request_with_binds( "insert into FilterWizard(strFilterName, bMatchAll, StartDate, EndDate) values (?, ?, ?, ?) ",(filter_name, match_all, start_date, end_date ))
+            self.cur.request( "insert into FilterWizard(strFilterName, bMatchAll, StartDate, EndDate) values (?, ?, ?, ?) ",(filter_name, match_all, start_date, end_date ))
         else:
-            self.cur.request_with_binds( "update FilterWizard set bMatchAll = ?, StartDate = ?, EndDate = ? where strFiltername = ? ",(match_all, start_date, end_date, filter_name ))
+            self.cur.request( "update FilterWizard set bMatchAll = ?, StartDate = ?, EndDate = ? where strFiltername = ? ",(match_all, start_date, end_date, filter_name ))
         
         try:
-            filter_key = [row for row in self.cur.request_with_binds( "select pkFilter from FilterWizard where strFilterName = ? ",(filter_name, ))] [0][0]
+            filter_key = [row for row in self.cur.request( "select pkFilter from FilterWizard where strFilterName = ? ",(filter_name, ))] [0][0]
         except Exception,msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )             
             return
             
-        self.cur.request_with_binds("delete from FilterWizardItems where fkfilter = ?", (filter_key, ))
+        self.cur.request("delete from FilterWizardItems where fkfilter = ?", (filter_key, ))
         for item, state in items.iteritems():
             if state != 0:
-                self.cur.request_with_binds("insert into FilterWizardItems(fkFilter, strItem, nState) values(?, ?, ?)", (filter_key, item, state))
-           
+                self.cur.request("insert into FilterWizardItems(fkFilter, strItem, nState) values(?, ?, ?)", (filter_key, item, state))
+
+        """
+        if self.db_backend.lower() == 'mysql':
+            self.cur.request("analyze table FilterWizard")
+            self.cur.request("analyze table FilterWizardItems")
+        else:
+            self.cur.request("analyze")           
+        """
+        
+        self.con.commit()
             
     def filterwizard_load_filter(self, filter_name):
         items = {}
@@ -818,13 +829,13 @@ class MyPictureDB(object):
         end_date = ''
         #
         try:
-            rows = [row for row in self.cur.request_with_binds( "select count(*) from FilterWizard where strFilterName = ? ",(filter_name, ))] [0][0]
+            rows = [row for row in self.cur.request( "select count(*) from FilterWizard where strFilterName = ? ",(filter_name, ))] [0][0]
         except Exception,msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )             
 
         if rows > 0:
-            filter_key, match_all, start_date, end_date = [row for row in self.cur.request_with_binds( "select pkFilter, bMatchAll, StartDate, EndDate from FilterWizard where strFilterName = ? ",(filter_name, ))] [0]
-            for state, item in self.cur.request_with_binds( "select nState, strItem from FilterWizardItems where fkFilter = ?", (filter_key,)):
+            filter_key, match_all, start_date, end_date = [row for row in self.cur.request( "select pkFilter, bMatchAll, StartDate, EndDate from FilterWizard where strFilterName = ? ",(filter_name, ))] [0]
+            for state, item in self.cur.request( "select nState, strItem from FilterWizardItems where fkFilter = ?", (filter_key,)):
                 items[item] = state
     
         return items, (True if match_all == 1 else False), start_date, end_date
@@ -841,7 +852,8 @@ class MyPictureDB(object):
     def collection_new(self, colname):
         """Add a new collection"""       
         if colname :
-            self.cur.request_with_binds( "INSERT INTO Collections(CollectionName) VALUES (?) ",(colname, ))
+            self.cur.request( "INSERT INTO Collections(CollectionName) VALUES (?) ",(colname, ))
+            self.con.commit()
         else:
             common.log( "collection_new", "User did not specify a name for the collection.")
             
@@ -850,34 +862,45 @@ class MyPictureDB(object):
         """delete a collection"""
         common.log( "collection_delete", "Name = %s"%colname)
         if colname:
-            self.cur.request_with_binds( """DELETE FROM FilesInCollections WHERE idCol=(SELECT idCol FROM Collections WHERE CollectionName=?)""", (colname,))
-            self.cur.request_with_binds( """DELETE FROM Collections WHERE CollectionName=? """,(colname,) )
+            self.cur.request( """DELETE FROM FilesInCollections WHERE idCol=(SELECT idCol FROM Collections WHERE CollectionName=?)""", (colname,))
+            self.cur.request( """DELETE FROM Collections WHERE CollectionName=? """,(colname,) )
+            self.con.commit()
         else:
             common.log( "collection_delete",  "User did not specify a name for the collection" )
-
-
+    
+    
     def collection_get_pics(self, colname):      
         """List all pics associated to the Collection given as Colname"""
-        return [row for row in self.cur.request_with_binds( """SELECT strPath,strFilename FROM Files WHERE idFile IN (SELECT idFile FROM FilesInCollections WHERE idCol IN (SELECT idCol FROM Collections WHERE CollectionName=?)) ORDER BY ImageDateTime ASC""",(colname,))]
-
-
+        return [row for row in self.cur.request( """SELECT strPath,strFilename FROM Files WHERE idFile IN (SELECT idFile FROM FilesInCollections WHERE idCol IN (SELECT idCol FROM Collections WHERE CollectionName=?)) ORDER BY ImageDateTime ASC""",(colname,))]
+    
+    
     def collection_rename(self, colname,newname):   
         """rename give collection"""
         if colname:
-            self.cur.request_with_binds( """UPDATE Collections SET CollectionName = ? WHERE CollectionName=? """, (newname, colname) )
+            self.cur.request( """UPDATE Collections SET CollectionName = ? WHERE CollectionName=? """, (newname, colname) )
+            self.con.commit()
         else:
             common.log( "collection_rename",  "User did not specify a name for the collection")
-
-
+    
+    
     def collection_add_pic(self, colname, filepath, filename):    
-        self.cur.request_with_binds( """INSERT INTO FilesInCollections(idCol,idFile) VALUES ( (SELECT idCol FROM Collections WHERE CollectionName=?) , (SELECT idFile FROM files WHERE strPath=? AND strFilename=?) )""",(colname,filepath,filename) )
-
-
+    
+        #cette requête ne vérifie pas si :
+        #   1- le nom de la collection existe dans la table Collections
+        #   2- si l'image est bien une image en base de donnée Files
+        #ces points sont solutionnés partiellement car les champs ne peuvent être NULL
+        #   3- l'association idCol et idFile peut apparaitre plusieurs fois...
+        #print """(SELECT idFile FROM files WHERE strPath="%s" AND strFilename="%s")"""%(filepath,filename)
+        self.cur.request( """INSERT INTO FilesInCollections(idCol,idFile) VALUES ( (SELECT idCol FROM Collections WHERE CollectionName=?) , (SELECT idFile FROM files WHERE strPath=? AND strFilename=?) )""",(colname,filepath,filename) )
+        self.con.commit()
+    
+    
     def collection_del_pic(self, colname, filepath, filename):
         common.log("collection_del_pic","%s, %s, %s"%(colname, filepath, filename))
-        self.cur.request_with_binds( """DELETE FROM FilesInCollections WHERE idCol=(SELECT idCol FROM Collections WHERE CollectionName=?) AND idFile=(SELECT idFile FROM files WHERE strPath=? AND strFilename=?)""",(colname, filepath, filename) )
-
-
+        self.cur.request( """DELETE FROM FilesInCollections WHERE idCol=(SELECT idCol FROM Collections WHERE CollectionName=?) AND idFile=(SELECT idFile FROM files WHERE strPath=? AND strFilename=?)""",(colname, filepath, filename) )
+        self.con.commit()
+    
+    
     ####################
     # Periodes functions
     #####################
@@ -892,22 +915,25 @@ class MyPictureDB(object):
         else:
             datestart = "datetime(%s)"%datestart
             dateend   = "datetime(%s)"%dateend
-
+        
         select = """INSERT INTO Periodes(PeriodeName,DateStart,DateEnd) VALUES (?,%s,%s)"""%(datestart,dateend)
-        self.cur.request_with_binds( select, (periodname,) )
+        self.cur.request( select, (periodname,) )
+        self.con.commit()
         return
-
+    
     def period_delete(self, periodname):
-        self.cur.request_with_binds( """DELETE FROM Periodes WHERE PeriodeName=? """,(periodname,) )
+        self.cur.request( """DELETE FROM Periodes WHERE PeriodeName=? """,(periodname,) )
+        self.con.commit()
         return
-
+    
     def period_rename(self, periodname, newname, newdatestart, newdateend):
         if self.con.get_backend() == "mysql":
-            self.cur.request_with_binds( """UPDATE Periodes SET PeriodeName = ?,DateStart = date_format(?, '%%Y-%%m-%%d') , DateEnd = date_format(?, '%%Y-%%m-%%d') WHERE PeriodeName=? """,(newname,newdatestart,newdateend,periodname) )
+            self.cur.request( """UPDATE Periodes SET PeriodeName = ?,DateStart = date_format(?, '%%Y-%%m-%%d') , DateEnd = date_format(?, '%%Y-%%m-%%d') WHERE PeriodeName=? """,(newname,newdatestart,newdateend,periodname) )
         else:
-            self.cur.request_with_binds( """UPDATE Periodes SET PeriodeName = ?,DateStart = datetime(?) , DateEnd = datetime(?) WHERE PeriodeName=? """,(newname,newdatestart,newdateend,periodname) )
+            self.cur.request( """UPDATE Periodes SET PeriodeName = ?,DateStart = datetime(?) , DateEnd = datetime(?) WHERE PeriodeName=? """,(newname,newdatestart,newdateend,periodname) )
+        self.con.commit()
         return
-
+    
     def period_dates_get_pics(self, dbdatestart, dbdateend):
         if self.con.get_backend() == "mysql":
             return self.cur.request("SELECT date_format('%s', '%%Y-%%m-%%d'),date_format(date_format('%s', '%%Y-%%m-%%d') + INTERVAL 1 DAY - INTERVAL 1 SECOND, '%%Y-%%m-%%d')"%(dbdatestart,dbdateend))[0]    
@@ -915,14 +941,6 @@ class MyPictureDB(object):
             return self.cur.request("SELECT strftime('%%Y-%%m-%%d',('%s')),strftime('%%Y-%%m-%%d',datetime('%s','+1 days','-1.0 seconds'))"%(dbdatestart,dbdateend))[0]    
 
 
-    """Get pics for the given period name"""
-    """
-    def get_pics_in_period(periodname):    
-        
-        period = self.cur.request_with_binds( "SELECT DateStart,DateEnd FROM Periodes WHERE PeriodeName=?", (periodname,) )
-        return [row for row in self.cur.request_with_binds( "SELECT strPath,strFilename FROM files WHERE datetime(ImageDateTime) BETWEEN ? AND ? ORDER BY ImageDateTime ASC",period )]
-    """
-    
     def search_in_files(self, tag_type, tagvalue, count=False):
         val = tagvalue.lower().replace("'", "''")
     
@@ -930,7 +948,7 @@ class MyPictureDB(object):
             val = val.replace("\\", "\\\\\\\\")
             
         if count:
-            return [row for row in self.cur.request_with_binds( """select count(distinct fi.strFilename||fi.strPath)
+            return [row for row in self.cur.request( """select count(distinct fi.strFilename||fi.strPath)
                                                           from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
                                                          where tt.idTagType = tc.idTagType
                                                            and tc.idTagContent = tif.idTagContent
@@ -938,7 +956,7 @@ class MyPictureDB(object):
                                                            and lower(tc.TagContent) LIKE '%%%s%%'
                                                            and tif.idFile = fi.idFile"""%val, (tag_type,))][0][0]
         else:
-            return [row for row in self.cur.request_with_binds( """select distinct fi.strPath, fi.strFilename
+            return [row for row in self.cur.request( """select distinct fi.strPath, fi.strFilename
                                                           from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
                                                          where tt.idTagType = tc.idTagType
                                                            and tc.idTagContent = tif.idTagContent
@@ -949,28 +967,28 @@ class MyPictureDB(object):
     
     def get_gps(self, filepath, filename):
     
-        latR = self.cur.request_with_binds( """select tc.TagContent from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
+        latR = self.cur.request( """select tc.TagContent from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
                                     where tt.TagType = 'GPS GPSLatitudeRef'
                                       and tt.idTagType = tc.idTagType
                                       and tc.idTagContent = tif.idTagContent
                                       and tif.idFile = fi.idFile
                                       and fi.strPath = ?
                                       and fi.strFilename = ?""",  (filepath,filename) )
-        lat = self.cur.request_with_binds( """select tc.TagContent from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
+        lat = self.cur.request( """select tc.TagContent from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
                                     where tt.TagType = 'GPS GPSLatitude'
                                       and tt.idTagType = tc.idTagType
                                       and tc.idTagContent = tif.idTagContent
                                       and tif.idFile = fi.idFile
                                       and fi.strPath = ?
                                       and fi.strFilename = ?""",  (filepath,filename) )
-        lonR = self.cur.request_with_binds( """select tc.TagContent from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
+        lonR = self.cur.request( """select tc.TagContent from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
                                     where tt.TagType = 'GPS GPSLongitudeRef'
                                       and tt.idTagType = tc.idTagType
                                       and tc.idTagContent = tif.idTagContent
                                       and tif.idFile = fi.idFile
                                       and fi.strPath = ?
                                       and fi.strFilename = ?""",  (filepath,filename) )
-        lon = self.cur.request_with_binds( """select tc.TagContent from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
+        lon = self.cur.request( """select tc.TagContent from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
                                     where tt.TagType = 'GPS GPSLongitude'
                                       and tt.idTagType = tc.idTagType
                                       and tc.idTagContent = tif.idTagContent
@@ -987,7 +1005,8 @@ class MyPictureDB(object):
         if not latR or not lat or not lonR or not lon: 
             return None                            
     
-
+        #tuplat = lat.replace(" ","").replace("[","").replace("]","").split(",")
+        #tuplon = lon.replace(" ","").replace("[","").replace("]","").split(",")
         lD,lM,lS = lat.replace(" ","").replace("[","").replace("]","").split(",")[:3]
         LD,LM,LS = lon.replace(" ","").replace("[","").replace("]","").split(",")[:3]
         exec("lD=%s"%lD)
@@ -999,7 +1018,10 @@ class MyPictureDB(object):
         latitude =  (int(lD)+(int(lM)/60.0)+(int(lS)/3600.0)) * (latR=="S" and -1 or 1)
         longitude = (int(LD)+(int(LM)/60.0)+(int(LS)/3600.0)) * (lonR=="W" and -1 or 1)
         return (latitude,longitude)
-
+    
+    ######################################"
+    #  Fonctions pour les dossiers racines
+    ######################################"
     
     def get_all_root_folders(self):
         "return folders which are root for scanning pictures"
@@ -1008,13 +1030,16 @@ class MyPictureDB(object):
     def add_root_folder(self, path, recursive, remove, exclude):
         "add the path root inside the database. Recursive is 0/1 for recursive scan, remove is 0/1 for removing files that are not physically in the place"
         self.cleanup_keywords()
-        self.cur.request_with_binds( """INSERT INTO Rootpaths(path,recursive,remove,exclude) VALUES (?,?,?,?)""",(common.smart_unicode(path),recursive,remove,exclude) )
+        self.cur.request( """INSERT INTO Rootpaths(path,recursive,remove,exclude) VALUES (?,?,?,?)""",(common.smart_unicode(path),recursive,remove,exclude) )
+        self.con.commit()
         common.log( "add_root_folder", "%s"%common.smart_utf8(path))
     
     def get_root_folders(self, path):
         common.log( "get_root_folders", "%s"%common.smart_utf8(path))
+        #print common.smart_utf8(path)
+
         try:
-            rows = [row for row in self.cur.request_with_binds( """SELECT path,recursive,remove,exclude FROM Rootpaths WHERE path=? """, (common.smart_unicode(path),) )][0]
+            rows = [row for row in self.cur.request( """SELECT path,recursive,remove,exclude FROM Rootpaths WHERE path=? """, (common.smart_unicode(path),) )][0]
         except Exception,msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
             rows = []
@@ -1029,15 +1054,15 @@ class MyPictureDB(object):
         self.delete_paths_from_root(path)
         #then remove the rootpath itself
         common.log( "delete_root",   """DELETE FROM Rootpaths WHERE path='%s' """%common.smart_utf8(path))
-        self.cur.request_with_binds( """DELETE FROM Rootpaths WHERE path=? """, (common.smart_unicode(path),) )
-    
+        self.cur.request( """DELETE FROM Rootpaths WHERE path=? """, (common.smart_unicode(path),) )
+        self.con.commit()
     
     def delete_paths_from_root(self, path):
         "remove the given rootpath, remove pics from this path, ..."
         common.log( "delete_paths_from_root", "name = %s"%common.smart_utf8(path))
         cptremoved = 0
         try:
-            idpath = self.cur.request_with_binds( """SELECT idFolder FROM folders WHERE FullPath = ?""",(common.smart_unicode(path),) )[0][0]
+            idpath = self.cur.request( """SELECT idFolder FROM folders WHERE FullPath = ?""",(common.smart_unicode(path),) )[0][0]
         except:
             common.log( "delete_paths_from_root",  "Path %s not found"%path)
             return 0
@@ -1050,22 +1075,24 @@ class MyPictureDB(object):
             
         common.log( "delete_paths_from_root",  """DELETE FROM files WHERE idFolder='%s'"""%idpath)
         self.cur.request( """DELETE FROM files WHERE idFolder='%s'"""%idpath)
-    
+
         for idchild in self.all_children_of_folder(idpath):
-    
+
             self.cur.request( """DELETE FROM FilesInCollections WHERE idFile in (SELECT idFile FROM files WHERE idFolder='%s')"""%idchild )
             try:
                 cptremoved = cptremoved + self.cur.request( """SELECT count(*) FROM files WHERE idFolder='%s'"""%idchild)[0][0]
             except Exception,msg:
                 common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
                 return 0
-            
+
             self.cur.request( """DELETE FROM files WHERE idFolder='%s'"""%idchild)
+            common.log( "delete_paths_from_root",  """DELETE FROM files WHERE idFolder='%s'"""%idchild)
             self.cur.request( """DELETE FROM folders WHERE idFolder='%s'"""%idchild)
-            
+            common.log( "delete_paths_from_root",  """DELETE FROM folders WHERE idFolder='%s'"""%idchild)
+
         common.log( "delete_paths_from_root",  """DELETE FROM folders WHERE idFolder='%s'"""%idpath)
         self.cur.request( """DELETE FROM folders WHERE idFolder='%s'"""%idpath)
-    
+
         try:
             for periodname,datestart,dateend in self.periods_list():
                 if self.cur.request( """SELECT count(*) FROM files WHERE datetime(ImageDateTime) BETWEEN '%s' AND '%s'"""%(datestart,dateend) )[0][0]==0:
@@ -1073,14 +1100,16 @@ class MyPictureDB(object):
             self.cleanup_keywords()
         except Exception,msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+
+        self.con.commit()
         return cptremoved
 
 
     def search_tag(self, tag=None,tag_type='a',limit=-1,offset=-1):
         """Look for given keyword and return the list of pictures.
-           If tag is not given, pictures with no keywords are returned"""
+    If tag is not given, pictures with no keywords are returned"""
         if tag is not None: 
-            return [row for row in self.cur.request_with_binds( "SELECT distinct strPath,strFilename FROM files f, TagContents tc, TagsInFiles tif, TagTypes tt WHERE f.idFile = tif.idFile AND tif.idTagContent = tc.idTagContent AND tc.TagContent = ? and tc.idTagType = tt.idTagType  and length(trim(tt.TagTranslation))>0 and tt.TagTranslation = ?  order by imagedatetime ",(tag.encode("utf8"),tag_type.encode("utf8")) )]
+            return [row for row in self.cur.request( "SELECT distinct strPath,strFilename FROM files f, TagContents tc, TagsInFiles tif, TagTypes tt WHERE f.idFile = tif.idFile AND tif.idTagContent = tc.idTagContent AND tc.TagContent = ? and tc.idTagType = tt.idTagType  and length(trim(tt.TagTranslation))>0 and tt.TagTranslation = ?  order by imagedatetime ",(tag.encode("utf8"),tag_type.encode("utf8")) )]
         else: 
             return [row for row in self.cur.request( "SELECT distinct strPath,strFilename FROM files WHERE idFile NOT IN (SELECT DISTINCT idFile FROM TagsInFiles) order by imagedatetime " )]
     
@@ -1089,87 +1118,87 @@ class MyPictureDB(object):
     
         """Return a list of all keywords in database """
         
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Country/primary location name'", (common.getstring(30700),))
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Photoshop:Country'", (common.getstring(30700),))
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpExt:CountryName'", (common.getstring(30700),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Country/primary location name'", (common.getstring(30700),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Photoshop:Country'", (common.getstring(30700),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpExt:CountryName'", (common.getstring(30700),))
     
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Country/primary location code'", (common.getstring(30701),))
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpCore:CountryCode'", (common.getstring(30701),))
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpCore:Country'", (common.getstring(30701),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Country/primary location code'", (common.getstring(30701),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpCore:CountryCode'", (common.getstring(30701),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpCore:Country'", (common.getstring(30701),))
     
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Province/state'", (common.getstring(30702),))
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Photoshop:State'", (common.getstring(30702),))
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpExt:ProvinceState'", (common.getstring(30702),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Province/state'", (common.getstring(30702),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Photoshop:State'", (common.getstring(30702),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpExt:ProvinceState'", (common.getstring(30702),))
     
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'Photoshop:City'", (common.getstring(30703),))
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'Iptc4xmpExt:City'", (common.getstring(30703),))
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'City'", (common.getstring(30703),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation = 'Photoshop:City'", (common.getstring(30703),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation = 'Iptc4xmpExt:City'", (common.getstring(30703),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation = 'City'", (common.getstring(30703),))
     
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpCore:Location'", (common.getstring(30704),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpCore:Location'", (common.getstring(30704),))
     
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'Iptc4xmpExt:Event'", (common.getstring(30705),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation = 'Iptc4xmpExt:Event'", (common.getstring(30705),))
     
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'DateAdded'", (common.getstring(30706),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'DateAdded'", (common.getstring(30706),))
         
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'EXIF DateTimeOriginal'", (common.getstring(30707),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'EXIF DateTimeOriginal'", (common.getstring(30707),))
         
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Photoshop:DateCreated'", (common.getstring(30708),))
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Image DateTime'", (common.getstring(30708),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Photoshop:DateCreated'", (common.getstring(30708),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Image DateTime'", (common.getstring(30708),))
     
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'Caption/abstract'", (common.getstring(30709),))
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'Dc:description'", (common.getstring(30709),))
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'Iptc4xmpCore:Description'", (common.getstring(30709),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation = 'Caption/abstract'", (common.getstring(30709),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation = 'Dc:description'", (common.getstring(30709),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation = 'Iptc4xmpCore:Description'", (common.getstring(30709),))
     
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'Iptc4xmpCore:Headline'", (common.getstring(30710),))
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Photoshop:Headline'", (common.getstring(30710),))
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Headline'", (common.getstring(30710),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation = 'Iptc4xmpCore:Headline'", (common.getstring(30710),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Photoshop:Headline'", (common.getstring(30710),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Headline'", (common.getstring(30710),))
     
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'Object name'", (common.getstring(30711),))
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'Dc:title'", (common.getstring(30711),))
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'Iptc4xmpCore:Title'", (common.getstring(30711),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation = 'Object name'", (common.getstring(30711),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation = 'Dc:title'", (common.getstring(30711),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation = 'Iptc4xmpCore:Title'", (common.getstring(30711),))
     
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'Writer/editor'", (common.getstring(30712),))
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'By-line'", (common.getstring(30712),))
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'Dc:creator'", (common.getstring(30712),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation = 'Writer/editor'", (common.getstring(30712),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation = 'By-line'", (common.getstring(30712),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation = 'Dc:creator'", (common.getstring(30712),))
         
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'By-line title'", (common.getstring(30713),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation = 'By-line title'", (common.getstring(30713),))
     
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'Dc:rights'", (common.getstring(30714),))
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation = 'Copyright notice'", (common.getstring(30714),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation = 'Dc:rights'", (common.getstring(30714),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation = 'Copyright notice'", (common.getstring(30714),))
     
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Xmp:Label'", (common.getstring(30715),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Xmp:Label'", (common.getstring(30715),))
         
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Xmp:Rating'", (common.getstring(30716),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Xmp:Rating'", (common.getstring(30716),))
     
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'MicrosoftPhoto:LastKeywordIPTC'", (common.getstring(30717),))
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'MicrosoftPhoto:LastKeywordXMP'", (common.getstring(30717),))
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Dc:subject'", (common.getstring(30717),))
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpCore:Keywords'", (common.getstring(30717),))
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Keywords'", (common.getstring(30717),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'MicrosoftPhoto:LastKeywordIPTC'", (common.getstring(30717),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'MicrosoftPhoto:LastKeywordXMP'", (common.getstring(30717),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Dc:subject'", (common.getstring(30717),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpCore:Keywords'", (common.getstring(30717),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Keywords'", (common.getstring(30717),))
     
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Category'", (common.getstring(30718),))
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Photoshop:Category'", (common.getstring(30718),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Category'", (common.getstring(30718),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Photoshop:Category'", (common.getstring(30718),))
         
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Photoshop:SupplementalCategories'", (common.getstring(30719),))
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Supplemental category'", (common.getstring(30719),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Photoshop:SupplementalCategories'", (common.getstring(30719),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Supplemental category'", (common.getstring(30719),))
     
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'MPReg:PersonDisplayName'", (common.getstring(30720),))
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpExt:PersonInImage'", (common.getstring(30720),))
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Mwg-rs:RegionList:Face'", (common.getstring(30720),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'MPReg:PersonDisplayName'", (common.getstring(30720),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Iptc4xmpExt:PersonInImage'", (common.getstring(30720),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Mwg-rs:RegionList:Face'", (common.getstring(30720),))
     
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'EXIF ExifImageWidth'", (common.getstring(30721),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'EXIF ExifImageWidth'", (common.getstring(30721),))
         
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'EXIF ExifImageLength'", (common.getstring(30722),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'EXIF ExifImageLength'", (common.getstring(30722),))
         
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'EXIF SceneCaptureType'", (common.getstring(30723),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'EXIF SceneCaptureType'", (common.getstring(30723),))
         
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'EXIF Flash'", (common.getstring(30724),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'EXIF Flash'", (common.getstring(30724),))
     
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Image Model'", (common.getstring(30725),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Image Model'", (common.getstring(30725),))
         
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Image Make'", (common.getstring(30726),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Image Make'", (common.getstring(30726),))
         
-        self.cur.request_with_binds("update TagTypes set TagTranslation = ? where TagTranslation =  'Image Artist'", (common.getstring(30727),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Image Artist'", (common.getstring(30727),))
     
         # default to not visible
         self.cur.request("update TagTypes set TagTranslation = '' where TagTranslation =  'EXIF DateTimeDigitized'")
@@ -1191,8 +1220,21 @@ class MyPictureDB(object):
         self.cur.request("update TagTypes set TagTranslation = '' where TagTranslation =  'Credit'")    
         self.cur.request("update TagTypes set TagTranslation = '' where TagTranslation =  'Sub-location'")
         
-        self.cur.request("vacuum")
-    
+        if self.con.get_backend() == 'mysql':
+            self.cur.request("ANALYZE TABLE files")
+            self.cur.request("ANALYZE TABLE FilesInCollections")
+            self.cur.request("ANALYZE TABLE Collections")
+            self.cur.request("ANALYZE TABLE Periods")
+            self.cur.request("ANALYZE TABLE Folders")
+            self.cur.request("ANALYZE TABLE Rootpaths")
+            self.cur.request("ANALYZE TABLE TagTypes")
+            self.cur.request("ANALYZE TABLE TagContents")
+            self.cur.request("ANALYZE TABLE TagsInFiles")
+        else:
+            self.cur.request("vacuum")
+            self.cur.request("analyze")
+        self.con.commit()
+        
     def list_TagTypes(self):
     
         return [row for (row,) in self.cur.request( """SELECT distinct tt.TagTranslation FROM TagTypes tt, TagContents tc, TagsInFiles tif 
@@ -1214,7 +1256,7 @@ class MyPictureDB(object):
     def count_tagtypes(self, tagType, limit=-1, offset=-1):
         try:
             if tagType is not None:
-                return self.cur.request_with_binds("""SELECT count(distinct TagContent) FROM tagsInFiles tif, TagContents tc, TagTypes tt WHERE tif.idTagContent = tc.idTagContent AND tc.idTagType = tt.idTagType and length(trim(tt.TagTranslation))>0 and tt.idTagType =? """, (tagType,) )[0][0]
+                return self.cur.request("""SELECT count(distinct TagContent) FROM tagsInFiles tif, TagContents tc, TagTypes tt WHERE tif.idTagContent = tc.idTagContent AND tc.idTagType = tt.idTagType and length(trim(tt.TagTranslation))>0 and tt.idTagType =? """, (tagType,) )[0][0]
             else:
                 return self.cur.request("""SELECT count(*) FROM TagTypes where length(trim(TagTranslation))>0""" )[0][0]
         except Exception,msg:
@@ -1222,8 +1264,9 @@ class MyPictureDB(object):
             return 0
             
     def set_tagtype_translation(self, TagType, TagTranslation):
-        self.cur.request_with_binds("Update TagTypes set TagTranslation = ? where TagType = ? ",(TagTranslation.encode('utf-8'), TagType.encode('utf-8')))
-    
+        self.cur.request("Update TagTypes set TagTranslation = ? where TagType = ? ",(TagTranslation.encode('utf-8'), TagType.encode('utf-8')))
+        self.con.commit()
+        
     def get_tagtypes_translation(self):
         return [row for row in self.cur.request('select TagType, TagTranslation from TagTypes order by 2,1')]
     
@@ -1233,7 +1276,7 @@ class MyPictureDB(object):
     
     def list_tags_count(self, tagType):
         """Return a list of all tags in database"""
-        return [row for row in self.cur.request_with_binds( """
+        return [row for row in self.cur.request( """
         select TagContent, count(distinct idFile) 
       from TagContents tc, TagsInFiles tif, TagTypes tt  
      where tc.idTagContent = tif.idTagContent
@@ -1244,7 +1287,7 @@ class MyPictureDB(object):
     def count_tags(self, kw, tagType, limit=-1, offset=-1):
         try:
             if kw is not None:
-                return self.cur.request_with_binds("""select count(distinct idFile) from  TagContents tc, TagsInFiles tif, TagTypes tt  where tc.idTagContent = tif.idTagContent and tc.TagContent = ? and tc.idTagType = tt.idTagType and tt.TagTranslation = ? """,(kw, tagType))[0][0]
+                return self.cur.request("""select count(distinct idFile) from  TagContents tc, TagsInFiles tif, TagTypes tt  where tc.idTagContent = tif.idTagContent and tc.TagContent = ? and tc.idTagType = tt.idTagType and tt.TagTranslation = ? """,(kw, tagType))[0][0]
             else:
                 return self.cur.request("""SELECT count(*) FROM files WHERE idFile not in (SELECT DISTINCT idFile FROM TagsInFiles)""" )[0][0]
         except Exception,msg:
@@ -1255,7 +1298,7 @@ class MyPictureDB(object):
         # new part
         count = 0
         try:
-            folderPath = self.cur.request_with_binds("""Select FullPath from Folders where idFolder = ?""", (folderid,))[0][0]
+            folderPath = self.cur.request("""Select FullPath from Folders where idFolder = ?""", (folderid,))[0][0]
             # mask the apostrophe
             folderPath = folderPath.replace("'", "''")
                 
@@ -1277,12 +1320,14 @@ class MyPictureDB(object):
         cpt = self.cur.request("SELECT count(*) FROM files f,folders p WHERE f.idFolder=p.idFolder AND f.idFolder='%s'"%folderid)[0][0]
         for idchild in children:
             cpt = cpt + self.cur.request("SELECT count(*) FROM files f,folders p WHERE f.idFolder=p.idFolder AND f.idFolder='%s'"%idchild)[0][0]
-        return cpt
+        return cpt#Request("SELECT count(*) FROM files f,folders p WHERE f.idFolder=p.idFolder AND f.idFolder='%s'"%folderid)[0][0]
     
     def count_pics_in_period(self, period, value):
+        #   lister les images pour une date donnée
         formatstring = {"year":"%Y","month":"%Y-%m","date":"%Y-%m-%d","":"%Y"}[period]
         if period=="year" or period=="":
             if value:
+                #filelist = search_between_dates( (value,formatstring) , ( str( int(value) +1 ),formatstring) )
                 filelist = self.pics_for_period('year',value)
             else:
                 filelist = self.search_all_dates()
@@ -1291,7 +1336,7 @@ class MyPictureDB(object):
             filelist = self.pics_for_period(period,value)
 
         else:
-            
+            #pas de periode, alors toutes les photos du 01/01 de la plus petite année, au 31/12 de la plus grande année
             listyears=self.get_years()
             amini=min(listyears)
             amaxi=max(listyears)
@@ -1315,17 +1360,17 @@ class MyPictureDB(object):
 
     def all_children_of_folder(self, rootid):
         """liste les id des dossiers enfants"""
-        
+        #A REVOIR : Ne fonctionne pas correctement !
         enfants=[]
         childrens=[rootid]
-        
+        #continu = False
         while True:
             try:
-                _ = childrens.pop(0)
+                chid = childrens.pop(0)
             except:
                 #fin
                 break
-            chlist = [row for (row,) in self.cur.request( """SELECT idFolder FROM folders WHERE ParentFolder='%s'"""%id )]#2,10,17
+            chlist = [row for (row,) in self.cur.request( """SELECT idFolder FROM folders WHERE ParentFolder='%s'"""%chid )]#2,10,17
             childrens=childrens+chlist
             enfants=enfants+chlist
     
@@ -1379,7 +1424,7 @@ class MyPictureDB(object):
                                'date' :["date_format('%s', '%%Y-%%m-%%d')"%date,"date_format(date_format('%s', '%%Y-%%m-%%d') + INTERVAL 1 DAY - INTERVAL 1 MINUTE, '%%Y-%%m-%%d %%H:%%i:%%S')"%date]}[periodtype]
             except:
                 print_exc()
-                
+                #log ("pics_for_period ( periodtype = ['date'|'month'|'year'] , date = corresponding to the period (year|year-month|year-month-day)")
             request = """SELECT strPath,strFilename FROM files WHERE ImageDateTime BETWEEN %s AND %s ORDER BY ImageDateTime ASC"""%(sdate,edate)
         else:
             try:
@@ -1388,7 +1433,7 @@ class MyPictureDB(object):
                                        'date' :['%s'%date,'start of day','+1 days']}[periodtype]
             except:
                 print_exc()
-                
+                #log ("pics_for_period ( periodtype = ['date'|'month'|'year'] , date = corresponding to the period (year|year-month|year-month-day)")
             request = """SELECT strPath,strFilename FROM files WHERE datetime(ImageDateTime) BETWEEN datetime('%s','%s') AND datetime('%s','%s','%s') ORDER BY ImageDateTime ASC;"""%(sdate,modif1,sdate,modif1,modif2)
         return [row for row in self.cur.request(request)]
 
@@ -1429,7 +1474,7 @@ class MyPictureDB(object):
 
     def get_pic_date(self, path, filename):
         try:
-            (rows, ) = [row for (row,) in self.cur.request_with_binds( "SELECT ImageDateTime FROM files WHERE strPath=? AND strFilename=? ",(path,filename) )]
+            (rows, ) = [row for (row,) in self.cur.request( "SELECT ImageDateTime FROM files WHERE strPath=? AND strFilename=? ",(path,filename) )]
 
             return str(rows)
         except Exception,msg:
