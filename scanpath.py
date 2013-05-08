@@ -416,6 +416,9 @@ class VFSScanner:
                 except Exception, msg:
                     common.log("VFSScanner._get_exif",  picfile , xbmc.LOGERROR)
                     common.log("VFSScanner._get_exif",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+                    
+        if not picentry.has_key("Image Rating"):
+            picentry["Image Rating"] = ""
         return picentry
 
 
