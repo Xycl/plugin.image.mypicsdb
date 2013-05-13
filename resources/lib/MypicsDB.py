@@ -8,7 +8,6 @@ Todo :
 
 """
 
-import sys 
 from os.path import join
 from traceback import print_exc
 from time import strftime,strptime
