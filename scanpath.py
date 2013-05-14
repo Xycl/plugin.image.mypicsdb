@@ -121,7 +121,6 @@ class VFSScanner:
                 self.scan.update(0,0,
                             common.getstring(30000)+" ["+common.getstring(30241)+"]",#MyPicture Database [preparing]
                             common.getstring(30247))#please wait...
-                print paths
                 for path,recursive,update,exclude in paths:
                     if exclude==0:
                         self.total_root_entries += 1
@@ -327,32 +326,35 @@ class VFSScanner:
                 common.log( "VFSScanner._get_metas()._get_exif()", "Finished reading EXIF tags")
             except Exception,msg:
                 common.log( "VFSScanner._get_metas()._get_exif()", "Exception", xbmc.LOGERROR)
-                print msg
+                common.log( "VFSScanner._get_metas()._get_exif()", msg, xbmc.LOGERROR)
+
 
             ###############################
             #    getting  IPTC  infos     #
             ###############################
             try:
-                common.log( "VFSScanner._get_metas()._get_exif()", 'Reading IPTC tags from "%s"'%fullpath)
+                common.log( "VFSScanner._get_metas()._get_iptc()", 'Reading IPTC tags from "%s"'%fullpath)
                 iptc = self._get_iptc(fullpath)
                 picentry.update(iptc)
-                common.log( "VFSScanner._get_metas()._get_exif()", "Finished reading IPTC tags")
+                common.log( "VFSScanner._get_metas()._get_iptc()", "Finished reading IPTC tags")
             except Exception,msg:
                 common.log( "VFSScanner._get_metas()_get_iptc()", "Exception", xbmc.LOGERROR)
-                print msg
+                common.log( "VFSScanner._get_metas()._get_iptc()", msg, xbmc.LOGERROR)
+
 
 
             ###############################
             #    getting  XMP infos       #
             ###############################
             try:
-                common.log( "VFSScanner._get_metas()._get_exif()", 'Reading XMP tags from "%s"'%fullpath)
+                common.log( "VFSScanner._get_metas()._get_xmp()", 'Reading XMP tags from "%s"'%fullpath)
                 xmp = self._get_xmp(fullpath)
                 picentry.update(xmp)
-                common.log( "VFSScanner._get_metas()._get_exif()", "Finished reading XMP tags")
+                common.log( "VFSScanner._get_metas()._get_xmp()", "Finished reading XMP tags")
             except Exception,msg:
                 common.log( "VFSScanner._get_metas()._get_xmp()", "Exception", xbmc.LOGERROR)
-                print msg
+                common.log( "VFSScanner._get_metas()._get_xmp()", msg, xbmc.LOGERROR)
+
 
 
         return picentry
