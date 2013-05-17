@@ -47,8 +47,8 @@ Supported methods:
 2) execute(statement, bind_variables). To use bind variables use the ? as placeholder. Example: "select * from table where column = ?".
 3) fetchone(). Fetches one row. Return None in case of end of fetch.
 4) fetchall(). Fetches all rows.
-5) request(). Does an execute() and fetchall() without the possiblity to use bind variables.
-6) request_with_binds(). Does an execute() and fetchall() with bind variables.
+5) request(). Does an execute() and fetchall() with the possiblity to use bind variables.
+
 
 
 Example
@@ -80,7 +80,7 @@ def DBFactory(backend, db_name, *args):
     backends = {'mysql':MysqlConnection, 'sqlite':SqliteConnection}
 
     if backend.lower() == 'mysql':
-        #print "mysql"
+
         import mysql.connector as database
             
     # default is to use Sqlite
@@ -141,11 +141,15 @@ class MysqlConnection(BaseConnection):
     def get_ddl_primary_key(self):
         return " auto_increment not null primary key "
         
+        
     def get_ddl_varchar(self, length):
         return " varchar(%d) "%length
         
+        
     def get_backend(self):
         return "mysql"
+
+
 
 class SqliteConnection(BaseConnection):
 
@@ -162,8 +166,10 @@ class SqliteConnection(BaseConnection):
     def cursor(self):        
         return SqliteCursor(self.connection.cursor(), self.connection)
 
+
     def get_ddl_primary_key(self):
         return " primary key not null "
+
 
     def get_ddl_varchar(self, length):
         return " text "
@@ -171,9 +177,9 @@ class SqliteConnection(BaseConnection):
     def get_backend(self):
         return "sqlite"
 
-class BaseCursor(object):
 
-    DEBUGGING = True
+
+class BaseCursor(object):
 
     def __init__(self, cursor, connection):
         self.cursor = cursor
@@ -191,6 +197,7 @@ class BaseCursor(object):
             self.cursor.execute(sql, bindvariables)
         else:
             self.cursor.execute(sql)
+
 
     def fetchone(self):
         row_object = self.cursor.fetchone()
@@ -242,13 +249,13 @@ class BaseCursor(object):
                 except:
                     pass
                 try:
-                    common.log("Database abstraction layer",  "SQL RequestWithBinds > %s"%statement, xbmc.LOGERROR)
+                    common.log("Database abstraction layer",  "SQL > %s"%statement, xbmc.LOGERROR)
                 except:
                     pass
                 try:
                     i = 1
                     for var in binds:
-                        common.log ("SQL RequestWithBinds numvar = %d  content = %s"%(i,var), xbmc.LOGERROR)
+                        common.log ("SQL request numvar = %d  content = %s"%(i,var), xbmc.LOGERROR)
                         i=i+1
                 except:
                     pass
@@ -265,6 +272,7 @@ class BaseCursor(object):
 
 class MysqlCursor(BaseCursor):
     pass
+
 
 
 class SqliteCursor(BaseCursor):

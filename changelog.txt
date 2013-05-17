@@ -1,3 +1,5 @@
+2013/05/17 --> v 2.2.9
+Fix:    MySql is case sensitive on case sensitive file systems
 Update: scanpath.py logging updated
 
 2013/05/08 --> v 2.2.8
