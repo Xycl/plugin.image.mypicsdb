@@ -1,3 +1,6 @@
+2013/05/18 --> v 2.2.10
+Fix:    Missing date corrected in menu browse by dates in case of using MySql
+
 2013/05/17 --> v 2.2.9
 Fix:    MySql is case sensitive on case sensitive file systems
 Update: scanpath.py logging updated
