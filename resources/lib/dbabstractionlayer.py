@@ -208,8 +208,25 @@ class BaseCursor(object):
 
 
     def fetchall(self):
-        return [row for row in self.cursor.fetchall()]
+        rows = []
+        
+        #return [row for row in self.cursor.fetchall()]
+        for row in self.cursor.fetchall():
+            cols = []
+            for col in row:
 
+                if isinstance(col, basestring):
+                    col = common.smart_unicode(col)
+                    #print col
+                #else:
+                #    print type(col)
+                #    print col
+                    
+                cols.append(col)
+                
+            rows.append(cols)
+            
+        return rows
 
     def request_with_binds(self, statement, bindvariables = []):
     

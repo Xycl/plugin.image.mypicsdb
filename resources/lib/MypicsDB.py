@@ -164,7 +164,7 @@ class MyPictureDB(object):
     
         if ecrase:
             #drop table
-            for table in ['FilterWizard', 'FilterWizardItems', 'Persons', 'PersonsInFiles', 'tags', 'TagContent', 'TagContents', 'TagsInFiles', 'TagTypes','files', 'Files', "keywords", 'folders', 'Folders',"KeywordsInFiles","Collections","FilesInCollections","Periodes","CategoriesInFiles","Categories","SupplementalCategoriesInFiles","SupplementalCategories","CitiesInFiles","Cities","CountriesInFiles","Countries","DBVersion"]:
+            for table in ['FilterWizard', 'FilterWizardItems', 'Persons', 'PersonsInFiles', 'tags', 'TagContent', 'TagContents', 'TagsInFiles', 'TagTypes','files', 'Files', "keywords", 'folders', 'Folders',"KeywordsInFiles","Collections","FilesInCollections", "periodes", "Periodes","CategoriesInFiles","Categories","SupplementalCategoriesInFiles","SupplementalCategories","CitiesInFiles","Cities","CountriesInFiles","Countries","DBVersion"]:
                 common.log("MPDB.make_new_base >> Dropping table", "%s"%table)
                 try:
                     self.cur.execute("""DROP TABLE %s"""%table)
@@ -200,7 +200,7 @@ class MyPictureDB(object):
                                                    ImageRating %s,
                                                    ImageDateTime DATETIME, 
                                                    Sha %s, 
-                                                   CONSTRAINT UNI_FILE UNIQUE (strPath,strFilename))"""%(self.con.get_ddl_primary_key(), self.con.get_ddl_varchar(255), self.con.get_ddl_varchar(128), self.con.get_ddl_varchar(40), self.con.get_ddl_varchar(1024), self.con.get_ddl_varchar(40), self.con.get_ddl_varchar(100)))
+                                                   CONSTRAINT UNI_FILE UNIQUE (strPath,strFilename))"""%(self.con.get_ddl_primary_key(), self.con.get_ddl_varchar(200), self.con.get_ddl_varchar(128), self.con.get_ddl_varchar(40), self.con.get_ddl_varchar(1024), self.con.get_ddl_varchar(40), self.con.get_ddl_varchar(100)))
         except Exception,msg:
             if str(msg).find("already exists") > -1:
                 pass
@@ -235,9 +235,9 @@ class MyPictureDB(object):
             else: 
                 common.log("MPDB.make_new_base", "CREATE TABLE FilesInCollections ...", xbmc.LOGERROR )
                 common.log("MPDB.make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
-        #table 'periodes'
+        #table 'Periodes'
         try:
-            self.cur.execute("CREATE TABLE periodes(idPeriode INTEGER %s, PeriodeName %s UNIQUE NOT NULL, DateStart DATETIME NOT NULL, DateEnd DATETIME NOT NULL, CONSTRAINT UNI_PERIODE UNIQUE (PeriodeName,DateStart,DateEnd) )"%(self.con.get_ddl_primary_key(), self.con.get_ddl_varchar(255)))
+            self.cur.execute("CREATE TABLE Periodes(idPeriode INTEGER %s, PeriodeName %s UNIQUE NOT NULL, DateStart DATETIME NOT NULL, DateEnd DATETIME NOT NULL, CONSTRAINT UNI_PERIODE UNIQUE (PeriodeName,DateStart,DateEnd) )"%(self.con.get_ddl_primary_key(), self.con.get_ddl_varchar(255)))
         except Exception,msg:
             if str(msg).find("already exists") > -1:
                 pass
@@ -904,7 +904,7 @@ class MyPictureDB(object):
     # Periodes functions
     #####################
     def periods_list(self):
-        """List all periodes"""
+        """List all Periodes"""
         return [row for row in self.cur.request( """SELECT PeriodeName,DateStart,DateEnd FROM Periodes""")]
     
     def period_add(self, periodname, datestart, dateend):

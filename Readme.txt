@@ -14,15 +14,15 @@ b) Rescan the paths which contain these added exclude paths to remove the pictur
 2) MySql
 ==================================================================================
 a) You must create a database:
-CREATE DATABASE MyPicsDB CHARACTER SET utf8 COLLATE utf8_general_ci;
+CREATE DATABASE MyPicsDB CHARACTER SET utf8 COLLATE utf8_bin;
 
 b) Create a user (if not already done for music and movies):
-CREATE USER 'xbmc' IDENTIFIED BY 'xbmc';
+CREATE USER 'xbmc'@'%' IDENTIFIED BY 'xbmc';
 
 c) give him rights
-GRANT ALL ON *.* TO 'xbmc';
+GRANT ALL ON *.* TO 'xbmc'@'%';
 
-d) Go to plugin settings and enable MySql. Database MyPicsDB with user XBMC and password XBMC is preconfigured.
+d) Go to plugin settings and enable MySql. Set the correct user and password!
 
 
 3) General problems with MyPicsDB
