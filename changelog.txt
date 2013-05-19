@@ -1,3 +1,6 @@
+2013/05/19 --> v 2.2.11
+Update: Using mmap for EXIF parser
+
 2013/05/18 --> v 2.2.10
 Fix:    Missing date corrected in menu browse by dates in case of using MySql
 

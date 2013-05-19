@@ -26,16 +26,18 @@ import xbmc
 import resources.lib.common as common
 
 # python modules
+import mmap
 import optparse
 import os
 from urllib import unquote_plus
 from traceback import print_exc
-from time import strftime,strptime
+from time import strftime, strptime
 
 #local modules
 from resources.lib.pathscanner import Scanner
 
 import resources.lib.MypicsDB as MypicsDB
+
 # local tag parsers
 from resources.lib.iptcinfo import IPTCInfo
 from resources.lib.iptcinfo import c_datasets as IPTC_FIELDS
@@ -388,11 +390,19 @@ class VFSScanner:
                       ]
 
         try:
-            f=open(picfile,"rb")
+            f=open(picfile,"r+b")
         except:
-            f=open(picfile.encode('utf-8'),"rb")
+            f=open(picfile.encode('utf-8'),"r+b")
         common.log( "VFSScanner._get_exif()", 'Calling function EXIF_file for "%s"'%picfile)
-        tags = EXIF_file(f,details=False)
+        try:
+            file = mmap.mmap(f.fileno(), 0)
+            #tags = EXIF_file(f,details=False)
+            tags = EXIF_file(file,details=False)
+            file.close()
+        except Exception,msg:
+            common.log( "VFSScanner._get_exif()", "Exception", xbmc.LOGERROR)
+            common.log( "VFSScanner._get_exif()", msg, xbmc.LOGERROR)
+            
         common.log( "VFSScanner._get_exif()", 'Function returned')
         f.close()
 
