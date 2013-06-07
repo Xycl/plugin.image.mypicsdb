@@ -214,7 +214,7 @@ class VFSScanner:
                              "ftype": extension in self.picture_extensions and "picture" or extension in self.video_extensions and "video" or "",
                              "DateAdded": strftime("%Y-%m-%d %H:%M:%S"),
                              "Thumb": "",
-                             "ImageRating": None
+                             "Image Rating": None
                              }
 
 
@@ -304,6 +304,9 @@ class VFSScanner:
 
         if recursive:
             for dirname in dirnames:
+                if self.scan.iscanceled():
+                    common.log( "VFSScanner._addpath", "Scanning canncelled", xbmc.LOGNOTICE)
+                    return
                 self._addpath(dirname, folderid, True, update)
                 
     
