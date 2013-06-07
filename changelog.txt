@@ -1,5 +1,6 @@
 2013/06/07 --> v 2.2.12
 Fix:    Video import fixed
+Update: Language files from Transifex
 
 2013/05/19 --> v 2.2.11
 Update: Using mmap for EXIF parser
