@@ -127,126 +127,136 @@ class Main:
 
     def add_directory(self,name,params,action,iconimage,fanart=None,contextmenu=None,total=0,info="*",replacemenu=True):
     
-        common.log("Main.add_directory", "Name = %s"%name)
         try:
-            parameter="&".join([param+"="+repr(common.quote_param(valeur.encode("utf-8"))) for param,valeur in params])
+            common.log("Main.add_directory", "Name = %s"%name)
+            try:
+                parameter="&".join([param+"="+repr(common.quote_param(valeur.encode("utf-8"))) for param,valeur in params])
+            except:
+                parameter=""
+
+            u=sys.argv[0]+"?"+parameter+"&action="+repr(str(action))+"&name="+repr(common.quote_param(name.encode("utf8")))
+
+            liz=xbmcgui.ListItem(name, thumbnailImage=iconimage)
+
+            if contextmenu :
+                liz.addContextMenuItems(contextmenu,replacemenu)
+            return xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=u,listitem=liz,isFolder=True)#,totalItems=total)
         except:
-            parameter=""
-
-        u=sys.argv[0]+"?"+parameter+"&action="+repr(str(action))+"&name="+repr(common.quote_param(name.encode("utf8")))
-
-        liz=xbmcgui.ListItem(name, thumbnailImage=iconimage)
-
-        if contextmenu :
-            liz.addContextMenuItems(contextmenu,replacemenu)
-        return xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=u,listitem=liz,isFolder=True)#,totalItems=total)
+            pass
 
 
     def add_action(self,name,params,action,iconimage,fanart=None,contextmenu=None,total=0,info="*",replacemenu=True):
 
-        common.log("Main.add_action", "Name = %s"%name)
         try:
-            parameter="&".join([param+"="+repr(common.quote_param(valeur.encode("utf-8"))) for param,valeur in params])
+            common.log("Main.add_action", "Name = %s"%name)
+            try:
+                parameter="&".join([param+"="+repr(common.quote_param(valeur.encode("utf-8"))) for param,valeur in params])
+            except:
+                parameter=""
+
+            u=sys.argv[0]+"?"+parameter+"&action="+repr(str(action))+"&name="+repr(common.quote_param(name.encode("utf8")))
+
+            liz=xbmcgui.ListItem(name, thumbnailImage=iconimage)
+
+            if contextmenu :
+                liz.addContextMenuItems(contextmenu,replacemenu)
+
+            return xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=u,listitem=liz,isFolder=False)#,totalItems=total)
         except:
-            parameter=""
-
-        u=sys.argv[0]+"?"+parameter+"&action="+repr(str(action))+"&name="+repr(common.quote_param(name.encode("utf8")))
-
-        liz=xbmcgui.ListItem(name, thumbnailImage=iconimage)
-
-        if contextmenu :
-            liz.addContextMenuItems(contextmenu,replacemenu)
-
-        return xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=u,listitem=liz,isFolder=False)#,totalItems=total)
+            pass
 
 
     def add_picture(self,picname,picpath,count=0, info="*",fanart=None,contextmenu=None,replacemenu=True):
-        fullfilepath = join(picpath,picname)
-        common.log("Main.add_picture", "Name = %s"%fullfilepath)
-        
-        liz=xbmcgui.ListItem(picname,info)
-        common.log("",picpath)
-        common.log("",picname)
-        date = MPDB.get_pic_date(picpath,picname)
         try:
-            date = date and strftime("%d.%m.%Y",strptime(date,"%Y-%m-%d %H:%M:%S")) or ""
-        except Exception,msg:
-            common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
-            date = None
-        suffix=""
-        rating=""
-        coords=None
-        extension = splitext(picname)[1].upper()
-        #is the file a video ?
-        if extension in ["."+ext.replace(".","").upper() for ext in common.getaddon_setting("vidsext").split("|")]:
-            infolabels = { "date": date }
-            liz.setInfo( type="video", infoLabels=infolabels )
-        #or is the file a picture ?
-        elif extension in ["."+ext.replace(".","").upper() for ext in common.getaddon_setting("picsext").split("|")]:
-            rating = MPDB.get_rating(picpath,picname)
-            if int(common.getaddon_setting("ratingmini"))>0:#un rating mini est configuré
-                if not rating:  return
-                if int(rating) < int(common.getaddon_setting("ratingmini")): return #si on a un rating dans la photo
-
-            coords = MPDB.get_gps(picpath,picname)
-            if coords: 
-                suffix = suffix + "[COLOR=C0C0C0C0][G][/COLOR]"
-
-            (exiftime,) = MPDB.cur.request_with_binds( """select coalesce(ImageDateTime, '0') from Files where strPath=? and strFilename=? """,(picpath,picname))
-            resolutionX = MPDB.cur.request_with_binds( """select coalesce(tc.TagContent,0) from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
-                                                     where tt.TagType = 'EXIF ExifImageWidth'
-                                                       and tt.idTagType = tc.idTagType
-                                                       and tc.idTagContent = tif.idTagContent
-                                                       and tif.idFile = fi.idFile
-                                                       and fi.strPath = ?
-                                                       and fi.strFilename = ?  """,(picpath,picname))
-
-            resolutionY = MPDB.cur.request_with_binds( """select coalesce(tc.TagContent,0) from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
-                                                     where tt.TagType = 'EXIF ExifImageLength'
-                                                       and tt.idTagType = tc.idTagType
-                                                       and tc.idTagContent = tif.idTagContent
-                                                       and tif.idFile = fi.idFile
-                                                       and fi.strPath = ?
-                                                       and fi.strFilename = ?  """,(picpath,picname))     
-
-            infolabels = { "picturepath":picname+" "+suffix, "date": date, "count": count  }
+            fullfilepath = join(picpath,picname)
+            common.log("Main.add_picture", "Name = %s"%fullfilepath)
+            
+            liz=xbmcgui.ListItem(picname,info)
+            common.log("",picpath)
+            common.log("",picname)
+            date = MPDB.get_pic_date(picpath,picname)
             try:
-                if exiftime[0] != None and exiftime[0] != "0":
-                    common.log("Main.add_picture", "Picture has EXIF Date/Time %s"%exiftime[0])
-                    infolabels["exif:exiftime"] = exiftime[0]
-            except:
-                pass
+                date = date and strftime("%d.%m.%Y",strptime(date,"%Y-%m-%d %H:%M:%S")) or ""
+            except Exception,msg:
+                common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+                date = None
+            suffix=""
+            rating=""
+            coords=None
+            extension = splitext(picname)[1].upper()
+            #is the file a video ?
+            if extension in ["."+ext.replace(".","").upper() for ext in common.getaddon_setting("vidsext").split("|")]:
+                infolabels = { "date": date }
+                liz.setInfo( type="video", infoLabels=infolabels )
+            #or is the file a picture ?
+            elif extension in ["."+ext.replace(".","").upper() for ext in common.getaddon_setting("picsext").split("|")]:
+                rating = MPDB.get_rating(picpath,picname)
+                if int(common.getaddon_setting("ratingmini"))>0:#un rating mini est configuré
+                    if not rating:  return
+                    if int(rating) < int(common.getaddon_setting("ratingmini")): return #si on a un rating dans la photo
 
-            try:
-                resolutionX = resolutionX[0][0]
-                resolutionY = resolutionY[0][0]
-                
-                if resolutionX != None and resolutionY != None and resolutionX != "0" and resolutionY != "0":
-                    common.log("Main.add_picture", "Picture has resolution %s x %s"%(str(resolutionX), str(resolutionY)))
-                    infolabels["exif:resolution"] = str(resolutionX) + ',' + str(resolutionY)
-            except:
-                pass
+                coords = MPDB.get_gps(picpath,picname)
+                if coords: 
+                    suffix = suffix + "[COLOR=C0C0C0C0][G][/COLOR]"
 
-            if rating:
-                common.log("Main.add_picture", "Picture has rating")
-                suffix = suffix + "[COLOR=C0FFFF00]"+("*"*int(rating))+"[/COLOR][COLOR=C0C0C0C0]"+("*"*(5-int(rating)))+"[/COLOR]"
+                (exiftime,) = MPDB.cur.request_with_binds( """select coalesce(ImageDateTime, '0') from Files where strPath=? and strFilename=? """,(picpath,picname))
+                resolutionX = MPDB.cur.request_with_binds( """select coalesce(tc.TagContent,0) from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
+                                                         where tt.TagType = 'EXIF ExifImageWidth'
+                                                           and tt.idTagType = tc.idTagType
+                                                           and tc.idTagContent = tif.idTagContent
+                                                           and tif.idFile = fi.idFile
+                                                           and fi.strPath = ?
+                                                           and fi.strFilename = ?  """,(picpath,picname))
 
-            liz.setInfo( type="pictures", infoLabels=infolabels )
+                resolutionY = MPDB.cur.request_with_binds( """select coalesce(tc.TagContent,0) from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
+                                                         where tt.TagType = 'EXIF ExifImageLength'
+                                                           and tt.idTagType = tc.idTagType
+                                                           and tc.idTagContent = tif.idTagContent
+                                                           and tif.idFile = fi.idFile
+                                                           and fi.strPath = ?
+                                                           and fi.strFilename = ?  """,(picpath,picname))     
 
-        liz.setLabel(picname+" "+suffix)
+                infolabels = { "picturepath":picname+" "+suffix, "date": date, "count": count  }
+                try:
+                    if exiftime[0] != None and exiftime[0] != "0":
+                        common.log("Main.add_picture", "Picture has EXIF Date/Time %s"%exiftime[0])
+                        infolabels["exif:exiftime"] = exiftime[0]
+                except:
+                    pass
 
-        if contextmenu:
-            if coords:
-                common.log("Main.add_picture", "Picture has geolocation")
-                contextmenu.append( (common.getstring(30220),"XBMC.RunPlugin(\"%s?action='geolocate'&place='%s'&path='%s'&filename='%s'&viewmode='view'\" ,)"%(sys.argv[0],"%0.6f,%0.6f"%(coords),
-                                                                                                                                                           common.quote_param(picpath.encode('utf-8')),
-                                                                                                                                                           common.quote_param(picname.encode('utf-8'))
-                                                                                                                                                           )))
-                #TODO : add to favourite
-                #TODO : ...
-            liz.addContextMenuItems(contextmenu,replacemenu)
+                try:
+                    resolutionX = resolutionX[0][0]
+                    resolutionY = resolutionY[0][0]
+                    
+                    if resolutionX != None and resolutionY != None and resolutionX != "0" and resolutionY != "0":
+                        common.log("Main.add_picture", "Picture has resolution %s x %s"%(str(resolutionX), str(resolutionY)))
+                        infolabels["exif:resolution"] = str(resolutionX) + ',' + str(resolutionY)
+                except:
+                    pass
 
-        return xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=fullfilepath,listitem=liz,isFolder=False)
+                if rating:
+                    common.log("Main.add_picture", "Picture has rating")
+                    suffix = suffix + "[COLOR=C0FFFF00]"+("*"*int(rating))+"[/COLOR][COLOR=C0C0C0C0]"+("*"*(5-int(rating)))+"[/COLOR]"
+
+                liz.setInfo( type="pictures", infoLabels=infolabels )
+
+            liz.setLabel(picname+" "+suffix)
+
+            if contextmenu:
+                if coords:
+                    common.log("Main.add_picture", "Picture has geolocation")
+                    contextmenu.append( (common.getstring(30220),"XBMC.RunPlugin(\"%s?action='geolocate'&place='%s'&path='%s'&filename='%s'&viewmode='view'\" ,)"%(sys.argv[0],"%0.6f,%0.6f"%(coords),
+                                                                                                                                                               common.quote_param(picpath.encode('utf-8')),
+                                                                                                                                                               common.quote_param(picname.encode('utf-8'))
+                                                                                                                                                               )))
+                    #TODO : add to favourite
+                    #TODO : ...
+                liz.addContextMenuItems(contextmenu,replacemenu)
+
+            return xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=fullfilepath,listitem=liz,isFolder=False)
+        except:
+            pass
+
 
     def show_home(self):
         common.log("Main.show_home", "start")

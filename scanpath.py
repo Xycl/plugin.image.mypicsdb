@@ -397,15 +397,21 @@ class VFSScanner:
         except:
             f=open(picfile.encode('utf-8'),"r+b")
         common.log( "VFSScanner._get_exif()", 'Calling function EXIF_file for "%s"'%picfile)
+
         try:
+            file = 0
             file = mmap.mmap(f.fileno(), 0)
-            #tags = EXIF_file(f,details=False)
-            tags = EXIF_file(file,details=False)
+            tags = EXIF_file(file, details=False)
+        except:
+            try:
+                tags = EXIF_file(f, details=False)
+            except Exception,msg:
+                common.log( "VFSScanner._get_exif()", "Exception", xbmc.LOGERROR)
+                common.log( "VFSScanner._get_exif()", msg, xbmc.LOGERROR)
+                
+        if file != 0:
             file.close()
-        except Exception,msg:
-            common.log( "VFSScanner._get_exif()", "Exception", xbmc.LOGERROR)
-            common.log( "VFSScanner._get_exif()", msg, xbmc.LOGERROR)
-            
+                
         common.log( "VFSScanner._get_exif()", 'Function returned')
         f.close()
 
