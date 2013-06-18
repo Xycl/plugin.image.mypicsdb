@@ -5,11 +5,15 @@ Don't change the plugin configuration unless you know what you do!
 a) You must add picture sources to XBMC
 b) Within MyPicsDB (not in the configuration) select menu "Paths of pictures folders" to add these paths to the database.
 
-   
 Excluding paths
 a) Add the exclude path(s) via menu "Paths of pictures folders".
 b) Rescan the paths which contain these added exclude paths to remove the pictures from MyPicsDB
 
+Excluding files
+a) This can be done in the plugin settings under "Files"
+b) You only need to enter a unique part of the complete path name. All files which contain this entered part of the path name will be excluded.
+c) Rescan all paths.
+d) To concatenate different file/path name parts use the | sign.
 
 2) MySql
 ==================================================================================
@@ -22,7 +26,7 @@ CREATE USER 'xbmc'@'%' IDENTIFIED BY 'xbmc';
 c) give him rights
 GRANT ALL ON *.* TO 'xbmc'@'%';
 
-d) Go to plugin settings and enable MySql. Set the correct user and password!
+d) Go to plugin settings and enable MySql. Set the correct user and password (they are case sensitive)!
 
 
 3) General problems with MyPicsDB
