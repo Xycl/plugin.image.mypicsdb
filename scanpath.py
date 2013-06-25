@@ -253,21 +253,19 @@ class VFSScanner:
                                               common.smart_utf8(filename))
                             continue
 
-
                     else:
                         sqlupdate  = False
                         common.log( "VFSScanner._addpath", "New picture will be inserted into dB")
                         self.picsadded   += 1
-                        
+
                 # videos aren't scanned and therefore never updated
                 elif extension in self.video_extensions:
                     common.log( "VFSScanner._addpath", 'Adding video file "%s"'%common.smart_utf8(pic))
-                    
+
                     if filename in filesfromdb:  # then it's an update
                         sqlupdate   = True
                         filesfromdb.pop(filesfromdb.index(filename))
                         continue
-
 
                     else:
                         sqlupdate  = False
@@ -275,14 +273,14 @@ class VFSScanner:
 
                 else:
                     continue
-                
+
                 try:
                     self.mpdb.file_insert(path, filename, picentry, sqlupdate, filesha)
                 except Exception, msg:
                     common.log("VFSScanner._addpath", 'Unable to insert picture "%s"'%pic, xbmc.LOGERROR)
                     common.log("VFSScanner._addpath", '"%s" - "%s"'%(Exception, msg), xbmc.LOGERROR)
                     continue
-                    
+
                 if sqlupdate:
                     common.log( "VFSScanner._addpath", 'Picture "%s" updated'%common.smart_utf8(pic))
                 else:
@@ -399,18 +397,18 @@ class VFSScanner:
         common.log( "VFSScanner._get_exif()", 'Calling function EXIF_file for "%s"'%picfile)
 
         try:
-            file = 0
-            file = mmap.mmap(f.fileno(), 0)
-            tags = EXIF_file(file, details=False)
+            mmapfile = 0
+            mmapfile = mmap.mmap(f.fileno(), 0)
+            tags = EXIF_file(mmapfile, details=False)
         except:
             try:
                 tags = EXIF_file(f, details=False)
             except Exception,msg:
-                common.log( "VFSScanner._get_exif()", "Exception", xbmc.LOGERROR)
-                common.log( "VFSScanner._get_exif()", msg, xbmc.LOGERROR)
-                
-        if file != 0:
-            file.close()
+                common.log("VFSScanner._get_exif",  picfile , xbmc.LOGERROR)
+                common.log("VFSScanner._get_exif",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+                    
+        if mmapfile != 0:
+            mmapfile.close()
                 
         common.log( "VFSScanner._get_exif()", 'Function returned')
         f.close()

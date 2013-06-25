@@ -103,7 +103,7 @@ class XMP_Tags(object):
             #print "Innertag : " + inner
             
             j = 0
-            people=''
+            val_inner_tag=''
             if start != -1 and end != -1:
                 end = inner.find("</" + tagname)
                 while end != -1:
@@ -114,17 +114,17 @@ class XMP_Tags(object):
 
                     tag_found = inner[start:end]
                     i = 0
-                    people = ''
+                    val_inner_tag = ''
                     while i < len(tag_found):
                         if ord(tag_found[i])!=0:
-                            people += tag_found[i]
+                            val_inner_tag += tag_found[i]
                         i += 1
 
-                    if len(people):
+                    if len(val_inner_tag):
                         try:
-                            value = unicode(people, encoding='utf-8', errors='strict')
+                            value = unicode(val_inner_tag, encoding='utf-8', errors='strict')
                         except:
-                            value = unicode(people, encoding="cp1252", errors='replace')
+                            value = unicode(val_inner_tag, encoding="cp1252", errors='replace')
 
                         # find inner tags and delete them  <rdf:li[^>]*?>(.*?)</rdf:li>
                         matchouter=re.compile('<rdf:Alt[^>]*?>(.*?)</rdf:Alt>',re.DOTALL).findall(value)
