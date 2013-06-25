@@ -603,7 +603,7 @@ class MyPictureDB(object):
     
         return
     
-    def sha_of_file ( self, filepath ) :
+    def sha_of_file ( self, filepath, length = None ) :
         #found here : http://sebsauvage.net/python/doublesdetector.py
         #thanks sebsauvage for all its snippets !
         """ Compute SHA (Secure Hash Algorythm) of a file.
@@ -612,6 +612,8 @@ class MyPictureDB(object):
                               returns '0' if file could not be read (file not found, no read rights...)
         """
     
+        loaded_bytes = 65536
+        
         try:
             import hashlib
             digest = hashlib.md5()
@@ -631,6 +633,10 @@ class MyPictureDB(object):
             while len(data) != 0:
                 digest.update(data)
                 data = filehandle.read(65536)
+                loaded_bytes += 65536
+                common.log("", "file = %s   loaded = %s"%(filepath, loaded_bytes))
+                if length != None and loaded_bytes >= length:
+                    break
             filehandle.close()
         except:
             print_exc()

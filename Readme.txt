@@ -15,6 +15,7 @@ b) You only need to enter a unique part of the complete path name. All files whi
 c) Rescan all paths.
 d) To concatenate different file/path name parts use the | sign.
 
+
 2) MySql
 ==================================================================================
 a) You must create a database:
@@ -29,7 +30,12 @@ GRANT ALL ON *.* TO 'xbmc'@'%';
 d) Go to plugin settings and enable MySql. Set the correct user and password (they are case sensitive)!
 
 
-3) General problems with MyPicsDB
+3) Tag translation and combination of tags
+==================================================================================
+Menu "translate your tags" lets you suppress tags (leave translation empty) or combine tags like 'Country/primary location name', 'Photoshop:Country' and 'Iptc4xmpExt:CountryName' to one 'Country' tag. 
+
+
+4) General problems with MyPicsDB
 ==================================================================================
 If you have unexplainable problems like pictures don't get included into database and you're a long time user of MyPicsDB then it will be a good decision to delete the database and start with a new one.
 
@@ -43,7 +49,7 @@ This means that the already entered paths are still available and that you can s
 Because all pictures were deleted from database it doesn't matter what you select in the following dialog box.
 
 
-4) Auto-update  MyPicsDB
+5) Auto-update  MyPicsDB
 ==================================================================================
    Idea from Fungify 
    
@@ -59,7 +65,7 @@ Because all pictures were deleted from database it doesn't matter what you selec
    wget --directory-prefix=tmp --http-user=<xbmc username> --http-passwd=<xbmc password> "http://Servername:Portnumber/xbmcCmds/xbmcHttp?command=ExecBuiltIn&parameter=XBMC.RunScript("<full path to plugin>\plugin.image.mypicsdb\scanpath.py",--database)
 
    
-5) For skinners
+6) For skinners
 ==================================================================================
   Done by MikeBZH44
 
