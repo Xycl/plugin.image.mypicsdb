@@ -140,6 +140,7 @@ class VFSScanner:
                 
         # Set default translation for tag types
         self.mpdb.default_tagtypes_translation()
+        self.mpdb.cleanup_keywords()
         
         xbmc.executebuiltin( "Notification(%s,%s)"%(common.getstring(30000).encode("utf8"),
                                                     common.getstring(30248).encode("utf8")%(self.picsscanned,self.picsadded,self.picsdeleted,self.picsupdated)

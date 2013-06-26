@@ -352,12 +352,14 @@ class MyPictureDB(object):
     
         try:
 
+            common.log("", "Tag tables will be cleaned.")
             self.cur.execute('delete from Files where idFolder not in( select idFolder from Folders)')
             self.cur.execute( "delete from TagsInFiles where idFile not in(select idFile from Files )")
             self.cur.execute( "delete from TagContents where idTagContent not in (select idTagContent from TagsInFiles)")
             # Only delete tags which are not translated!
             self.cur.execute( "delete from TagTypes where idTagType not in (select idTagType from TagContents) and TagType = TagTranslation")
-    
+            self.con.commit()
+            
         except Exception,msg:
             common.log("MPDB.cleanup_keywords", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
             #self.cur.close()
@@ -566,12 +568,9 @@ class MyPictureDB(object):
             list_child.extend(self.get_children(idchild))
         return list_child
     
-    def del_pic(self, picpath, picfile=None): #TODO : revoir la vérif du dossier inutile
-        """Supprime le chemin/fichier de la base. Si aucun fichier n'est fourni, toutes les images du chemin sont supprimées de la base"""
+    def del_pic(self, picpath, picfile=None): 
     
         if picfile:
-            #on supprime le fichier de la base
-            #print """DELETE FROM Files WHERE idFolder = (SELECT idFolder FROM Folders WHERE FullPath="%s") AND strFilename="%s" """%(picpath,picfile)
             self.cur.request("""DELETE FROM Files WHERE idFolder = (SELECT idFolder FROM Folders WHERE FullPath=?) AND strFilename=? """,(picpath,picfile))
     
         else:
@@ -600,6 +599,8 @@ class MyPictureDB(object):
                 self.cur.request( """DELETE FROM Folders WHERE idFolder in ("%s") """%""" "," """.join([str(i) for i in deletelist]) )
             except:
                 pass
+            
+        self.cleanup_keywords()
     
         return
     
