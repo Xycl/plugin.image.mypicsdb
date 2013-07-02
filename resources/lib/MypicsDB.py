@@ -21,7 +21,8 @@ import dbabstractionlayer as dblayer
 
 DB_VERSION19  = '1.9.12'
 DB_VERSION201 = '2.0.1'
-DB_VERSION    = '2.2.9'
+DB_VERSION229 = '2.2.9'
+DB_VERSION    = '12.0.2'
 
 lists_separator = "||"
 
@@ -86,13 +87,23 @@ class MyPictureDB(object):
             common.log("MPDB.Versiversion_tableonTable", "MyPicsDB database will be updated", xbmc.LOGNOTICE )
             self.make_new_base(True)
             #VersionTable()
-            
-        # version of DB is less then current version
-        elif common.check_version(strVersion, DB_VERSION)>0:
+
+        # version of DB is less then 2.2.9
+        elif common.check_version(strVersion, DB_VERSION229)>0:
             # update tags for new introduced yyyy-mm  tag
             common.log("MPDB.version_table", "MyPicsDB database will be updated to version %s. New YYYY-MM tags will be inserted."%str(DB_VERSION), xbmc.LOGNOTICE )
             self.update_yyyy_mm_tags()
             self.version_211_tables()         
+            self.version_1202_tables()
+            self.cur.execute("update DBVersion set strVersion = '"+DB_VERSION+"'")
+            self.con.commit()
+                        
+        # version of DB is less then current version
+        elif common.check_version(strVersion, DB_VERSION)>0:
+            # update tags for new introduced yyyy-mm  tag
+            common.log("MPDB.version_table", "MyPicsDB database will be updated to version %s. New YYYY-MM tags will be inserted."%str(DB_VERSION), xbmc.LOGNOTICE )
+            self.update_yyyy_mm_tags()         
+            self.version_1202_tables()
             self.cur.execute("update DBVersion set strVersion = '"+DB_VERSION+"'")
             self.con.commit()
         else:
@@ -108,7 +119,7 @@ class MyPictureDB(object):
         rows = [row for row in self.cur.request("SELECT idFile, strFilename, strPath, ImageDateTime FROM Files")]
         
         for row in rows:
-            dictionnary['YYYY-MM'] = row[3][:7]
+            dictionnary['YYYY-MM'] = str(row[3])[:7]
             try:
                 self.tags_insert( row[0], row[1], row[2], dictionnary)
                 common.log( 'MPDB.update_yyyy_mm_tags()', 'Tag YYYY-MM with value %s inserted for "%s"'%(dictionnary['YYYY-MM'], row[1]) )
@@ -118,7 +129,24 @@ class MyPictureDB(object):
         self.con.commit()
         #self.cur.close()
         return True
-    
+
+    def version_1202_tables(self):
+  
+        try:
+            self.cur.execute("create table fc_bak as select * from FilesInCollections")
+            self.cur.execute("drop table FilesInCollections")
+
+            self.cur.execute("create table FilesInCollections (idCol INTEGER, idFile INTEGER NOT NULL, Constraint UNI_COLLECTION UNIQUE (idCol, idFile))")
+            self.cur.execute("CREATE INDEX idxFilesInCollections1 ON FilesInCollections(idCol)")
+            self.cur.execute("CREATE INDEX idxFilesInCollections2 ON FilesInCollections(idFile)")
+            
+            self.cur.execute("insert into FilesInCollections select * from fc_bak ")
+            self.cur.execute("drop table fc_bak")
+            self.con.commit()
+        except:
+            pass
+           
+               
     def version_211_tables(self):
   
         try:
@@ -228,7 +256,7 @@ class MyPictureDB(object):
                 common.log("MPDB.make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
         #table 'FilesInCollections'
         try:
-            self.cur.execute("CREATE TABLE FilesInCollections (idCol INTEGER %s, idFile INTEGER NOT NULL, Constraint UNI_COLLECTION UNIQUE (idCol,idFile))"%self.con.get_ddl_primary_key())
+            self.cur.execute("CREATE TABLE FilesInCollections (idCol INTEGER, idFile INTEGER NOT NULL, Constraint UNI_COLLECTION UNIQUE (idCol,idFile))")
         except Exception,msg:
             if str(msg).find("already exists") > -1:
                 pass
@@ -289,6 +317,7 @@ class MyPictureDB(object):
         
         try:
             self.cur.execute("CREATE INDEX idxFilesInCollections1 ON FilesInCollections(idCol)")
+            self.cur.execute("CREATE INDEX idxFilesInCollections2 ON FilesInCollections(idFile)")
         except Exception,msg:
             pass
     
@@ -318,7 +347,7 @@ class MyPictureDB(object):
     
         try:
             self.cur.execute("CREATE INDEX idxFiles1 ON Files(idFile, idFolder)")
-            self.cur.execute("CREATE INDEX idxFilesInCollections ON FilesInCollections (idFile)")
+            
         except Exception,msg:
             pass
     
@@ -916,14 +945,19 @@ class MyPictureDB(object):
     
     def period_add(self, periodname, datestart, dateend):
         if self.con.get_backend() == "mysql":
-            datestart = "date_format('%s', '%%%%Y-%%%%m-%%%%d %%%%H:%%%%i:%%%%S')"%datestart
-            dateend   = "date_format('%s', '%%%%Y-%%%%m-%%%%d %%%%H:%%%%i:%%%%S')"%dateend
+            datestart = "date_format('%s', '%%Y-%%m-%%d %%H:%%i:%%S')"%datestart
+            dateend   = "date_format('%s', '%%Y-%%m-%%d %%H:%%i:%%S')"%dateend
+            common.log("", "datestart = %s"%datestart)
+            common.log("", "dateend   = %s"%dateend)
         else:
-            datestart = "datetime(%s)"%datestart
-            dateend   = "datetime(%s)"%dateend
-        
-        select = """INSERT INTO Periodes(PeriodeName,DateStart,DateEnd) VALUES (?,%s,%s)"""%(datestart,dateend)
-        self.cur.request( select, (periodname,) )
+            datestart = "datetime('%s')"%datestart
+            dateend   = "datetime('%s')"%dateend
+            common.log("", "datestart = %s"%datestart)
+            common.log("", "dateend   = %s"%dateend)
+
+        insert = """INSERT INTO Periodes(PeriodeName,DateStart,DateEnd) VALUES (?,%s,%s)"""%(datestart,dateend)
+        common.log("", insert)
+        self.cur.request( insert, (periodname,) )
         self.con.commit()
         return
     
@@ -952,7 +986,8 @@ class MyPictureDB(object):
     
         if self.con.get_backend() == 'mysql':
             val = val.replace("\\", "\\\\\\\\")
-            
+
+
         if count:
             return [row for row in self.cur.request( """select count(distinct fi.strFilename||fi.strPath)
                                                           from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi

@@ -192,7 +192,10 @@ class BaseCursor(object):
 
     def execute(self, sql, bindvariables=[]):
         if bindvariables and isinstance(self, MysqlCursor) == True:
+            #common.log("", "MySql execute for: %s"%sql)
+            sql = sql.replace('%', '%%')
             sql = sql.replace('?', '%s')
+            #common.log("", "MySql execute after: %s"%sql)
         if bindvariables :
             self.cursor.execute(sql, bindvariables)
         else:
@@ -243,14 +246,15 @@ class BaseCursor(object):
                     for value in bindvariables:
                         if type(value).__name__ == 'str':
                             binds.append(common.smart_unicode(value))
+                            #common.log("", "bindVar = %s"%common.smart_unicode(value))
                         else:
                             binds.append(value)
+                            #common.log("", "bindVar = %s"%value)
                     self.execute( statement, binds )
                     try:
                         return_value = self.fetchall()
                     except:
                         pass
-
 
                 else:
                     self.execute( statement, binds )
