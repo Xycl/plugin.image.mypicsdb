@@ -1340,16 +1340,29 @@ class MyPictureDB(object):
         # new part
         count = 0
         try:
-            folderPath = self.cur.request("""Select FullPath from Folders where idFolder = ?""", (folderid,))[0][0]
+        
+            #folderPath    = self.cur.request("""Select FullPath from Folders where idFolder = ?""", (folderid,))[0][0]
+            #parent_folder = self.cur.request("""Select ParentFolder from Folders where idFolder = ?""", (folderid,))[0][0]
+            
+            row = self.cur.request("""Select FullPath, ParentFolder from Folders where idFolder = ?""", (folderid,))
+            folderPath = row[0][0]
+            parent_folder = row[0][1]
+            
+            common.log("", "folderid = %s"%folderid)
+            common.log("", "folderPath = %s"%folderPath)
+            common.log("", "parent_folder = %s"%parent_folder)
+            
             # mask the apostrophe
             folderPath = folderPath.replace("'", "''")
                 
             if self.con.get_backend() == 'mysql':
                 folderPath = folderPath.replace("\\", "\\\\\\\\")            
             
-            common.log("",  folderPath )
-            count = self.cur.request("""select count(*) from Files f, Folders p where f.idFolder=p.idFolder and p.FullPath like '%s%%' """%folderPath)[0][0]
-   
+            if parent_folder:
+                count = self.cur.request("""select count(*) from Files f, Folders p where f.idFolder=p.idFolder and (p.FullPath = '%s' or p.FullPath like '%s%%' or p.FullPath like '%s%%')"""%(folderPath, folderPath + '/', folderPath + '\\'))[0][0]
+            else:
+                count = self.cur.request("""select count(*) from Files f, Folders p where f.idFolder=p.idFolder and p.FullPath like '%s%%'"""%(folderPath))[0][0]            
+            
         except Exception,msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
         
