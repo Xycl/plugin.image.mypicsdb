@@ -446,7 +446,12 @@ class MyPictureDB(object):
                 self.cleanup_keywords()
 
         try:
-            imagedatetime = "null"
+            
+            if self.con.get_backend() == "mysql":
+                imagedatetime = "0000-00-00 00:00:00"
+            else:
+                imagedatetime = "null"
+                
             if  "EXIF DateTimeOriginal" in dictionnary:
                 imagedatetime = dictionnary["EXIF DateTimeOriginal"]
                 #print "1 = " + str(imagedatetime)
