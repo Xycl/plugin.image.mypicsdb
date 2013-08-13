@@ -1364,7 +1364,10 @@ class MyPictureDB(object):
                 folderPath = folderPath.replace("\\", "\\\\\\\\")            
             
             if parent_folder:
-                count = self.cur.request("""select count(*) from Files f, Folders p where f.idFolder=p.idFolder and (p.FullPath = '%s' or p.FullPath like '%s%%' or p.FullPath like '%s%%')"""%(folderPath, folderPath + '/', folderPath + '\\'))[0][0]
+                if self.con.get_backend() == 'mysql':
+                    count = self.cur.request("""select count(*) from Files f, Folders p where f.idFolder=p.idFolder and (p.FullPath like '%s' or p.FullPath like '%s%%' or p.FullPath like '%s%%')"""%(folderPath, folderPath + '/', folderPath + '\\\\\\\\'))[0][0]
+                else:
+                    count = self.cur.request("""select count(*) from Files f, Folders p where f.idFolder=p.idFolder and (p.FullPath = '%s' or p.FullPath like '%s%%' or p.FullPath like '%s%%')"""%(folderPath, folderPath + '/', folderPath + '\\'))[0][0]
             else:
                 count = self.cur.request("""select count(*) from Files f, Folders p where f.idFolder=p.idFolder and p.FullPath like '%s%%'"""%(folderPath))[0][0]            
             

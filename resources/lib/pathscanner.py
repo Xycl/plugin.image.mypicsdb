@@ -66,7 +66,7 @@ class Scanner(object):
         path = xbmc.translatePath(path)
         common.log("Scanner._walk",'"%s"'%path)
         #if xbmcvfs.exists(xbmc.translatePath(path)) or re.match(r"[a-zA-Z]:\\", path) is not None:
-        subdirs, files = self._listdir(path)
+        subdirs, files = self.listdir(path)
         for subdir in subdirs:
             dirnames.append(os.path.join(path, subdir))
 
@@ -118,7 +118,7 @@ class Scanner(object):
             return common.smart_unicode(destination), True
 
             
-    def _listdir(self, path):
+    def listdir(self, path):
 
         try:
             return xbmcvfs.listdir(path)

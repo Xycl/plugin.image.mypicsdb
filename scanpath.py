@@ -250,7 +250,7 @@ class VFSScanner:
                             if self.scan and self.totalfiles!=0 and self.total_root_entries!=0:
                                 self.scan.update(int(100*float(self.picsscanned)/float(self.totalfiles)),
                                               int(100*float(self.current_root_entry)/float(self.total_root_entries)),
-                                              common.smart_utf8(common.getstring(30000)+"[%s] (%0.2f%%)"%(self.action,100*float(self.picsscanned)/float(self.totalfiles))),#"MyPicture Database [%s] (%0.2f%%)"
+                                              common.smart_utf8(common.getstring(30000)+" [%s] (%0.2f%%)"%(self.action,100*float(self.picsscanned)/float(self.totalfiles))),#"MyPicture Database [%s] (%0.2f%%)"
                                               common.smart_utf8(filename))
                             continue
 
