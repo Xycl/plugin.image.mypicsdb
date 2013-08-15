@@ -17,14 +17,12 @@ import common
 import dbabstractionlayer as dblayer
 
 
-#home = common.getaddon_path()
-
-DB_VERSION19  = '1.9.12'
-DB_VERSION201 = '2.0.1'
-DB_VERSION229 = '2.2.9'
-DB_VERSION    = '12.0.2'
-
-lists_separator = "||"
+DB_VERSION19      = '1.9.12'
+DB_VERSION201     = '2.0.1'
+DB_VERSION229     = '2.2.9'
+DB_VERSION1202    = '12.0.2'
+DB_VERSION        = '12.0.6'
+lists_separator   = "||"
 
 class MyPictureDBException(Exception):
     pass
@@ -98,14 +96,24 @@ class MyPictureDB(object):
             self.cur.execute("update DBVersion set strVersion = '"+DB_VERSION+"'")
             self.con.commit()
                         
-        # version of DB is less then current version
-        elif common.check_version(strVersion, DB_VERSION)>0:
+        # version of DB is less then 12.0.2
+        elif common.check_version(strVersion, DB_VERSION1202)>0:
             # update tags for new introduced yyyy-mm  tag
             common.log("MPDB.version_table", "MyPicsDB database will be updated to version %s. New YYYY-MM tags will be inserted."%str(DB_VERSION), xbmc.LOGNOTICE )
-            self.update_yyyy_mm_tags()         
+            self.update_yyyy_mm_tags()
+            if self.con.get_backend() == "mysql":
+                self.version_201_tables()         
             self.version_1202_tables()
             self.cur.execute("update DBVersion set strVersion = '"+DB_VERSION+"'")
             self.con.commit()
+            
+        # version of DB is less then current version
+        elif common.check_version(strVersion, DB_VERSION)>0:
+            if self.con.get_backend() == "mysql":
+                self.cur.execute("alter table FilterWizard modify pkFilter integer auto_increment not null")
+                self.cur.execute("alter table FilterWizardItems modify idItems integer auto_increment not null")
+                self.cur.execute("update DBVersion set strVersion = '"+DB_VERSION+"'")
+                self.con.commit()
         else:
             common.log("MPDB.version_table", "MyPicsDB database contains already current schema" )
             
@@ -163,7 +171,7 @@ class MyPictureDB(object):
         #table 'FilterWizard'
    
         try:
-            self.cur.execute("""create table FilterWizard (pkFilter integer primary key, strFilterName VARCHAR(255) unique, bMatchAll integer, StartDate date, EndDate date)""")
+            self.cur.execute("""create table FilterWizard (pkFilter integer %s, strFilterName %s unique, bMatchAll integer, StartDate date, EndDate date)"""%(self.con.get_ddl_primary_key(), self.con.get_ddl_varchar(255)))
         except Exception,msg:
             if str(msg).find("already exists") > -1:
                 pass
@@ -173,7 +181,7 @@ class MyPictureDB(object):
     
         #table 'FilterWizardItems'
         try:
-            self.cur.execute("""create table FilterWizardItems (idItems integer primary key, fkFilter integer, strItem VARCHAR(255), nState integer, FOREIGN KEY(fkFilter) REFERENCES FilterWizard(pkFilter))""")
+            self.cur.execute("""create table FilterWizardItems (idItems integer %s, fkFilter integer, strItem %s, nState integer, FOREIGN KEY(fkFilter) REFERENCES FilterWizard(pkFilter))"""%(self.con.get_ddl_primary_key(), self.con.get_ddl_varchar(255)))
         except Exception,msg:
             if str(msg).find("already exists") > -1:
                 pass
@@ -828,6 +836,14 @@ class MyPictureDB(object):
         
     def filterwizard_save_filter(self, filter_name, items, bmatch_all, start_date ='', end_date = ''):
     
+        if self.db_backend.lower() == 'mysql':
+            
+            if start_date == '':
+                start_date = "0000-00-00 00:00:00"
+                
+            if end_date == '':
+                end_date = "0000-00-00 00:00:00"
+                    
         match_all = (1 if bmatch_all == True else 0)
         
         try:

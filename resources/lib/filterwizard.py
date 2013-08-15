@@ -219,7 +219,12 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
             self.active_tags, self.use_and, self.start_date, self.end_date = self.MPDB.filterwizard_load_filter(filtersettings)
             if self.use_and:
                 self.getControl( BUTTON_MATCHALL ).setSelected(1)
-            if self.start_date != "" or self.end_date != "":
+
+            if self.start_date is None:
+                self.start_date = ""
+            if self.end_date is None:
+                self.end_date = ""
+            if str(self.start_date) != "" or str(self.end_date) != "":
                 self.getControl( BUTTON_DATE ).setLabel( self.start_date + ' ... ' + self.end_date )
             else:
                 self.getControl( BUTTON_DATE ).setLabel( common.getstring(30164) )
@@ -328,7 +333,10 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
         filters = []
         filters.append( common.getstring(30653) )
         filters = filters + self.MPDB.filterwizard_list_filters()
-        filters.remove(self.last_used_filter_name)
+        try:
+            filters.remove(self.last_used_filter_name)
+        except:
+            pass
         dialog = xbmcgui.Dialog()
         ret = dialog.select(common.getstring(30608), filters)
         if ret > 0:

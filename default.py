@@ -176,7 +176,8 @@ class Main:
             common.log("",picname)
             date = MPDB.get_pic_date(picpath,picname)
             try:
-                date = date and strftime("%d.%m.%Y",strptime(date,"%Y-%m-%d %H:%M:%S")) or ""
+                if date:
+                    date = date and strftime("%d.%m.%Y",strptime(date,"%Y-%m-%d %H:%M:%S")) or ""
             except Exception,msg:
                 common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
                 date = None
@@ -191,9 +192,11 @@ class Main:
             #or is the file a picture ?
             elif extension in ["."+ext.replace(".","").upper() for ext in common.getaddon_setting("picsext").split("|")]:
                 rating = MPDB.get_rating(picpath,picname)
-                if int(common.getaddon_setting("ratingmini"))>0:#un rating mini est configuré
-                    if not rating:  return
-                    if int(rating) < int(common.getaddon_setting("ratingmini")): return #si on a un rating dans la photo
+                if int(common.getaddon_setting("ratingmini"))>0:
+                    if not rating:  
+                        return
+                    if int(rating) < int(common.getaddon_setting("ratingmini")): 
+                        return 
 
                 coords = MPDB.get_gps(picpath,picname)
                 if coords: 
@@ -216,7 +219,8 @@ class Main:
                                                            and fi.strPath = ?
                                                            and fi.strFilename = ?  """,(picpath,picname))     
 
-                infolabels = { "picturepath":picname+" "+suffix, "date": date, "count": count  }
+                #infolabels = { "picturepath":picname+" "+suffix, "date": date, "count": count  }
+                infolabels = { "picturepath":fullfilepath, "date": date, "count": count  }
                 try:
                     if exiftime[0] != None and exiftime[0] != "0":
                         common.log("Main.add_picture", "Picture has EXIF Date/Time %s"%exiftime[0])
