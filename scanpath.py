@@ -391,27 +391,48 @@ class VFSScanner:
                     "EXIF ExifVersion"
                       ]
 
+        # try to open picfile in modify/write mode. Windows needs this for memory mapped file support.
         try:
+            # General for all OS. Use unicode for picfile.
+            # This fails with OpenElec or if modify/write attribute isn't set.
             f=open(picfile,"r+b")
-        except:
-            f=open(picfile.encode('utf-8'),"r+b")
-        common.log( "VFSScanner._get_exif()", 'Calling function EXIF_file for "%s"'%picfile)
-
-        try:
-            mmapfile = 0
-            mmapfile = mmap.mmap(f.fileno(), 0)
-            tags = EXIF_file(mmapfile, details=False)
+            common.log( "VFSScanner._get_exif()", 'File opened with statement: %s'%'f=open(picfile,"r+b")')
         except:
             try:
+                # Special for OpenElec. Use utf-8 for picfile.
+                # If modify/write attribute isn't set then it'll fail.
+                f=open(picfile.encode("utf-8"),"r+b")
+                common.log( "VFSScanner._get_exif()", 'File opened with statement: %s'%'f=open(picfile.encode("utf-8"),"r+b")')
+            except:
+                # Where're here because write/modify attribute is missing and file could not be opened.
+                try:
+                    # General for all OS. Use unicode for picfile.
+                    f=open(picfile,"rb")
+                    common.log( "VFSScanner._get_exif()", 'File opened with statement: %s'%'f=open(picfile,"rb")')
+                except:
+                    # Special for OpenElec. Use utf-8 for picfile.
+                    f=open(picfile.encode('utf-8'),"rb")
+                    common.log( "VFSScanner._get_exif()", 'File opened with statement: %s'%'f=open(picfile.encode("utf-8"),"rb")')
+        common.log( "VFSScanner._get_exif()", 'Calling function EXIF_file for "%s"'%picfile)
+
+        mmapfile = 0
+        try:
+            # If write/modify attribute isn't set then this will fail on Windows because above the file was opened read only!
+            mmapfile = mmap.mmap(f.fileno(), 0)
+            tags = EXIF_file(mmapfile, details=False)
+            common.log( "VFSScanner._get_exif()", 'EXIF_file with mmap support returned')
+        except:
+            try:
+                # We've to open the file without memory mapped file support.
                 tags = EXIF_file(f, details=False)
+                common.log( "VFSScanner._get_exif()", 'EXIF_file without mmap support returned')
             except Exception,msg:
-                common.log("VFSScanner._get_exif",  picfile , xbmc.LOGERROR)
-                common.log("VFSScanner._get_exif",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+                common.log("VFSScanner._get_exif", picfile , xbmc.LOGERROR)
+                common.log("VFSScanner._get_exif", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
                     
         if mmapfile != 0:
             mmapfile.close()
                 
-        common.log( "VFSScanner._get_exif()", 'Function returned')
         f.close()
 
         picentry={}
