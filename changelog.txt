@@ -1,3 +1,6 @@
+2013/08/25 --> v 12.0.7
+Update: Scanpath.py hardened in case files are read-only.
+
 2013/08/15 --> v 12.0.6
 Fix:    Load/Save filter wizard settings didn't work with MySql
 
