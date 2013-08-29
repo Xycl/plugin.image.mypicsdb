@@ -1,3 +1,6 @@
+2013/08/28 --> v 12.0.8
+Fix:    If there were pictures without a valid EXIF DateTime then creating Date Ranges would produce script errors.
+
 2013/08/25 --> v 12.0.7
 Update: Scanpath.py hardened in case files are read-only.
 
