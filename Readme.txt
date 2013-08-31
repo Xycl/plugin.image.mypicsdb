@@ -15,6 +15,8 @@ b) You only need to enter a unique part of the complete path name. All files whi
 c) Rescan all paths.
 d) To concatenate different file/path name parts use the | sign.
 
+Cleanup
+a) After renaming a directory you must do a full rescan!
 
 2) MySql
 ==================================================================================

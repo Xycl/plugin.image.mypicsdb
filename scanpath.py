@@ -219,7 +219,6 @@ class VFSScanner:
                              }
 
 
-
                 sqlupdate = False
                 filesha   = 0
                 
@@ -236,15 +235,15 @@ class VFSScanner:
                     if isremote:
                         self.filescanner.delete(localfile)
                         
-                    if filename in filesfromdb:  # then it's an update
+                    if pic in filesfromdb:  # then it's an update
 
                         sqlupdate   = True
                         if self.mpdb.stored_sha(path,filename) != filesha:  # if sha is equal then don't scan again
                             self.picsupdated += 1
                             common.log( "VFSScanner._addpath", "Picture already exists and must be updated")
-                            filesfromdb.pop(filesfromdb.index(filename))
+                            filesfromdb.pop(filesfromdb.index(pic))
                         else:
-                            filesfromdb.pop(filesfromdb.index(filename))
+                            filesfromdb.pop(filesfromdb.index(pic))
                             common.log( "VFSScanner._addpath", "Picture already exists but not modified")
 
                             if self.scan and self.totalfiles!=0 and self.total_root_entries!=0:
@@ -263,9 +262,9 @@ class VFSScanner:
                 elif extension in self.video_extensions:
                     common.log( "VFSScanner._addpath", 'Adding video file "%s"'%common.smart_utf8(pic))
 
-                    if filename in filesfromdb:  # then it's an update
+                    if pic in filesfromdb:  # then it's an update
                         sqlupdate   = True
-                        filesfromdb.pop(filesfromdb.index(filename))
+                        filesfromdb.pop(filesfromdb.index(pic))
                         continue
 
                     else:
@@ -307,6 +306,10 @@ class VFSScanner:
                     common.log( "VFSScanner._addpath", "Scanning canncelled", xbmc.LOGNOTICE)
                     return
                 self._addpath(dirname, folderid, True, update)
+                
+        # delete all entries with "sha is null"
+        self.picsdeleted += self.mpdb.del_pics_wo_sha()
+
                 
     
         """

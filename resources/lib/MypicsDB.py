@@ -391,6 +391,7 @@ class MyPictureDB(object):
 
             common.log("", "Tag tables will be cleaned.")
             self.cur.execute('delete from Files where idFolder not in( select idFolder from Folders)')
+            self.cur.execute('delete from Folders where idFolder not in( select idFolder from Files)')
             self.cur.execute( "delete from TagsInFiles where idFile not in(select idFile from Files )")
             self.cur.execute( "delete from TagContents where idTagContent not in (select idTagContent from TagsInFiles)")
             # Only delete tags which are not translated!
@@ -407,7 +408,7 @@ class MyPictureDB(object):
     
     def pic_exists(self, picpath, picfile):
         """
-        Check wether or not a file exists in the DB
+        Check whether or not a file exists in the DB
         """
     
         try:
@@ -422,25 +423,28 @@ class MyPictureDB(object):
             retour= True
         #self.cur.close()
         return retour
-    
+
+        
     def listdir(self, path):
         """
         List Files from DB where path
         """
 
+        full_filename = []
         try:
-            retour = [row[0] for row in self.cur.request( u"SELECT f.strFilename FROM Files f,Folders p WHERE f.idFolder=p.idFolder AND p.FullPath=(?)",(path,))]
+            pictures = [row for row in self.cur.request( u"SELECT f.strPath, f.strFilename FROM Files f,Folders p WHERE f.idFolder=p.idFolder AND p.FullPath=(?) order by f.idFile",(path,))]
+            for entry in pictures:
+                full_filename.append(join(entry[0], entry[1]))
+
         except Exception,msg:
-            common.log( "listdir", "path = "%path, xbmc.LOGERROR )
-            common.log( "listdir", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+            common.log( "", "path = "%path, xbmc.LOGERROR )
+            common.log( "", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
             self.cur.close()
             raise
-    
         
-        #print retour
-        #self.cur.close()
-        return retour
-    
+        return full_filename
+
+        
     def file_insert(self, path,filename,dictionnary,update=False, sha=0):
         """
         insert into file database the dictionnary values into the dictionnary keys fields
@@ -677,7 +681,7 @@ class MyPictureDB(object):
                 digest.update(data)
                 data = filehandle.read(65536)
                 loaded_bytes += 65536
-                common.log("", "file = %s   loaded = %s"%(filepath, loaded_bytes))
+                #common.log("", "file = %s   loaded = %s"%(filepath, loaded_bytes))
                 if length != None and loaded_bytes >= length:
                     break
             filehandle.close()
@@ -1494,6 +1498,11 @@ class MyPictureDB(object):
             request = """SELECT strPath,strFilename FROM Files WHERE datetime(ImageDateTime) BETWEEN datetime('%s',%s) AND datetime('%s',%s) ORDER BY ImageDateTime ASC"""%(DS,Smodifier,DE,Emodifier)
         return [row for row in self.cur.request(request)]
 
+        
+    def del_pics_wo_sha(self):
+        count = [row for row in self.cur.request("select count(*) from Files where Sha is null")][0][0]
+        self.cur.request("delete from Files where Sha is null");
+        return count
 
     def pics_for_period(self, periodtype, date):
         if self.con.get_backend() == "mysql":
