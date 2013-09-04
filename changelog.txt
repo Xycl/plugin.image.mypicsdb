@@ -1,5 +1,5 @@
-2013/09/03 --> v 12.1.0
-Update: Next release for Frodo
+2013/09/03 --> v 12.0.10
+Fix:    DB cleanup deleted rootfolders in Folders table.
 
 2013/08/29 --> v 12.0.9
 Fix:    Renaming a directory wasn't recognized. Now you can use full rescan (Menu: "Paths of picture folders->Scan all paths" -> Dialog: Click on "yes") to clean-up (delete) the DB entries.
