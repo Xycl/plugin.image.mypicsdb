@@ -61,6 +61,8 @@ class VFSScanner:
         self.video_extensions   = []
         self.lists_separator = "||"
         
+        self.scan_is_cancelled = False
+        
         self.picsdeleted = 0
         self.picsupdated = 0
         self.picsadded   = 0
@@ -198,6 +200,7 @@ class VFSScanner:
         if filenames:
             for pic in filenames:
                 if self.scan.iscanceled():
+                    self.scan_is_cancelled = True
                     common.log( "VFSScanner._addpath", "Scanning canncelled", xbmc.LOGNOTICE)
                     return
                     
@@ -304,11 +307,12 @@ class VFSScanner:
             for dirname in dirnames:
                 if self.scan.iscanceled():
                     common.log( "VFSScanner._addpath", "Scanning canncelled", xbmc.LOGNOTICE)
+                    self.scan_is_cancelled = True
                     return
                 self._addpath(dirname, folderid, True, update)
                 
         # delete all entries with "sha is null"
-        self.picsdeleted += self.mpdb.del_pics_wo_sha()
+        self.picsdeleted += self.mpdb.del_pics_wo_sha(self.scan_is_cancelled)
 
                 
     

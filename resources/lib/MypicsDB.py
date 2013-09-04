@@ -116,8 +116,7 @@ class MyPictureDB(object):
                 self.con.commit()
         else:
             common.log("MPDB.version_table", "MyPicsDB database contains already current schema" )
-            
-        #self.cur.close()
+
     
     # new tag type YYYY-MM in version 2.10
     def update_yyyy_mm_tags(self):   
@@ -135,7 +134,7 @@ class MyPictureDB(object):
                 common.log( 'MPDB.update_yyyy_mm_tags()', 'Tag YYYY-MM with value %s NOT inserted for "%s"'%(dictionnary['YYYY-MM'], row[1]) )
                 
         self.con.commit()
-        #self.cur.close()
+
         return True
 
     def version_1202_tables(self):
@@ -163,13 +162,11 @@ class MyPictureDB(object):
         except:
             pass
            
-        #self.cur.close()
         self.version_201_tables()
             
     # new tables in version 2.0.1
     def version_201_tables(self ):
         #table 'FilterWizard'
-   
         try:
             self.cur.execute("""create table FilterWizard (pkFilter integer %s, strFilterName %s unique, bMatchAll integer, StartDate date, EndDate date)"""%(self.con.get_ddl_primary_key(), self.con.get_ddl_varchar(255)))
         except Exception,msg:
@@ -391,7 +388,7 @@ class MyPictureDB(object):
 
             common.log("", "Tag tables will be cleaned.")
             self.cur.execute('delete from Files where idFolder not in( select idFolder from Folders)')
-            self.cur.execute('delete from Folders where idFolder not in( select idFolder from Files)')
+            self.cur.execute('delete from Folders where idFolder not in( select idFolder from Files) and ParentFolder is not null')
             self.cur.execute( "delete from TagsInFiles where idFile not in(select idFile from Files )")
             self.cur.execute( "delete from TagContents where idTagContent not in (select idTagContent from TagsInFiles)")
             # Only delete tags which are not translated!
@@ -1499,9 +1496,11 @@ class MyPictureDB(object):
         return [row for row in self.cur.request(request)]
 
         
-    def del_pics_wo_sha(self):
-        count = [row for row in self.cur.request("select count(*) from Files where Sha is null")][0][0]
-        self.cur.request("delete from Files where Sha is null");
+    def del_pics_wo_sha(self, is_cancelled):
+        count = 0
+        if is_cancelled == False:
+            count = [row for row in self.cur.request("select count(*) from Files where Sha is null")][0][0]
+            self.cur.request("delete from Files where Sha is null");
         return count
 
     def pics_for_period(self, periodtype, date):

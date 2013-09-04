@@ -394,9 +394,7 @@ class Main:
                     action    = "showpics",#action
                     iconimage = join(PIC_PATH,"dates.png"),#icone
                     fanart    = join(PIC_PATH,"fanart-date.png"),
-                    contextmenu   = [(common.getstring(30152),"XBMC.RunPlugin(\"%s?action='addfolder'&method='date'&period='%s'&value='%s'&viewmode='scan'\")"%(sys.argv[0],allperiod,self.args.value)),
-                                     ("diaporama"        ,"XBMC.RunPlugin(\"%s?action='diapo'&method='date'&period='%s'&value='%s'&viewmode='scan'\")"%(sys.argv[0],allperiod,self.args.value))
-                                     ]
+                    contextmenu   = [(common.getstring(30152),"XBMC.RunPlugin(\"%s?action='addfolder'&method='date'&period='%s'&value='%s'&viewmode='scan'\")"%(sys.argv[0],allperiod,self.args.value)),]
                     )
         total=len(listperiod)
         for period in listperiod:
@@ -1674,7 +1672,8 @@ if __name__=="__main__":
         m.show_map()
     
     elif m.args.action=='diapo':
-        m.show_diaporama()
+        pass
+        #m.show_diaporama()
     
     elif m.args.action=='alea':
         #TODO : afficher une liste aléatoire de photos
