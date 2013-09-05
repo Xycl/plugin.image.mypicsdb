@@ -219,8 +219,8 @@ class Main:
                                                            and fi.strPath = ?
                                                            and fi.strFilename = ?  """,(picpath,picname))     
 
-                #infolabels = { "picturepath":picname+" "+suffix, "date": date, "count": count  }
-                infolabels = { "picturepath":fullfilepath, "date": date, "count": count  }
+                infolabels = { "picturepath":picname+" "+suffix, "date": date, "count": count  }
+                #infolabels = { "picturepath":fullfilepath, "date": date, "count": count  }
                 try:
                     if exiftime[0] != None and exiftime[0] != "0":
                         common.log("Main.add_picture", "Picture has EXIF Date/Time %s"%exiftime[0])

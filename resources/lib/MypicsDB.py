@@ -388,7 +388,7 @@ class MyPictureDB(object):
 
             common.log("", "Tag tables will be cleaned.")
             self.cur.execute('delete from Files where idFolder not in( select idFolder from Folders)')
-            self.cur.execute('delete from Folders where idFolder not in( select idFolder from Files) and ParentFolder is not null')
+            self.cur.execute('delete from Folders where idFolder not in( select idFolder from Files) and ParentFolder is not null and idFolder not in (select coalesce(ParentFolder,0) from Folders)')
             self.cur.execute( "delete from TagsInFiles where idFile not in(select idFile from Files )")
             self.cur.execute( "delete from TagContents where idTagContent not in (select idTagContent from TagsInFiles)")
             # Only delete tags which are not translated!
