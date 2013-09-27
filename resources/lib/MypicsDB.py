@@ -1014,13 +1014,13 @@ class MyPictureDB(object):
 
 
         if count:
-            return [row for row in self.cur.request( """select count(distinct fi.strFilename||fi.strPath)
+            return [row for row in self.cur.request( """select count(*) from (select distinct fi.strFilename, fi.strPath
                                                           from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
                                                          where tt.idTagType = tc.idTagType
                                                            and tc.idTagContent = tif.idTagContent
                                                            and tt.TagTranslation = ?
                                                            and lower(tc.TagContent) LIKE '%%%s%%'
-                                                           and tif.idFile = fi.idFile"""%val, (tag_type,))][0][0]
+                                                           and tif.idFile = fi.idFile) a"""%val, (tag_type,))][0][0]
         else:
             return [row for row in self.cur.request( """select distinct fi.strPath, fi.strFilename
                                                           from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
