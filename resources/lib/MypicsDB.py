@@ -116,6 +116,11 @@ class MyPictureDB(object):
                 self.con.commit()
         else:
             common.log("MPDB.version_table", "MyPicsDB database contains already current schema" )
+            
+        try:
+            self.cur.execute("CREATE INDEX idxFiles2 ON Files(ImageDateTime)")
+        except:
+            pass
 
     
     # new tag type YYYY-MM in version 2.10
@@ -352,6 +357,7 @@ class MyPictureDB(object):
     
         try:
             self.cur.execute("CREATE INDEX idxFiles1 ON Files(idFile, idFolder)")
+            self.cur.execute("CREATE INDEX idxFiles2 ON Files(ImageDateTime)")
             
         except Exception,msg:
             pass
@@ -512,8 +518,8 @@ class MyPictureDB(object):
             if isinstance(value, basestring) and dictionnary[tag_type]:
     
                 # exclude the following tags
-                if tag_type not in ['sha', 'strFilename', 'strPath',
-                                   'mtime', 'ftype',
+                if tag_type not in ['sha', 'strFilename', #'strPath',
+                                   'mtime', #'ftype',
                                    'source', 'urgency', 'time created', 'date created']:
     
                     tag_values = dictionnary[tag_type].split(lists_separator)
@@ -1286,6 +1292,8 @@ class MyPictureDB(object):
         self.cur.request("update TagTypes set TagTranslation = '' where TagTranslation =  'Special instructions'")    
         self.cur.request("update TagTypes set TagTranslation = '' where TagTranslation =  'Credit'")    
         self.cur.request("update TagTypes set TagTranslation = '' where TagTranslation =  'Sub-location'")
+        self.cur.request("update TagTypes set TagTranslation = '' where TagTranslation =  'Ftype'")
+        self.cur.request("update TagTypes set TagTranslation = '' where TagTranslation =  'StrPath'")
         
         if self.con.get_backend() == 'mysql':
             self.cur.request("ANALYZE TABLE Files")

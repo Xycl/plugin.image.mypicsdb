@@ -1,4 +1,7 @@
-2013/09/10 --> v 12.1.1
+2013/10/02 --> v 12.1.2
+Update: File type and picture path now available as tag to use it in Filter Wizard.
+
+2013/09/30 --> v 12.1.1
 Fix:    Displayed pictures count after a global search was wrong when using MySql
 
 2013/09/10 --> v 12.1.0
