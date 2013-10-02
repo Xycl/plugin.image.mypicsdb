@@ -113,7 +113,7 @@ class VFSScanner:
             
             self.scan.close()
 
-        elif self.options.database:
+        elif self.options.database or self.options.refresh:
             paths = self.mpdb.get_all_root_folders()
             common.log("VFSScanner.dispatcher", "Database refresh started", xbmc.LOGNOTICE)
             self.action = common.getstring(30242)#Updating
@@ -139,15 +139,16 @@ class VFSScanner:
                             print_exc()
 
                 self.scan.close()
-                
+
         # Set default translation for tag types
         self.mpdb.default_tagtypes_translation()
         self.mpdb.cleanup_keywords()
+
+        # delete all entries with "sha is null"
+        self.picsdeleted += self.mpdb.del_pics_wo_sha(self.scan_is_cancelled)
+
+        common.show_notification(common.getstring(30000), common.getstring(30248)%(self.picsscanned,self.picsadded,self.picsdeleted,self.picsupdated) )
         
-        xbmc.executebuiltin( "Notification(%s,%s)"%(common.getstring(30000).encode("utf8"),
-                                                    common.getstring(30248).encode("utf8")%(self.picsscanned,self.picsadded,self.picsdeleted,self.picsupdated)
-                                                    )
-                             )
 
 
     def _countfiles(self, path, reset = True, recursive = True):
@@ -180,6 +181,7 @@ class VFSScanner:
         common.log("VFSScanner._addpath", '"%s"'%common.smart_utf8(path) )
         # Check excluded paths
         if path in self.exclude_folders:
+            common.log("VFSScanner._addpath", 'Path in exclude folder: "%s"'%common.smart_utf8(path) )
             self.picsdeleted = self.picsdeleted + self.mpdb.delete_paths_from_root(path)
             return
 
@@ -208,7 +210,7 @@ class VFSScanner:
                     continue
                 
                 self.picsscanned += 1
-                #filename = common.smart_unicode(os.path.basename(pic))
+                
                 filename = os.path.basename(pic)
                 extension = os.path.splitext(pic)[1].upper()
                     
@@ -225,41 +227,71 @@ class VFSScanner:
                 sqlupdate = False
                 filesha   = 0
                 
-                # get the meta tags. but only for pictures
+                # get the meta tags. but only for pictures and only if they are new or modified.
                 if extension in self.picture_extensions:
-                    (localfile, isremote) = self.filescanner.getlocalfile(pic)
+                    
                     common.log( "VFSScanner._addpath", 'Scanning picture "%s"'%common.smart_utf8(pic))
-                    filesha = self.mpdb.sha_of_file(localfile) 
-
-                    tags = self._get_metas(common.smart_unicode(localfile))
-                    picentry.update(tags)
-
-                    # if isremote == True then the file was copied to cache directory.
-                    if isremote:
-                        self.filescanner.delete(localfile)
+                    
+                    
+                    if pic in filesfromdb: # then it's an update
                         
-                    if pic in filesfromdb:  # then it's an update
+                        filesfromdb.pop(filesfromdb.index(pic))
+                        
+                        if self.options.refresh == True: # this means that we only want to get new pictures.
+                                if self.scan and self.totalfiles!=0 and self.total_root_entries!=0:
+                                    self.scan.update(int(100*float(self.picsscanned)/float(self.totalfiles)),
+                                                  int(100*float(self.current_root_entry)/float(self.total_root_entries)),
+                                                  common.smart_utf8(common.getstring(30000)+" [%s] (%0.2f%%)"%(self.action,100*float(self.picsscanned)/float(self.totalfiles))),#"MyPicture Database [%s] (%0.2f%%)"
+                                                  common.smart_utf8(filename))
+    
+                                continue                            
+                        else: 
+                            (localfile, isremote) = self.filescanner.getlocalfile(pic)
+                            
+                            filesha = self.mpdb.sha_of_file(localfile) 
+                            sqlupdate   = True
+                            
+                            
+                            if self.mpdb.stored_sha(path,filename) != filesha:  # picture was modified
+                                self.picsupdated += 1
+                                common.log( "VFSScanner._addpath", "Picture already exists and must be updated")
+                                
+                                tags = self._get_metas(common.smart_unicode(localfile))
+                                picentry.update(tags)
+            
+                                # if isremote == True then the file was copied to cache directory.
+                                if isremote:
+                                    self.filescanner.delete(localfile)                            
+    
+                            else:
+    
+                                common.log( "VFSScanner._addpath", "Picture already exists but not modified")
+    
+                                if self.scan and self.totalfiles!=0 and self.total_root_entries!=0:
+                                    self.scan.update(int(100*float(self.picsscanned)/float(self.totalfiles)),
+                                                  int(100*float(self.current_root_entry)/float(self.total_root_entries)),
+                                                  common.smart_utf8(common.getstring(30000)+" [%s] (%0.2f%%)"%(self.action,100*float(self.picsscanned)/float(self.totalfiles))),#"MyPicture Database [%s] (%0.2f%%)"
+                                                  common.smart_utf8(filename))
+    
+                                if isremote:
+                                    self.filescanner.delete(localfile)                            
+    
+                                continue
 
-                        sqlupdate   = True
-                        if self.mpdb.stored_sha(path,filename) != filesha:  # if sha is equal then don't scan again
-                            self.picsupdated += 1
-                            common.log( "VFSScanner._addpath", "Picture already exists and must be updated")
-                            filesfromdb.pop(filesfromdb.index(pic))
-                        else:
-                            filesfromdb.pop(filesfromdb.index(pic))
-                            common.log( "VFSScanner._addpath", "Picture already exists but not modified")
+                    else: # it's a new picture
 
-                            if self.scan and self.totalfiles!=0 and self.total_root_entries!=0:
-                                self.scan.update(int(100*float(self.picsscanned)/float(self.totalfiles)),
-                                              int(100*float(self.current_root_entry)/float(self.total_root_entries)),
-                                              common.smart_utf8(common.getstring(30000)+" [%s] (%0.2f%%)"%(self.action,100*float(self.picsscanned)/float(self.totalfiles))),#"MyPicture Database [%s] (%0.2f%%)"
-                                              common.smart_utf8(filename))
-                            continue
-
-                    else:
+                        (localfile, isremote) = self.filescanner.getlocalfile(pic)
+                        filesha = self.mpdb.sha_of_file(localfile)
                         sqlupdate  = False
                         common.log( "VFSScanner._addpath", "New picture will be inserted into dB")
                         self.picsadded   += 1
+
+                        tags = self._get_metas(common.smart_unicode(localfile))
+                        picentry.update(tags)
+
+                        if isremote:
+                            self.filescanner.delete(localfile)
+
 
                 # videos aren't scanned and therefore never updated
                 elif extension in self.video_extensions:
@@ -292,12 +324,17 @@ class VFSScanner:
                 if self.scan and self.totalfiles!=0 and self.total_root_entries!=0:
                     self.scan.update(int(100*float(self.picsscanned)/float(self.totalfiles)),
                                   int(100*float(self.current_root_entry)/float(self.total_root_entries)),
-                                  common.smart_utf8(common.getstring(30000)+"[%s] (%0.2f%%)"%(self.action,100*float(self.picsscanned)/float(self.totalfiles))),#"MyPicture Database [%s] (%0.2f%%)"
+                                  common.smart_utf8(common.getstring(30000)+" [%s] (%0.2f%%)"%(self.action,100*float(self.picsscanned)/float(self.totalfiles))),#"MyPicture Database [%s] (%0.2f%%)"
                                   common.smart_utf8(filename))
                 
+        if self.scan.iscanceled():
+            common.log( "VFSScanner._addpath", "Scanning canncelled", xbmc.LOGNOTICE)
+            self.scan_is_cancelled = True
+            return                
+        
         # all pics left in list filesfromdb weren't found in file system.
         # therefore delete them from db
-        if filesfromdb:
+        if filesfromdb and self.options.refresh != True:
             for pic in filesfromdb:
                 self.mpdb.del_pic(path, pic)
                 common.log( "VFSScanner._addpath", 'Picture "%s" deleted from DB'%common.smart_utf8(pic))
@@ -310,10 +347,6 @@ class VFSScanner:
                     self.scan_is_cancelled = True
                     return
                 self._addpath(dirname, folderid, True, update)
-                
-        # delete all entries with "sha is null"
-        self.picsdeleted += self.mpdb.del_pics_wo_sha(self.scan_is_cancelled)
-
                 
     
         """
@@ -543,6 +576,7 @@ if __name__=="__main__":
     parser = optparse.OptionParser()
     parser.enable_interspersed_args()
     parser.add_option("--database","-d",action="store_true", dest="database",default=False)
+    parser.add_option("--refresh","-f",action="store_true", dest="refresh",default=False)
     parser.add_option("-p","--rootpath",action="store", type="string", dest="rootpath")
     parser.add_option("-r","--recursive",action="store_true", dest="recursive", default=False)
     (options, args) = parser.parse_args()

@@ -966,7 +966,9 @@ class Main:
                 #dialogaddonscan était en cours d'utilisation, on return
                 return
         elif self.args.do=="refreshpaths":
-            pass
+            if not(xbmc.getInfoLabel( "Window.Property(DialogAddonScan.IsAlive)" ) == "true"):
+                common.run_script("%s,--refresh"% join( home, "scanpath.py"))
+                return
 
         if int(sys.argv[1]) >= 0:
             excludefolders=[]
@@ -990,6 +992,14 @@ class Main:
             if len(includefolders) > 0:
                 self.add_action(name      = common.getstring(30213),#scan all distinct root paths
                             params    = [("do","scanall"),("viewmode","view"),],#paramètres
+                            action    = "rootfolders",#action
+                            iconimage = join(PIC_PATH,"settings.png"),#icone
+                            fanart    = join(PIC_PATH,"fanart-setting.png"),
+                            contextmenu   = None)#menucontextuel
+            # Add new pictures
+            if len(includefolders) > 0:
+                self.add_action(name      = common.getstring(30249),#scan all distinct root paths
+                            params    = [("do","refreshpaths"),("viewmode","view"),],#paramètres
                             action    = "rootfolders",#action
                             iconimage = join(PIC_PATH,"settings.png"),#icone
                             fanart    = join(PIC_PATH,"fanart-setting.png"),
