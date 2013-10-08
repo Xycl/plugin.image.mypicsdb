@@ -456,13 +456,7 @@ class MyPictureDB(object):
         insert into file database the dictionnary values into the dictionnary keys fields
         keys are DB fields ; values are DB values
         """
-    
-        if update :#si update alors on doit updater et non pas insert
-            if self.pic_exists(path,filename):
-                #print "file exists in database and rescan is set to true..."
-                self.cur.request(""" DELETE FROM Files WHERE idFolder = (SELECT idFolder FROM Folders WHERE FullPath=?) AND strFilename=? """,(path,filename))
-                self.cleanup_keywords()
-
+        
         try:
             
             if self.con.get_backend() == "mysql":
@@ -480,12 +474,41 @@ class MyPictureDB(object):
                 imagedatetime = dictionnary["EXIF DateTimeDigitized"]
                 #print "3 = " + str(imagedatetime)
              
-            try:
-                dictionnary['YYYY-MM'] = imagedatetime[:7]
-            except:
-                pass
-            
-            self.cur.execute( """INSERT INTO Files(idFolder, strPath, strFilename, ftype, DateAdded,  Thumb,  ImageRating, ImageDateTime, Sha) values (?, ?, ?, ?, ?, ?, ?, ?, ?)""", 
+            dictionnary['YYYY-MM'] = imagedatetime[:7]
+
+        except:
+            pass        
+    
+        try:
+            if update :
+                if self.pic_exists(path,filename):
+                    try:
+                        #print "file exists in database and rescan is set to true..."
+                        (id_files, ) = self.cur.request("Select idFile FROM Files WHERE idFolder = (SELECT idFolder FROM Folders WHERE FullPath=?) AND strFilename=? ",(path,filename))
+                        id_file=id_files[0]
+                    except:
+                        return
+                        
+                    try:
+                        
+                        #print "File = " + str(id_file)
+                        
+                        #self.cur.execute("Delete From Files Where idFile=?", (id_file,))
+                        #self.cur.execute("Delete From FilesInCollections Where idFile=?", (id_file,))
+                        
+                        id_tagcontents=[row for row in self.cur.request("SELECT idTagContent FROM TagsInFiles WHERE idFile=?", (id_file,))]
+                        self.cur.execute("Delete From TagsInFiles Where idFile=?", (id_file,))
+                        
+                        for id_tagcontent in id_tagcontents:
+                            self.cur.execute("Delete From TagsContents Where idTagContent= ?", (id_tagcontent,))
+                        
+                        self.cur.execute("""Update Files set ftype=?, Thumb=?, ImageRating=?, ImageDateTime=?, Sha=? where idFile=?""", ( dictionnary["ftype"], dictionnary["Thumb"], dictionnary["Image Rating"], imagedatetime, sha, id_file ) )
+                    except:
+                        pass
+                    
+            else:
+             
+                self.cur.execute( """INSERT INTO Files(idFolder, strPath, strFilename, ftype, DateAdded,  Thumb,  ImageRating, ImageDateTime, Sha) values (?, ?, ?, ?, ?, ?, ?, ?, ?)""", 
                           ( dictionnary["idFolder"],  dictionnary["strPath"], dictionnary["strFilename"], dictionnary["ftype"], dictionnary["DateAdded"], dictionnary["Thumb"], dictionnary["Image Rating"], imagedatetime, sha ) )
             #self.con.commit()
         except Exception,msg:
@@ -500,8 +523,8 @@ class MyPictureDB(object):
     
         # meta table inserts
         try:
-            idfile = [row[0] for row in self.cur.request("SELECT idFile FROM Files WHERE strPath = ? AND strFilename = ?",(path,filename,) )] [0]
-            self.tags_insert(idfile, filename, path, dictionnary)
+            id_file = [row[0] for row in self.cur.request("SELECT idFile FROM Files WHERE strPath = ? AND strFilename = ?",(path,filename,) )] [0]
+            self.tags_insert(id_file, filename, path, dictionnary)
         except Exception,msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )             
     
