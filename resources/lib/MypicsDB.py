@@ -1264,6 +1264,7 @@ class MyPictureDB(object):
         self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Xmp:Label'", (common.getstring(30715),))
         
         self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Xmp:Rating'", (common.getstring(30716),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Xap:Rating'", (common.getstring(30716),))
         self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Image Rating'", (common.getstring(30716),))
     
         self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'MicrosoftPhoto:LastKeywordIPTC'", (common.getstring(30717),))

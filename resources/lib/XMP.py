@@ -37,6 +37,7 @@ tag_set = {'MPReg:PersonDisplayName' : 'MPReg:PersonDisplayName',
 
            'xmp:Label' : 'xmp:Label',
            'xmp:Rating' : 'xmp:Rating',
+           'xap:Rating' : 'xap:Rating',
 
            'photoshop:Category' : 'photoshop:Category',
            'photoshop:City' : 'photoshop:City',
