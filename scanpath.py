@@ -336,8 +336,8 @@ class VFSScanner:
         # therefore delete them from db
         if filesfromdb and self.options.refresh != True:
             for pic in filesfromdb:
-                self.mpdb.del_pic(path, pic)
-                common.log( "VFSScanner._addpath", 'Picture "%s" deleted from DB'%common.smart_utf8(pic))
+                self.mpdb.del_pic(os.path.dirname(pic), os.path.basename(pic))
+                common.log( "VFSScanner._addpath", 'Picture dir: "%s"  file: "%s" deleted from DB'%(os.path.dirname(pic), os.path.basename(pic)))
                 self.picsdeleted += 1
 
         if recursive:

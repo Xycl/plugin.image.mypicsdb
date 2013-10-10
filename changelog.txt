@@ -1,3 +1,6 @@
+2013/10/09 --> v 12.1.5
+Fix:    Removing pictures from DB fixed. Sometimes they were not removed even if they were deleted on file system.
+
 2013/10/09 --> v 12.1.4
 Update: XMP parser also reads tag "xap:Rating"
 
