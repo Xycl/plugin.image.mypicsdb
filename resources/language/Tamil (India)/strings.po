@@ -9,113 +9,65 @@ msgstr ""
 "POT-Creation-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: XBMC Translation Team\n"
-"Language-Team: Spanish (Argentina) (http://www.transifex.com/projects/p/xbmc-addons/language/es_AR/)\n"
+"Language-Team: Tamil (India) (http://www.transifex.com/projects/p/xbmc-addons/language/ta_IN/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: es_AR\n"
+"Language: ta_IN\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgctxt "#30001"
 msgid "Database"
-msgstr "Base de Datos"
+msgstr "தரவுத்தளம்"
 
 msgctxt "#30030"
 msgid "General"
-msgstr "General"
+msgstr "பொதுவானது"
 
 msgctxt "#30031"
 msgid "Files"
-msgstr "Archivos"
-
-msgctxt "#30041"
-msgid "All"
-msgstr "Todos"
+msgstr "கோப்புகள்"
 
 msgctxt "#30051"
 msgid "Videos"
-msgstr "Videos"
+msgstr "நிகழ்படம்"
 
 msgctxt "#30052"
 msgid "Tags"
-msgstr "Etiquetas"
+msgstr "குறிப்புகள்"
 
 msgctxt "#30224"
 msgid "Close"
-msgstr "Cerrar"
+msgstr "மூடுக"
 
 msgctxt "#30601"
 msgid "Tags"
-msgstr "Etiquetas"
-
-msgctxt "#30613"
-msgid "OK"
-msgstr "OK"
+msgstr "குறிப்புகள்"
 
 msgctxt "#30614"
 msgid "Cancel"
-msgstr "Cancelar"
-
-msgctxt "#30617"
-msgid "Save"
-msgstr "Guardar"
+msgstr "இரத்துக"
 
 msgctxt "#30619"
 msgid "Delete"
-msgstr "Eliminar"
-
-msgctxt "#30650"
-msgid "Debugging"
-msgstr "Depuración"
-
-msgctxt "#30664"
-msgid "User"
-msgstr "Usuarios"
+msgstr "நீக்கு"
 
 msgctxt "#30665"
 msgid "Password"
-msgstr "Contraseña"
-
-msgctxt "#30667"
-msgid "Port"
-msgstr "Puerto"
-
-msgctxt "#30700"
-msgid "Country"
-msgstr "País"
-
-msgctxt "#30702"
-msgid "State"
-msgstr "Estado"
-
-msgctxt "#30703"
-msgid "City"
-msgstr "Ciudad"
+msgstr "அடையாளச் சொல்"
 
 msgctxt "#30704"
 msgid "Location"
-msgstr "Ubicación"
-
-msgctxt "#30709"
-msgid "Description"
-msgstr "Descripción"
-
-msgctxt "#30710"
-msgid "Headline"
-msgstr "Titular"
+msgstr "இருப்பிடம்"
 
 msgctxt "#30711"
 msgid "Title"
-msgstr "Título"
+msgstr "தலைப்பு"
 
 msgctxt "#30715"
 msgid "Label"
-msgstr "Firma"
+msgstr "சிட்டை"
 
 msgctxt "#30718"
 msgid "Category"
-msgstr "Categoría"
-
-msgctxt "#30723"
-msgid "Orientation"
-msgstr "Orientación"
+msgstr "வகை"
