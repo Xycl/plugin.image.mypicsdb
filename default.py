@@ -955,9 +955,9 @@ class Main:
         elif self.args.do=="scanall":
             if not(xbmc.getInfoLabel( "Window.Property(DialogAddonScan.IsAlive)" ) == "true"): #si dialogaddonscan n'est pas en cours d'utilisation...
 
-                dialog = xbmcgui.Dialog()
-                if True == dialog.yesno(common.getstring(30000), common.getstring(30214), common.getstring(30215), common.getstring(30216) ):
-                    MPDB.cur.request('Update Files set sha = NULL')
+                #dialog = xbmcgui.Dialog()
+                #if True == dialog.yesno(common.getstring(30000), common.getstring(30214), common.getstring(30215), common.getstring(30216) ):
+                #    MPDB.cur.request('Update Files set sha = NULL')
 
                 #xbmc.executebuiltin( "RunScript(%s,--database)"% join( home, "scanpath.py").encode("utf8") )
                 common.run_script("%s,--database"% join( home, "scanpath.py"))
