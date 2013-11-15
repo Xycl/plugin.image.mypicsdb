@@ -89,6 +89,9 @@ class Main:
 
         self.parm = common.smart_utf8(unquote_plus(sys.argv[2])).replace("\\\\", "\\")
         
+        # change for ruuk's plugin screensaver
+        self.parm= self.parm.replace('&plugin_slideshow_ss=true', '')
+        
         sys.argv[2] = self.parm
         parm = self.cleanup(self.parm[ 1 : ])
         common.log("Main.get_args", parm)

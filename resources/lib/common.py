@@ -23,7 +23,13 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 import sys, os, urllib
 import xbmc, xbmcaddon
 
-__addonname__    = sys.modules[ "__main__" ].__addonname__
+# change for ruuk's plugin screensaver
+try:
+    __addonname__    = sys.modules[ "__main__" ].__addonname__
+except:
+    __addonname__ = 'plugin.image.mypicsdb'
+
+    
 __settings__ = xbmcaddon.Addon(id=__addonname__)
 __language__ = __settings__.getLocalizedString
 __homepath__ = __settings__.getAddonInfo('path').decode('utf-8')
