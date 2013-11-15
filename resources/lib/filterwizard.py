@@ -75,7 +75,6 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
 
             for key, value in self.active_tags.iteritems():
                 if value == 1:
-                    print key
                     arraytrue.append( key)
 
                 if value == -1:
