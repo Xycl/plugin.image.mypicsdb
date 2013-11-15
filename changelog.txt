@@ -1,3 +1,6 @@
+2013/11/15 --> v 12.2.1
+Fix:    Load/Save and change Filter Wizard settings
+
 2013/11/15 --> v 12.2.0
 New:    Support of Ruuk's Plugin Slideshow Screensaver ( HTTP://http://forum.xbmc.org/showthread.php?tid=153057 )
 
