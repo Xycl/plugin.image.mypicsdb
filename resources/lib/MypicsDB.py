@@ -926,8 +926,9 @@ class MyPictureDB(object):
             filter_key, match_all, start_date, end_date = [row for row in self.cur.request( "select pkFilter, bMatchAll, StartDate, EndDate from FilterWizard where strFilterName = ? ",(filter_name, ))] [0]
             for state, item in self.cur.request( "select nState, strItem from FilterWizardItems where fkFilter = ?", (filter_key,)):
                 items[item] = state
-    
-        return items, (True if match_all == 1 else False), start_date, end_date
+
+                
+        return items, (True if match_all == 1 else False), ('' if start_date == None else start_date), ('' if end_date == None else end_date)
         
     
     ###################################
