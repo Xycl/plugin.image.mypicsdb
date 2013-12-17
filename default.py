@@ -1384,9 +1384,9 @@ class Main:
             picfanart = join(PIC_PATH,"fanart-date.png")
             numberofdays = common.getaddon_setting("recentnbdays")
             if MPDB.con.get_backend() == "mysql":
-                filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE DateAdded IN (SELECT DISTINCT DateAdded FROM Files WHERE DateAdded>=SysDate() - INTERVAL %s DAY)  ORDER BY DateAdded ASC LIMIT %s OFFSET %s"""%(numberofdays,limit,offset))]
+                filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE DateAdded>=SysDate() - INTERVAL %s DAY ORDER BY DateAdded ASC LIMIT %s OFFSET %s"""%(numberofdays,limit,offset))]
             else:
-                filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE DateAdded IN (SELECT DISTINCT DateAdded FROM Files WHERE DateAdded>=datetime('now','start of day','-%s days'))  ORDER BY DateAdded ASC LIMIT %s OFFSET %s"""%(numberofdays,limit,offset))]
+                filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE DateAdded >= datetime('now','start of day','-%s days') ORDER BY DateAdded ASC LIMIT %s OFFSET %s"""%(numberofdays,limit,offset))]
 
         elif self.args.method =="lastpicsshooted":#X last pictures shooted __OK
             picfanart = join(PIC_PATH,"fanart-date.png")

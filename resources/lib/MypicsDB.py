@@ -1,18 +1,25 @@
 # -*- coding: utf8 -*-
 """
-Todo :
-* ability to remove a file from database
-* use smb file access to browse smb share pictures:
-    http://sourceforge.net/projects/pysmb/
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
 
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
 from os.path import join
 from traceback import print_exc
 from time import strftime,strptime
 
-import  xbmc, xbmcgui
+import xbmc
+import xbmcgui
 import common
 import dbabstractionlayer as dblayer
 
@@ -21,7 +28,7 @@ DB_VERSION19      = '1.9.12'
 DB_VERSION201     = '2.0.1'
 DB_VERSION229     = '2.2.9'
 DB_VERSION1202    = '12.0.2'
-DB_VERSION        = '12.0.6'
+DB_VERSION        = '12.2.4'
 lists_separator   = "||"
 
 class MyPictureDBException(Exception):
@@ -109,18 +116,29 @@ class MyPictureDB(object):
             
         # version of DB is less then current version
         elif common.check_version(strVersion, DB_VERSION)>0:
+            self.cur.execute("update DBVersion set strVersion = '"+DB_VERSION+"'")
+            self.con.commit()
+            try:
+                self.cur.execute("CREATE INDEX idxFiles2 ON Files(ImageDateTime)")
+            except:
+                pass
+            try:
+                self.cur.execute("CREATE INDEX idxFiles3 ON Files (DateAdded)")
+            except:
+                pass
+            try:
+                self.cur.execute("CREATE INDEX idxFiles4 ON Files (idFolder)")
+            except:
+                pass
             if self.con.get_backend() == "mysql":
-                self.cur.execute("alter table FilterWizard modify pkFilter integer auto_increment not null")
-                self.cur.execute("alter table FilterWizardItems modify idItems integer auto_increment not null")
-                self.cur.execute("update DBVersion set strVersion = '"+DB_VERSION+"'")
-                self.con.commit()
+                try:
+                    self.cur.execute("alter table FilterWizard modify pkFilter integer auto_increment not null")
+                    self.cur.execute("alter table FilterWizardItems modify idItems integer auto_increment not null")
+                except:
+                    pass
         else:
             common.log("MPDB.version_table", "MyPicsDB database contains already current schema" )
             
-        try:
-            self.cur.execute("CREATE INDEX idxFiles2 ON Files(ImageDateTime)")
-        except:
-            pass
 
     
     # new tag type YYYY-MM in version 2.10
@@ -736,55 +754,56 @@ class MyPictureDB(object):
     
     
     
-    ###################################
+    #####################################
     # Filter Wizard functions
     #####################################
     
     def filterwizard_result(self, set_tags, unset_tags, match_all, start_date='', end_date=''):
+
         if len(set_tags) == 0 and len(unset_tags) == 0 and start_date == '' and end_date == '':
             return
-        
+
         set_tags_array = set_tags.split("|||")
         unset_tags_array = unset_tags.split("|||")    
 
         outer_select = "SELECT distinct strPath,strFilename, ImageDateTime FROM FILES WHERE 1=1 "
-    
-        # These selects are joined with IN clause
+
+        # These selects are joined with an IN clause
         inner_select = "SELECT tif.idfile FROM TagContents tc, TagsInFiles tif , TagTypes tt WHERE tif.idTagContent = tc.idTagContent AND tc.idTagType = tt.idTagType "
-    
+
         # Build the conditions
         if match_all == "1":
             if len(set_tags) > 0:
                 for filter_tags in set_tags_array:
-    
+
                     key_value = filter_tags.split("||")
                     key = key_value[0]
                     value = key_value[1].replace("'", "''")
-    
+
                     condition = "AND tt.TagTranslation = '"+key+"' AND tc.TagContent = '"+value+"' "
                     outer_select += " AND idFile in ( " + inner_select + condition + " ) "
-    
+
             if len(unset_tags) > 0:
                 for filter_tags in unset_tags_array:
-    
+
                     key_value = filter_tags.split("||")
                     key = key_value[0]
                     value = key_value[1].replace("'", "''")
-    
+
                     condition = "AND tt.TagTranslation = '"+key+"' AND tc.TagContent = '"+value+"' "
                     outer_select += " AND idFile not in ( " + inner_select + condition + " ) "            
-    
+
         else:
             old_key = ""
             old_value = ""
-    
+
             if len(set_tags) > 0:        
                 for filter_tags in set_tags_array:
-    
+
                     key_value = filter_tags.split("||")
                     key = key_value[0]
                     value = key_value[1].replace("'", "''")
-    
+
                     if key != old_key:
                         if len(old_key) > 0:
                             condition = "AND tt.TagTranslation = '"+old_key+"' AND tc.TagContent in( "+old_value+" ) "
@@ -795,10 +814,10 @@ class MyPictureDB(object):
                         old_value += ", '" + value + "'"
                 condition = "AND tt.TagTranslation = '"+old_key+"' AND tc.TagContent in( "+old_value+" ) "
                 outer_select += " AND idFile in ( " + inner_select + condition + " ) "
-    
+
             if len(unset_tags) > 0:
                 for filter_tags in unset_tags_array:
-    
+
                     key_value = filter_tags.split("||")
                     key = key_value[0]
                     value = key_value[1].replace("'", "''")
@@ -811,12 +830,12 @@ class MyPictureDB(object):
                         old_value = "'" + value + "'"
                     else:
                         old_value += ", '" + value + "'"
-    
+
                 condition = "AND tt.TagTranslation = '"+old_key+"' AND tc.TagContent in( "+old_value+" ) "
                 outer_select += " AND idFile not in ( " + inner_select + condition + " ) "
-    
+
         outer_select += " order by imagedatetime "
-        
+
         # test if start or end_date is set
         if start_date != '' or end_date != '':
             dates_set = 0
@@ -828,7 +847,7 @@ class MyPictureDB(object):
                     outer_select += " where ImageDateTime >= date_format('%s', '%%Y-%%m-%%d') "%(start_date,)
                 else:
                     outer_select += " where ImageDateTime >= date('%s') "%(start_date,)
-            
+
             if end_date != '':
                 dates_set += 1
                 if dates_set == 1:
@@ -841,21 +860,21 @@ class MyPictureDB(object):
                         outer_select += " and ImageDateTime <= date_format('%s', '%%Y-%%m-%%d') "%(end_date,)
                     else:
                         outer_select += " and ImageDateTime <= date('%s') "%(end_date,)
-                    
+
         else:
             outer_select = 'Select strPath,strFilename from (' + outer_select + ' ) maindateset '
-                
+
         common.log('filterwizard_result', outer_select, xbmc.LOGDEBUG)
         return [row for row in self.cur.request(outer_select)]
-    
-    
+
+
     def filterwizard_list_filters(self):
         filterarray = []
         for row in self.cur.request( """select strFilterName from FilterWizard order by 1"""):
             filterarray.append(row[0])
         return filterarray
-    
-    
+
+
     def filterwizard_delete_filter(self, filter_name):
         self.cur.request( "delete from FilterWizard where strFilterName = ? ",(filter_name, ))
         self.cur.request("delete from FilterWizardItems where fkFilter not in (select pkFilter from FilterWizard)")
@@ -866,36 +885,36 @@ class MyPictureDB(object):
             self.cur.request("analyze")           
 
         self.con.commit()
-        
+
     def filterwizard_save_filter(self, filter_name, items, bmatch_all, start_date ='', end_date = ''):
-    
+
         if self.db_backend.lower() == 'mysql':
-            
+
             if start_date == '':
                 start_date = "0000-00-00 00:00:00"
-                
+
             if end_date == '':
                 end_date = "0000-00-00 00:00:00"
-                    
+
         match_all = (1 if bmatch_all == True else 0)
-        
+
         try:
             rows = [row for row in self.cur.request( "select count(*) from FilterWizard where strFilterName = ? ",(filter_name, ))] [0][0]
         except Exception,msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )             
             rows = 0
-            
+
         if rows == 0:
             self.cur.request( "insert into FilterWizard(strFilterName, bMatchAll, StartDate, EndDate) values (?, ?, ?, ?) ",(filter_name, match_all, start_date, end_date ))
         else:
             self.cur.request( "update FilterWizard set bMatchAll = ?, StartDate = ?, EndDate = ? where strFiltername = ? ",(match_all, start_date, end_date, filter_name ))
-        
+
         try:
             filter_key = [row for row in self.cur.request( "select pkFilter from FilterWizard where strFilterName = ? ",(filter_name, ))] [0][0]
         except Exception,msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )             
             return
-            
+
         self.cur.request("delete from FilterWizardItems where fkFilter = ?", (filter_key, ))
         for item, state in items.iteritems():
             if state != 0:

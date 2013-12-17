@@ -1,3 +1,6 @@
+2013/12/17 --> v 12.2.4
+Update: New indexes on table files
+
 2013/11/15 --> v 12.2.3
 Fix:    Importing a saved Filter Wizard setting into a collection failed when using MySQL
 
