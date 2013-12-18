@@ -1,3 +1,7 @@
+2013/12/18 --> v 12.2.5
+New:    Menu "N random pictures"
+New:    Menu "Saved filter wizard settings"
+
 2013/12/17 --> v 12.2.4
 Update: New indexes on table files
 

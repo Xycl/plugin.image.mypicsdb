@@ -48,7 +48,6 @@ Then start MyPicsDB.
 All tables (except table rootpaths which includes your entered picture paths) are dropped and recreated. 
 
 This means that the already entered paths are still available and that you can start a rescan with "Paths of picture folders"->"Scan all paths". 
-Because all pictures were deleted from database it doesn't matter what you select in the following dialog box.
 
 
 5) Auto-update  MyPicsDB

@@ -794,10 +794,11 @@ class MyPictureDB(object):
                     outer_select += " AND idFile not in ( " + inner_select + condition + " ) "            
 
         else:
-            old_key = ""
-            old_value = ""
 
-            if len(set_tags) > 0:        
+            if len(set_tags) > 0:
+                old_key = ""
+                old_value = ""
+
                 for filter_tags in set_tags_array:
 
                     key_value = filter_tags.split("||")
@@ -816,6 +817,9 @@ class MyPictureDB(object):
                 outer_select += " AND idFile in ( " + inner_select + condition + " ) "
 
             if len(unset_tags) > 0:
+                old_key = ""
+                old_value = ""
+                
                 for filter_tags in unset_tags_array:
 
                     key_value = filter_tags.split("||")
@@ -949,7 +953,31 @@ class MyPictureDB(object):
                 
         return items, (True if match_all == 1 else False), ('' if start_date == None else start_date), ('' if end_date == None else end_date)
         
-    
+    def filterwizard_get_pics_from_filter(self, filter_name):
+        (items, match_all, start_date, end_date) = self.filterwizard_load_filter(filter_name)
+        set_tags = ""
+        unset_tags = ""
+        for key, value in items.iteritems():
+            if value == 1:
+                if len(set_tags)==0:
+                    set_tags = key
+                else:
+                    set_tags += "|||" + key                        
+
+            if value == -1:
+                if len(unset_tags)==0:
+                    unset_tags = key
+                else:
+                    unset_tags += "|||" + key    
+
+        
+        return self.filterwizard_result(set_tags, unset_tags, match_all, start_date, end_date)
+
+        
+        
+        for item in items:
+            print item
+        
     ###################################
     # Collection functions
     #####################################
