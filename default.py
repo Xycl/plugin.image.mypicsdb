@@ -1255,7 +1255,10 @@ class Main:
                 _query += """ORDER BY "DateAdded" DESC LIMIT %s""" %(str(_limit))
         if _method == "Random":
             # Get random pictures from database
-            _query += """ORDER BY RANDOM() LIMIT %s""" %(str(_limit))
+            if MPDB.db_backend.lower() == 'mysql':
+                _query += """ORDER BY RAND() LIMIT %s""" %(str(_limit))
+            else:
+                _query += """ORDER BY RANDOM() LIMIT %s""" %(str(_limit))
         # Request database
         _results = self.exec_query( _query )
         cache.table_name = "MyPicsDB"
@@ -1349,10 +1352,22 @@ class Main:
             
         # we are showing pictures for a RANDOM selection
         elif self.args.method == "random":
+
+            limit = common.getaddon_setting("randompicsnumber")
+            if limit < 10:
+                limit = 10        
+
+            try:
+                count = [row for row in MPDB.cur.request( """SELECT count(*) FROM Files""")][0][0]
+            except:
+                count = 0
+
+            modulo = float(count)/float(limit)
+
             if MPDB.db_backend.lower() == 'mysql':
-                filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files ORDER BY RAND(9223372036854775807) LIMIT %s OFFSET %s"""%(common.getaddon_setting("randompicsnumber"),offset) )]            
+                filelist = [row for row in MPDB.cur.request( """SELECT strPath, strFilename FROM Files ORDER BY RAND() LIMIT %s OFFSET %s"""%(limit, offset) )]
             else:
-                filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files ORDER BY RANDOM() LIMIT %s OFFSET %s"""%(common.getaddon_setting("randompicsnumber"),offset) )]
+                filelist = [row for row in MPDB.cur.request( """SELECT strPath, strFilename FROM Files WHERE RANDOM() %% %s ORDER BY RANDOM() LIMIT %s OFFSET %s"""%(modulo, limit, offset) )]
 
         # we are showing pictures for a DATE selection
         elif self.args.method == "date":

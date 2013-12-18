@@ -1,3 +1,6 @@
+2013/12/18 --> v 12.2.7
+Update: Resultset for menu "N random pictures" limited
+
 2013/12/18 --> v 12.2.6
 Fix:    Init error when using Ruuk's Plugin Slideshow Screensaver fixed.
 
