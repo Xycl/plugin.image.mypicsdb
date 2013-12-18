@@ -561,7 +561,7 @@ class Main:
                 common.log('',filtername)
                 
                 self.add_directory(name      = "%s"%(filtername),
-                            params        = [("method","wizard"),("viewmode","view"),("filtername", filtername),("period",""),("value",""),("page","1"),("viewmode","view")],
+                            params        = [("method","wizard"),("viewmode","view"),("filtername", filtername),("period",""),("value",""),("page","1")],
                             action        = "showpics",
                             iconimage     = join(PIC_PATH,"keywords.png"),
                             fanart        = join(PIC_PATH,"fanart-keyword.png"),
