@@ -326,7 +326,8 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
         dialog = xbmcgui.Dialog()
         ret = dialog.select(common.getstring(30608), filters)
         if ret > -1:
-            self.MPDB.filterwizard_delete_filter(filters[ret])
+            if dialog.yesno(common.getstring(30250), common.getstring(30251)%filters[ret]) :
+                self.MPDB.filterwizard_delete_filter(filters[ret])
 
 
     def save_filter_settings(self):

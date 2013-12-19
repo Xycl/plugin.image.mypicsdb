@@ -608,6 +608,14 @@ msgctxt "#30249"
 msgid "Search for new pictures"
 msgstr "Nach neuen Bildern suchen"
 
+msgctxt "#30250"
+msgid "Are you sure?"
+msgstr "Bist du sicher?"
+
+msgctxt "#30251"
+msgid "Delete \"%s\""
+msgstr "Lösche \"%s\""
+
 msgctxt "#30300"
 msgid "file name"
 msgstr "Dateiname"
@@ -879,3 +887,4 @@ msgstr "Kamerahersteller"
 msgctxt "#30727"
 msgid "Image Artist"
 msgstr "Künstler"
+

@@ -880,8 +880,16 @@ class MyPictureDB(object):
 
 
     def filterwizard_delete_filter(self, filter_name):
-        self.cur.request( "delete from FilterWizard where strFilterName = ? ",(filter_name, ))
-        self.cur.request("delete from FilterWizardItems where fkFilter not in (select pkFilter from FilterWizard)")
+        try:
+            filterkey = self.cur.request( "select pkFilter from FilterWizard where strFilterName = ? ",(filter_name, ))[0][0]
+            
+            self.cur.request( "delete from FilterWizardItems where fkFilter = ?", (filterkey, ))
+            self.cur.request( "delete from FilterWizardItems where fkFilter not in (select pkFilter from FilterWizard)")
+            self.cur.request( "delete from FilterWizard where pkFilter = ? ",(filterkey, ))    
+        except:
+            pass
+        
+        
         if self.db_backend.lower() == 'mysql':
             self.cur.request("analyze table FilterWizard")
             self.cur.request("analyze table FilterWizardItems")

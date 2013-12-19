@@ -561,7 +561,7 @@ class Main:
                 common.log('',filtername)
                 
                 self.add_directory(name      = "%s"%(filtername),
-                            params        = [("method","wizard"),("viewmode","view"),("filtername", filtername),("period",""),("value",""),("page","1")],
+                            params        = [("method","wizard_settings"),("viewmode","view"),("filtername", filtername),("period",""),("value",""),("page","1")],
                             action        = "showpics",
                             iconimage     = join(PIC_PATH,"keywords.png"),
                             fanart        = join(PIC_PATH,"fanart-keyword.png"),
@@ -895,7 +895,7 @@ class Main:
                             contextmenu   = [(common.getstring(30152),"XBMC.RunPlugin(\"%s?action='addfolder'&method='search'&field='%s'&searchterm='%s'&viewmode='scan'\")"%(sys.argv[0],tag,motrecherche))])#menucontextuel
         if not result:
             dialog = xbmcgui.Dialog()
-            dialog.ok(common.getstring(30000).encode("utf8"), common.getstring(30119).encode("utf8")%motrecherche)
+            dialog.ok(common.getstring(30000), common.getstring(30119)%motrecherche)
             return
         xbmcplugin.addSortMethod( int(sys.argv[1]), xbmcplugin.SORT_METHOD_UNSORTED )
         xbmcplugin.endOfDirectory( int(sys.argv[1]),updateListing=refresh)
@@ -968,12 +968,14 @@ class Main:
 
         elif self.args.do=="delroot":
             try:
-                common.log("Main.show_roots", 'delroot "%s"'% self.args.delpath)
-                MPDB.delete_root( self.args.delpath) 
+                dialog = xbmcgui.Dialog()
+                if dialog.yesno(common.getstring(30250), common.getstring(30251)%common.smart_utf8(self.args.delpath)) :
+                    common.log("Main.show_roots", 'delroot "%s"'% self.args.delpath)
+                    MPDB.delete_root( self.args.delpath) 
+                    if self.args.delpath != 'neverexistingpath':
+                        common.show_notification(common.getstring(30000),common.getstring(30205),3000,join(home,"icon.png"))
             except IndexError,msg:
                 common.log("Main.show_roots", 'delroot IndexError %s - %s'%( IndexError,msg), xbmc.LOGERROR )
-            if self.args.delpath != 'neverexistingpath':
-                common.show_notification(common.getstring(30000),common.getstring(30205),3000,join(home,"icon.png"))
                 #xbmc.executebuiltin( "Notification(%s,%s,%s,%s)"%(common.getstring(30000).encode("utf8"),common.getstring(30205).encode("utf8"),3000,join(home,"icon.png").encode('utf-8')))
         elif self.args.do=="rootclic":#clic sur un chemin (à exclure ou à scanner)
             if not(xbmc.getInfoLabel( "Window.Property(DialogAddonScan.IsAlive)" ) == "true"): #si dialogaddonscan n'est pas en cours d'utilisation...
@@ -1347,7 +1349,7 @@ class Main:
         if self.args.method == "folder":#NON UTILISE : l'affichage par dossiers affiche de lui même les photos
             pass
 
-        elif self.args.method =="wizard":
+        elif self.args.method =="wizard_settings":
             filelist = MPDB.filterwizard_get_pics_from_filter(self.args.filtername)
             
         # we are showing pictures for a RANDOM selection
