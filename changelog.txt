@@ -1,3 +1,6 @@
+2013/12/27 --> v 12.2.9
+Update: Phase 1 migration to Gotham
+
 2013/12/19 --> v 12.2.8
 Fix:    Filter Wizard didn't work after adding menu "Saved filter wizard settings"
 
