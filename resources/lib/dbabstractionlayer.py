@@ -81,7 +81,7 @@ def DBFactory(backend, db_name, *args):
 
     if backend.lower() == 'mysql':
 
-        import mysql.connector as database
+        import local.mysql.connector as database
             
     # default is to use Sqlite
     else:

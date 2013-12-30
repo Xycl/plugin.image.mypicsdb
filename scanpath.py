@@ -47,7 +47,7 @@ from resources.lib.XMP import XMP_Tags
 
 
 #xbmc addons
-from DialogAddonScan import AddonScan
+from resources.lib.local.dialogaddonscan.DialogAddonScan import AddonScan
 
 
 

@@ -1,3 +1,7 @@
+2013/12/30 --> v 12.3.0
+Update: First Gotham release of MyPicsDB
+Fix:    Python modules dialogaddonscan and mysql don't work. Local working copy now part of MyPicsDB.
+
 2013/12/27 --> v 12.2.9
 Update: Phase 1 migration to Gotham
 
