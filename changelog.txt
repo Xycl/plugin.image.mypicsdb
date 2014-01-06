@@ -1,9 +1,9 @@
+2014/01/06 --> v 12.3.1
+Update: Language files from Transifex
+
 2013/12/30 --> v 12.3.0
 Update: First Gotham release of MyPicsDB
 Fix:    Python modules dialogaddonscan and mysql don't work. Local working copy now part of MyPicsDB.
-
-2013/12/27 --> v 12.2.9
-Update: Phase 1 migration to Gotham
 
 2013/12/19 --> v 12.2.8
 Fix:    Filter Wizard didn't work after adding menu "Saved filter wizard settings"
