@@ -566,7 +566,8 @@ class Main:
                             action        = "showpics",
                             iconimage     = join(PIC_PATH,"keywords.png"),
                             fanart        = join(PIC_PATH,"fanart-keyword.png"),
-                            contextmenu   = [('','')],
+                            contextmenu   = [(common.getstring(30152),"XBMC.RunPlugin(\"%s?action='addfolder'&method='wizard_settings'&filtername='%s'&viewmode='scan'\")"%(sys.argv[0],filtername)),],
+                            #contextmenu   = [('','')],
                             total         = total)
             xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_LABEL)
             xbmcplugin.endOfDirectory(int(sys.argv[1]))

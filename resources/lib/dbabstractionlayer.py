@@ -71,6 +71,7 @@ else:
 
 import xbmc
 import common
+import datetime
 
 database=''
 
@@ -218,8 +219,13 @@ class BaseCursor(object):
             cols = []
             for col in row:
 
+                # make sure we return unicode strings!!!
                 if isinstance(col, basestring):
                     col = common.smart_unicode(col)
+                if isinstance(col, datetime.date):
+                    if col == '0000-00-00':
+                        col = ''
+                    col = common.smart_unicode(str(col))
                     #print col
                 #else:
                 #    print type(col)

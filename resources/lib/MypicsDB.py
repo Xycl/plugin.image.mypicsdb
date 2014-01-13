@@ -959,7 +959,13 @@ class MyPictureDB(object):
                 items[item] = state
 
                 
-        return items, (True if match_all == 1 else False), ('' if start_date == None else start_date), ('' if end_date == None else end_date)
+        # for MySQL which returns 0000-00-00 instead of NULL
+        if start_date == None or start_date == '0000-00-00':
+            start_date = ''
+        if end_date == None or end_date == '0000-00-00':
+            end_date = ''
+                        
+        return items, (True if match_all == 1 else False), start_date, end_date
         
     def filterwizard_get_pics_from_filter(self, filter_name):
         (items, match_all, start_date, end_date) = self.filterwizard_load_filter(filter_name)
@@ -1645,7 +1651,7 @@ class MyPictureDB(object):
     def get_pics_dates(self):
         """return all different dates from 'EXIF DateTimeOriginal'"""
         if self.con.get_backend() == "mysql":
-            return [t for (t,) in self.cur.request("""SELECT DISTINCT date_format(ImageDateTime, '%Y-%m-%d') FROM Files WHERE length(trim(ImageDateTime))>8  ORDER BY ImageDateTime ASC""")]
+            return [t for (t,) in self.cur.request("""SELECT DISTINCT date_format(ImageDateTime, '%Y-%m-%d') FROM Files WHERE length(trim(ImageDateTime))>8 AND ImageDateTime> 0 ORDER BY ImageDateTime ASC""")]
         else:
             return [t for (t,) in self.cur.request("""SELECT DISTINCT strftime("%Y-%m-%d",ImageDateTime) FROM Files WHERE length(trim(ImageDateTime))>8  ORDER BY ImageDateTime ASC""")]
 
