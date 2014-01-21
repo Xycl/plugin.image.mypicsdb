@@ -679,7 +679,6 @@ class Main:
             dbdatestart = common.smart_unicode(dbdatestart)
             dbdateend = common.smart_unicode(dbdateend)
 
-            #datestart,dateend = MPDB.cur.request("SELECT strftime('%%Y-%%m-%%d',('%s')),strftime('%%Y-%%m-%%d',datetime('%s','+1 days','-1.0 seconds'))"%(dbdatestart,dbdateend))[0]
             datestart, dateend = MPDB.period_dates_get_pics(dbdatestart,dbdateend)
             datestart = common.smart_unicode(datestart)
             dateend   = common.smart_unicode(dateend)
@@ -730,27 +729,9 @@ class Main:
                 if (kb.isConfirmed()):
                     collection_name = kb.getText()
 
-                    # load the filter    
-                    active_tags, use_and, start_date, end_date = MPDB.filterwizard_load_filter(filters[ret])
+                    #MPDB.collection_add_dyn_data(collection_name, filters[ret], 'FilterWizard')
 
-                    # divide active_tags into set and unset (green or red checkbox)
-                    set_tags = ""
-                    unset_tags = ""
-
-                    for key, value in active_tags.iteritems():
-                        if value == 1:
-                            if len(set_tags)==0:
-                                set_tags = key
-                            else:
-                                set_tags += "|||" + key                        
-
-                        if value == -1:
-                            if len(unset_tags)==0:
-                                unset_tags = key
-                            else:
-                                unset_tags += "|||" + key    
-
-                    rows = MPDB.filterwizard_result(set_tags, unset_tags, use_and, start_date, end_date)
+                    rows = MPDB.filterwizard_get_pics_from_filter(filters[ret])
 
                     if rows != None:
                         MPDB.collection_new(collection_name)
@@ -865,21 +846,41 @@ class Main:
 
 
     def global_search(self):
-        #récupére la liste des colonnes de la table files
         if not self.args.searchterm:
-            kb = xbmc.Keyboard("",common.getstring(30115) , False)
-            kb.doModal()
-            if (kb.isConfirmed()):
-                motrecherche = kb.getText()
-                common.log("Main.global_search", "user entered %s"%motrecherche)
-            else:
+            refresh=0
+            filters = MPDB.search_list_saved()
+            dialog = xbmcgui.Dialog()
+            
+            ret = dialog.select(common.getstring(30121), filters)
+            if ret > 0:
+                motrecherche = filters[ret]
+                # Save is important because there are only 10 saved searches and due to save call the search gets a new key!!!
+                MPDB.search_save(motrecherche)
+            elif ret == -1:
                 common.log("Main.global_search", "user cancelled search")
+                xbmcplugin.endOfDirectory( int(sys.argv[1]),updateListing=refresh)
                 return
-            refresh=False
+
+            else:
+                kb = xbmc.Keyboard("",common.getstring(30115) , False)
+                kb.doModal()
+                if (kb.isConfirmed()):
+                    motrecherche = kb.getText()
+                    if motrecherche == '':
+                        xbmcplugin.endOfDirectory( int(sys.argv[1]),updateListing=refresh)
+                        return
+                        
+                    MPDB.search_save(motrecherche)
+                    common.log("Main.global_search", "user entered %s"%motrecherche)
+                else:
+                    common.log("Main.global_search", "user cancelled search")
+                    xbmcplugin.endOfDirectory( int(sys.argv[1]),updateListing=refresh)
+                    return
+
         else:
             motrecherche = self.args.searchterm
             common.log("Main.global_search", "search %s"%motrecherche)
-            refresh=True
+            refresh=1
 
         listtags = [k for k in MPDB.list_tagtypes_count()]
 
@@ -892,12 +893,14 @@ class Main:
                 self.add_directory(name      = common.getstring(30116)%(compte,motrecherche.decode("utf8"),tag ), #files_fields_description.has_key(colname) and files_fields_description[colname] or colname),
                             params    = [("method","search"),("field",u"%s"%common.smart_unicode(tag)),("searchterm",u"%s"%common.smart_unicode(motrecherche)),("page","1"),("viewmode","view")],#paramètres
                             action    = "showpics",#action
-                            iconimage = join(PIC_PATH,"search.png"),#icone
+                            iconimage = join(PIC_PATH,"search.png"),
                             fanart    = join(PIC_PATH,"fanart-search.png"),
                             contextmenu   = [(common.getstring(30152),"XBMC.RunPlugin(\"%s?action='addfolder'&method='search'&field='%s'&searchterm='%s'&viewmode='scan'\")"%(sys.argv[0],tag,motrecherche))])#menucontextuel
         if not result:
             dialog = xbmcgui.Dialog()
             dialog.ok(common.getstring(30000), common.getstring(30119)%motrecherche)
+            refresh=0
+            xbmcplugin.endOfDirectory( int(sys.argv[1]),updateListing=refresh)
             return
         xbmcplugin.addSortMethod( int(sys.argv[1]), xbmcplugin.SORT_METHOD_UNSORTED )
         xbmcplugin.endOfDirectory( int(sys.argv[1]),updateListing=refresh)
@@ -924,7 +927,6 @@ class Main:
                 recursive = dialog.yesno(common.getstring(30000),common.getstring(30202)) and 1 or 0 #browse recursively this folder ?
                 update = True #dialog.yesno(common.getstring(30000),common.getstring(30203)) and 1 or 0 # Remove files from database if pictures does not exists?
 
-                #ajoute le rootfolder dans la base
                 try:
                     if newroot.startswith('multipath://'):
                         common.log("Main.show_roots", 'Adding Multipath: "%s"'%unquote_plus(newroot))
@@ -941,7 +943,7 @@ class Main:
                 except:
                     common.log("Main.show_roots", 'MPDB.add_root_folder failed for "%s"'%newroot, xbmc.LOGERROR)
                 common.show_notification(common.getstring(30000),common.getstring(30204),3000,join(home,"icon.png"))
-                #xbmc.executebuiltin( "Notification(%s,%s,%s,%s)"%(common.getstring(30000).encode("utf8"),common.getstring(30204).encode("utf8"),3000,join(home,"icon.png").encode("utf8") ) )
+                
                 if not(xbmc.getInfoLabel( "Window.Property(DialogAddonScan.IsAlive)" ) == "true"): #si dialogaddonscan n'est pas en cours d'utilisation...
                     if dialog.yesno(common.getstring(30000),common.getstring(30206)):#do a scan now ?
                         if newroot.startswith('multipath://'):
@@ -950,15 +952,14 @@ class Main:
                             for item in newpartialroot:
                                 common.log("Main.show_roots",  'Starting scanpath "%s"'% unquote_plus(item) )
                                 common.run_script("%s,%s --rootpath=%s"%( join( home, "scanpath.py"),recursive and "-r, " or "",common.quote_param(unquote_plus(item))))
-                                #xbmc.executebuiltin( "RunScript(%s,%s--rootpath=%s)"%( join( home, "scanpath.py").encode("utf8"),recursive and "-r, " or "",common.quote_param(unquote_plus(item))))
+                                
                                 common.log("Main.show_roots",  'Scanpath "%s" started'% unquote_plus(item) )
                         else:
                             common.log("Main.show_roots",  'Starting scanpath "%s"'%newroot)
                             common.run_script("%s,%s --rootpath=%s"%( join( home, "scanpath.py"),recursive and "-r, " or "",common.quote_param(newroot)))
-                            #xbmc.executebuiltin( "RunScript(%s,%s--rootpath=%s)"%( join( home, "scanpath.py").encode("utf8"),recursive and "-r, " or "",common.quote_param(newroot)))
+
                             common.log("Main.show_roots",  'Scanpath "%s" started'%newroot )
                 else:
-                    #dialogaddonscan était en cours d'utilisation, on returncommon.log("Main.show_roots", 'Adding Multipath: "%s"'%unquote_plus(newroot))
                     return
                 return
 
@@ -978,26 +979,21 @@ class Main:
                         common.show_notification(common.getstring(30000),common.getstring(30205),3000,join(home,"icon.png"))
             except IndexError,msg:
                 common.log("Main.show_roots", 'delroot IndexError %s - %s'%( IndexError,msg), xbmc.LOGERROR )
-                #xbmc.executebuiltin( "Notification(%s,%s,%s,%s)"%(common.getstring(30000).encode("utf8"),common.getstring(30205).encode("utf8"),3000,join(home,"icon.png").encode('utf-8')))
-        elif self.args.do=="rootclic":#clic sur un chemin (à exclure ou à scanner)
-            if not(xbmc.getInfoLabel( "Window.Property(DialogAddonScan.IsAlive)" ) == "true"): #si dialogaddonscan n'est pas en cours d'utilisation...
-                if str(self.args.exclude)=="0":#le chemin choisi n'est pas un chemin à exclure...
+
+        elif self.args.do=="rootclic":
+            if not(xbmc.getInfoLabel( "Window.Property(DialogAddonScan.IsAlive)" ) == "true"): 
+                if str(self.args.exclude)=="0":
                     path,recursive,update,exclude = MPDB.get_root_folders(self.args.rootpath)
                     common.run_script("%s,%s --rootpath=%s"%( join( home, "scanpath.py"),recursive and "-r, " or "",common.quote_param(path)))
-                    #xbmc.executebuiltin( "RunScript(%s,%s--rootpath=%s)"%( join( home, "scanpath.py").encode("utf8"),recursive and "-r, " or "",common.quote_param(path)))
-                else:#clic sur un chemin à exclure...
+
+                else:
                     pass
             else:
                 #dialogaddonscan était en cours d'utilisation, on return
                 return
         elif self.args.do=="scanall":
-            if not(xbmc.getInfoLabel( "Window.Property(DialogAddonScan.IsAlive)" ) == "true"): #si dialogaddonscan n'est pas en cours d'utilisation...
+            if not(xbmc.getInfoLabel( "Window.Property(DialogAddonScan.IsAlive)" ) == "true"):
 
-                #dialog = xbmcgui.Dialog()
-                #if True == dialog.yesno(common.getstring(30000), common.getstring(30214), common.getstring(30215), common.getstring(30216) ):
-                #    MPDB.cur.request('Update Files set sha = NULL')
-
-                #xbmc.executebuiltin( "RunScript(%s,--database)"% join( home, "scanpath.py").encode("utf8") )
                 common.run_script("%s,--database"% join( home, "scanpath.py"))
                 return
             else:
