@@ -13,7 +13,7 @@ __addonDir__  = __settings__.getAddonInfo( "path" )
 
 XBMC_SKIN  = xbmc.getSkinDir()
 SKINS_PATH = os.path.join( __addonDir__, "resources", "skins" )
-ADDON_SKIN = ( "default", XBMC_SKIN )[ os.path.exists( os.path.join( SKINS_PATH, XBMC_SKIN ) ) ]
+ADDON_SKIN = ( "Default", XBMC_SKIN )[ os.path.exists( os.path.join( SKINS_PATH, XBMC_SKIN ) ) ]
 MEDIA_PATH = os.path.join( SKINS_PATH, ADDON_SKIN, "media" )
 
 
