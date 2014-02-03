@@ -23,6 +23,7 @@ import os, urllib
 import xbmc, xbmcvfs
 import common
 import json
+import datetime
 
 class Scanner(object):
 
@@ -117,7 +118,17 @@ class Scanner(object):
 
             return common.smart_unicode(destination), True
 
-            
+
+    def getfiledatetime(self, filename):
+
+        filedatetime = "0000-00-00 00:00:00"
+        try:
+            filedatetime = datetime.datetime.fromtimestamp(xbmcvfs.Stat(filename).st_mtime())
+        except:
+            pass
+        return filedatetime
+
+    
     def listdir(self, path):
 
         try:
