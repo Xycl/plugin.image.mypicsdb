@@ -305,7 +305,9 @@ class VFSScanner:
                     else:
                         sqlupdate  = False
                         self.picsadded   += 1
-                        picentry["EXIF DateTimeOriginal"] = self.filescanner.getfiledatetime(pic)
+                        moddate = self.filescanner.getfiledatetime(pic)
+                        if moddate != "0000-00-00 00:00:00":
+                            picentry["EXIF DateTimeOriginal"] = moddate
 
                 else:
                     continue
