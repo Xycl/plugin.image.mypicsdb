@@ -531,7 +531,7 @@ class Main:
 
             newtagtrue = ""
             newtagfalse = ""
-            matchall = (1 if GlobalMatchAll else 0)
+            matchall = GlobalMatchAll
             start_date = g_start_date
             end_date = g_end_date
             if len(GlobalFilterTrue) > 0:
@@ -1635,11 +1635,11 @@ class Main:
 
 GlobalFilterTrue  = []
 GlobalFilterFalse  = []
-GlobalMatchAll = False
+GlobalMatchAll = 0
 g_start_date = ''
 g_end_date   = ''
 Handle        = 0
-def filterwizard_delegate(ArrayTrue, ArrayFalse, MatchAll = False, start_date = '', end_date = ''):
+def filterwizard_delegate(ArrayTrue, ArrayFalse, MatchAll = 0, start_date = '', end_date = ''):
     global GlobalFilterTrue, GlobalFilterFalse, GlobalMatchAll, Handle, g_start_date, g_end_date
     GlobalFilterTrue  = ArrayTrue
     GlobalFilterFalse  = ArrayFalse

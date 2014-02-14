@@ -65,7 +65,7 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
         if ( action.getId() in CANCEL_DIALOG or self.getFocusId() == BUTTON_CANCEL and action.getId() in SELECT_ITEM ):
             arraytrue = []
             arrayfalse = []
-            self.filter (arraytrue,arrayfalse,False,'','')
+            self.filter (arraytrue,arrayfalse,0,'','')
             self.close()
 
         # Okay
@@ -100,7 +100,10 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
 
         # Match all button
         elif ( action.getId() in SELECT_ITEM and self.getFocusId() == BUTTON_MATCHALL ):
-            self.use_and = not self.use_and
+            if self.use_and == 1:
+                self.use_and = 0
+            else:
+                self.use_and = 1
 
         # Load filter settings
         elif ( action.getId() in SELECT_ITEM and self.getFocusId() == LOAD_FILTER ):
@@ -204,7 +207,7 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
         self.tag_types = [u"%s"%k  for k in self.MPDB.list_TagTypes()]
         self.currently_selected_tagtypes = ''
         self.checked_tags = 0
-        self.use_and = False
+        self.use_and = 0
         self.start_date = ''
         self.end_date   = ''
         self.active_tags = {}
@@ -216,7 +219,7 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
         # load last filter settings
         if filtersettings != "":
             self.active_tags, self.use_and, self.start_date, self.end_date = self.MPDB.filterwizard_load_filter(filtersettings)
-            if self.use_and:
+            if self.use_and == 1:
                 self.getControl( BUTTON_MATCHALL ).setSelected(1)
 
             if self.start_date is None:
@@ -301,7 +304,7 @@ class FilterWizard( xbmcgui.WindowXMLDialog ):
     def clear_settings(self):
         self.active_tags.clear()
         self.checked_tags = 0
-        self.use_and = False
+        self.use_and = 0
         self.getControl( BUTTON_MATCHALL ).setSelected(0)
 
         self.load_tag_content_list(self.tag_types[0])

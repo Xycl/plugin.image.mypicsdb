@@ -668,9 +668,10 @@ class MyPictureDB(object):
 
         # These selects are joined with an IN clause
         inner_select = "SELECT tif.idfile FROM TagContents tc, TagsInFiles tif , TagTypes tt WHERE tif.idTagContent = tc.idTagContent AND tc.idTagType = tt.idTagType "
-
+        
+        common.log("", "match_all = %s"%(match_all), xbmc.LOGNOTICE)
         # Build the conditions
-        if match_all == "1":
+        if match_all == 1 or match_all == "1":
             if len(set_tags) > 0:
                 for filter_tags in set_tags_array:
 
@@ -796,7 +797,7 @@ class MyPictureDB(object):
 
         self.con.commit()
 
-    def filterwizard_save_filter(self, filter_name, items, bmatch_all, start_date ='', end_date = ''):
+    def filterwizard_save_filter(self, filter_name, items, match_all, start_date ='', end_date = ''):
 
         if self.db_backend.lower() == 'mysql':
 
@@ -805,8 +806,6 @@ class MyPictureDB(object):
 
             if end_date == '':
                 end_date = "0000-00-00 00:00:00"
-
-        match_all = (1 if bmatch_all == True else 0)
 
         try:
             rows = [row for row in self.cur.request( "select count(*) from FilterWizard where strFilterName = ? ",(filter_name, ))] [0][0]
@@ -854,9 +853,11 @@ class MyPictureDB(object):
             start_date = ''
         if end_date == None or end_date == '0000-00-00':
             end_date = ''
-                        
-        return items, (True if match_all == 1 else False), start_date, end_date
-        
+
+        common.log("", "match_all = %s"%(match_all), xbmc.LOGNOTICE)
+        return items, match_all, start_date, end_date
+
+
     def filterwizard_get_pics_from_filter(self, filter_name):
         (items, match_all, start_date, end_date) = self.filterwizard_load_filter(filter_name)
         set_tags = ""
@@ -874,26 +875,26 @@ class MyPictureDB(object):
                 else:
                     unset_tags += "|||" + key    
 
-        
+        common.log("", "match_all = %s"%(match_all), xbmc.LOGNOTICE)                    
         return self.filterwizard_result(set_tags, unset_tags, match_all, start_date, end_date)
 
-        
-        
+
+
     ###################################
     # Collection functions
     #####################################
     def collections_list(self):
         return [row for row in self.cur.request( """SELECT CollectionName FROM Collections""")]
-    
-    
+
+
     def collection_new(self, colname):      
         if colname :
             self.cur.request( "INSERT INTO Collections(CollectionName) VALUES (?) ",(colname, ))
             self.con.commit()
         else:
             common.log( "collection_new", "User did not specify a name for the collection.")
-            
-            
+
+
     def collection_delete(self, colname):      
         common.log( "collection_delete", "Name = %s"%colname)
         if colname:
@@ -902,8 +903,8 @@ class MyPictureDB(object):
             self.con.commit()
         else:
             common.log( "collection_delete",  "User did not specify a name for the collection" )
-    
-    
+
+
     def collection_get_pics(self, colname):
         try:
 
@@ -919,27 +920,27 @@ class MyPictureDB(object):
         row = [row for row in self.cur.request( """SELECT strPath,strFilename FROM Files WHERE idFile IN (SELECT idFile FROM FilesInCollections WHERE idCol IN (SELECT idCol FROM Collections WHERE CollectionName=?)) ORDER BY ImageDateTime ASC""",(colname,))]
         row.extend(rows_from_filter)
         return row
-        
-    
-    
+
+
     def collection_rename(self, colname,newname):   
         if colname:
             self.cur.request( """UPDATE Collections SET CollectionName = ? WHERE CollectionName=? """, (newname, colname) )
             self.con.commit()
         else:
             common.log( "collection_rename",  "User did not specify a name for the collection")
-    
-    
+
+
     def collection_add_pic(self, colname, filepath, filename):    
 
         self.cur.request( """INSERT INTO FilesInCollections(idCol,idFile) VALUES ( (SELECT idCol FROM Collections WHERE CollectionName=?) , (SELECT idFile FROM Files WHERE strPath=? AND strFilename=?) )""",(colname,filepath,filename) )
         self.con.commit()
-    
-    
+
+
     def collection_del_pic(self, colname, filepath, filename):
         common.log("collection_del_pic","%s, %s, %s"%(colname, filepath, filename))
         self.cur.request( """DELETE FROM FilesInCollections WHERE idCol=(SELECT idCol FROM Collections WHERE CollectionName=?) AND idFile=(SELECT idFile FROM Files WHERE strPath=? AND strFilename=?)""",(colname, filepath, filename) )
         self.con.commit()
+
 
     def collection_add_dyn_data(self, colname, filtername, what_table):
         # get primary key of stored filter settings
@@ -967,13 +968,15 @@ class MyPictureDB(object):
         
         self.con.commit()
 
-                    
+
+
     ####################
     # Periodes functions
     #####################
     def periods_list(self):
         return [row for row in self.cur.request( """SELECT PeriodeName,DateStart,DateEnd FROM Periodes""")]
-    
+
+
     def period_add(self, periodname, datestart, dateend):
         if self.con.get_backend() == "mysql":
             datestart = "date_format('%s', '%%Y-%%m-%%d %%H:%%i:%%S')"%datestart
@@ -991,12 +994,14 @@ class MyPictureDB(object):
         self.cur.request( insert, (periodname,) )
         self.con.commit()
         return
-    
+
+
     def period_delete(self, periodname):
         self.cur.request( """DELETE FROM Periodes WHERE PeriodeName=? """,(periodname,) )
         self.con.commit()
         return
-    
+
+
     def period_rename(self, periodname, newname, newdatestart, newdateend):
         if self.con.get_backend() == "mysql":
             self.cur.request( """UPDATE Periodes SET PeriodeName = ?,DateStart = date_format(?, '%%Y-%%m-%%d') , DateEnd = date_format(?, '%%Y-%%m-%%d') WHERE PeriodeName=? """,(newname,newdatestart,newdateend,periodname) )
@@ -1004,7 +1009,8 @@ class MyPictureDB(object):
             self.cur.request( """UPDATE Periodes SET PeriodeName = ?,DateStart = datetime(?) , DateEnd = datetime(?) WHERE PeriodeName=? """,(newname,newdatestart,newdateend,periodname) )
         self.con.commit()
         return
-    
+
+
     def period_dates_get_pics(self, dbdatestart, dbdateend):
         if self.con.get_backend() == "mysql":
             return self.cur.request("SELECT date_format('%s', '%%Y-%%m-%%d'),date_format(date_format('%s', '%%Y-%%m-%%d') + INTERVAL 1 DAY - INTERVAL 1 SECOND, '%%Y-%%m-%%d')"%(dbdatestart,dbdateend))[0]    
