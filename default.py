@@ -14,7 +14,7 @@ from urllib import unquote_plus
 from time import strftime,strptime
 from traceback import print_exc
 
-import xbmc, xbmcplugin,xbmcgui
+import xbmc, xbmcplugin, xbmcgui, xbmcaddon
 
 
 # MikeBZH44
@@ -249,6 +249,8 @@ class Main:
                 liz.setInfo( type="pictures", infoLabels=infolabels )
 
             liz.setLabel(picname+" "+suffix)
+            if fanart is not None:
+                liz.setProperty('fanart_image',fanart) 
 
             if contextmenu:
                 if coords:
@@ -341,10 +343,17 @@ class Main:
             self.add_directory(common.getstring(30098),[("searchterm",""),("viewmode","view")],"globalsearch",
                     join(PIC_PATH,"search.png"),
                     fanart=join(PIC_PATH,"fanart-search.png"))
-        # chemin scannés
+
+        # picture sources
         self.add_directory(common.getstring(30099),[("do","showroots"),("viewmode","view")],"rootfolders",
                     join(PIC_PATH,"settings.png"),
                     fanart=join(PIC_PATH,"fanart-setting.png"))
+
+        # Settings
+        self.add_action(common.getstring(30009),[("showsettings", ""),("viewmode","view")],"showsettings",
+                    join(PIC_PATH,"settings.png"),
+                    fanart=join(PIC_PATH,"fanart-setting.png"))
+
 
         # Translation Editor
         self.add_action(common.getstring(30620),[("showtranslationeditor",""),("viewmode","view")],"showtranslationeditor",
@@ -520,6 +529,8 @@ class Main:
     def show_help(self):
         viewer.Viewer()
 
+    def show_settings(self):
+        xbmcaddon.Addon().openSettings()
 
     def show_wizard(self):
         if self.args.wizard == 'dialog':
@@ -1733,6 +1744,9 @@ if __name__=="__main__":
     elif m.args.action=='rootfolders':
         m.show_roots()
 
+    elif m.args.action=='showsettings':
+        m.show_settings()
+        
     elif m.args.action=='locate':
         dialog = xbmcgui.Dialog()
         dstpath = dialog.browse(2, common.getstring(30071),"files" ,"", True, False, m.args.filepath)

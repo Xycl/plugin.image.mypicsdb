@@ -121,7 +121,7 @@ class MyPictureDB(object):
     
         if ecrase:
             #drop table
-            for table in ['FilterWizard', 'FilterWizardItems', 'Persons', 'PersonsInFiles', 'tags', 'TagContent', 'TagContents', 'TagsInFiles', 'TagTypes','files', 'Files', "keywords", 'folders', 'Folders',"KeywordsInFiles","Collections","FilesInCollections", "periodes", "Periodes","CategoriesInFiles","Categories","SupplementalCategoriesInFiles","SupplementalCategories","CitiesInFiles","Cities","CountriesInFiles","Countries","DBVersion"]:
+            for table in ['Persons', 'PersonsInFiles', 'DynDataInCollections','tags', 'TagContent', 'TagContents', 'TagsInFiles', 'TagTypes','files', 'Files', "keywords", 'folders', 'Folders',"KeywordsInFiles","Collections","FilesInCollections", "periodes", "Periodes","CategoriesInFiles","Categories","SupplementalCategoriesInFiles","SupplementalCategories","CitiesInFiles","Cities","CountriesInFiles","Countries","DBVersion"]:
                 common.log("MPDB.make_new_base >> Dropping table", "%s"%table)
                 try:
                     self.cur.execute("""DROP TABLE %s"""%table)
