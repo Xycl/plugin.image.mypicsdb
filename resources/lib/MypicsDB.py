@@ -1073,57 +1073,47 @@ class MyPictureDB(object):
 
 
     def get_gps(self, filepath, filename):
-    
-        latR = self.cur.request( """select tc.TagContent from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
-                                    where tt.TagType = 'GPS GPSLatitudeRef'
-                                      and tt.idTagType = tc.idTagType
-                                      and tc.idTagContent = tif.idTagContent
-                                      and tif.idFile = fi.idFile
-                                      and fi.strPath = ?
-                                      and fi.strFilename = ?""",  (filepath,filename) )
-        lat = self.cur.request( """select tc.TagContent from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
-                                    where tt.TagType = 'GPS GPSLatitude'
-                                      and tt.idTagType = tc.idTagType
-                                      and tc.idTagContent = tif.idTagContent
-                                      and tif.idFile = fi.idFile
-                                      and fi.strPath = ?
-                                      and fi.strFilename = ?""",  (filepath,filename) )
-        lonR = self.cur.request( """select tc.TagContent from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
-                                    where tt.TagType = 'GPS GPSLongitudeRef'
-                                      and tt.idTagType = tc.idTagType
-                                      and tc.idTagContent = tif.idTagContent
-                                      and tif.idFile = fi.idFile
-                                      and fi.strPath = ?
-                                      and fi.strFilename = ?""",  (filepath,filename) )
-        lon = self.cur.request( """select tc.TagContent from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
-                                    where tt.TagType = 'GPS GPSLongitude'
-                                      and tt.idTagType = tc.idTagType
-                                      and tc.idTagContent = tif.idTagContent
-                                      and tif.idFile = fi.idFile
-                                      and fi.strPath = ?
-                                      and fi.strFilename = ?""",  (filepath,filename) )
+
+        lon = lonR = lat = latR = 0
         try:
-            latR=latR[0][0]
-            lat=lat[0][0]
-            lonR=lonR[0][0]
-            lon=lon[0][0]
-        except IndexError:
+            rows = self.cur.request( """select tc.TagContent, tt.TagType from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
+                                        where tt.TagType in ( 'GPS GPSLongitude', 'GPS GPSLongitudeRef', 'GPS GPSLatitude', 'GPS GPSLatitudeRef')
+                                          and tt.idTagType = tc.idTagType
+                                          and tc.idTagContent = tif.idTagContent
+                                          and tif.idFile = fi.idFile
+                                          and fi.strPath = ?
+                                          and fi.strFilename = ?""",  (filepath,filename) )
+            try:
+                for row in rows:
+                    print row
+                    if row[1] == 'GPS GPSLongitude':
+                        lon = row[0]
+                    elif row[1] == 'GPS GPSLongitudeRef':
+                        lonR = row[0]
+                    elif row[1] == 'GPS GPSLatitude':
+                        lat = row[0]
+                    elif row[1] == 'GPS GPSLatitudeRef':
+                        latR = row[0]
+                     
+            except IndexError:
+                return None
+            if not latR or not lat or not lonR or not lon: 
+                return None                            
+        
+            lD,lM,lS = lat.replace(" ","").replace("[","").replace("]","").split(",")[:3]
+            LD,LM,LS = lon.replace(" ","").replace("[","").replace("]","").split(",")[:3]
+            exec("lD=%s"%lD)
+            exec("lM=%s"%lM)
+            exec("lS=%s"%lS)
+            exec("LD=%s"%LD)
+            exec("LM=%s"%LM)
+            exec("LS=%s"%LS)
+            latitude =  (int(lD)+(int(lM)/60.0)+(int(lS)/3600.0)) * (latR=="S" and -1 or 1)
+            longitude = (int(LD)+(int(LM)/60.0)+(int(LS)/3600.0)) * (lonR=="W" and -1 or 1)
+            return (latitude,longitude)
+        except Exception,msg:
+            common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
             return None
-        if not latR or not lat or not lonR or not lon: 
-            return None                            
-    
-        lD,lM,lS = lat.replace(" ","").replace("[","").replace("]","").split(",")[:3]
-        LD,LM,LS = lon.replace(" ","").replace("[","").replace("]","").split(",")[:3]
-        exec("lD=%s"%lD)
-        exec("lM=%s"%lM)
-        exec("lS=%s"%lS)
-        exec("LD=%s"%LD)
-        exec("LM=%s"%LM)
-        exec("LS=%s"%LS)
-        latitude =  (int(lD)+(int(lM)/60.0)+(int(lS)/3600.0)) * (latR=="S" and -1 or 1)
-        longitude = (int(LD)+(int(LM)/60.0)+(int(LS)/3600.0)) * (lonR=="W" and -1 or 1)
-        return (latitude,longitude)
-    
 
     def get_all_root_folders(self):
         "return Folders which are root for scanning pictures"
@@ -1582,7 +1572,7 @@ class MyPictureDB(object):
 
     def get_pic_date(self, path, filename):
         try:
-            (rows, ) = [row for (row,) in self.cur.request( "SELECT ImageDateTime FROM Files WHERE strPath=? AND strFilename=? ",(path,filename) )]
+            (rows, ) = [row for (row,) in self.cur.request( "SELECT coalesce(ImageDateTime, '0') FROM Files WHERE strPath=? AND strFilename=? ",(path,filename) )]
 
             return str(rows)
         except Exception,msg:

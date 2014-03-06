@@ -179,9 +179,9 @@ class Main:
             common.log("",picname)
             
             try:
-                date = MPDB.get_pic_date(picpath,picname)
-                if date:
-                    date = date and strftime("%d.%m.%Y",strptime(date,"%Y-%m-%d %H:%M:%S")) or ""
+                exiftime = MPDB.get_pic_date(picpath,picname)
+                if exiftime:
+                    date = exiftime and strftime("%d.%m.%Y",strptime(exiftime,"%Y-%m-%d %H:%M:%S")) or ""
             except Exception,msg:
                 #common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
                 date = None
@@ -206,35 +206,31 @@ class Main:
                 if coords: 
                     suffix = suffix + "[COLOR=C0C0C0C0][G][/COLOR]"
 
-                (exiftime,) = MPDB.cur.request_with_binds( """select coalesce(ImageDateTime, '0') from Files where strPath=? and strFilename=? """,(picpath,picname))
-                resolutionX = MPDB.cur.request_with_binds( """select coalesce(tc.TagContent,0) from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
-                                                         where tt.TagType = 'EXIF ExifImageWidth'
+                resolutionXY = MPDB.cur.request_with_binds( """select coalesce(tc.TagContent,0), tt.TagType from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
+                                                         where tt.TagType in ( 'EXIF ExifImageLength', 'EXIF ExifImageWidth' )
                                                            and tt.idTagType = tc.idTagType
                                                            and tc.idTagContent = tif.idTagContent
                                                            and tif.idFile = fi.idFile
                                                            and fi.strPath = ?
                                                            and fi.strFilename = ?  """,(picpath,picname))
 
-                resolutionY = MPDB.cur.request_with_binds( """select coalesce(tc.TagContent,0) from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
-                                                         where tt.TagType = 'EXIF ExifImageLength'
-                                                           and tt.idTagType = tc.idTagType
-                                                           and tc.idTagContent = tif.idTagContent
-                                                           and tif.idFile = fi.idFile
-                                                           and fi.strPath = ?
-                                                           and fi.strFilename = ?  """,(picpath,picname))     
-
                 infolabels = { "picturepath":picname+" "+suffix, "date": date, "count": count  }
                 #infolabels = { "picturepath":fullfilepath, "date": date, "count": count  }
                 try:
-                    if exiftime[0] != None and exiftime[0] != "0":
-                        common.log("Main.add_picture", "Picture has EXIF Date/Time %s"%exiftime[0])
-                        infolabels["exif:exiftime"] = exiftime[0]
+                    if exiftime != None and exiftime != "0":
+                        common.log("Main.add_picture", "Picture has EXIF Date/Time %s"%exiftime)
+                        infolabels["exif:exiftime"] = exiftime
                 except:
                     pass
 
                 try:
-                    resolutionX = resolutionX[0][0]
-                    resolutionY = resolutionY[0][0]
+
+                    if "Width" in resolutionXY[0][1]:
+                        resolutionX = resolutionXY[0][0]
+                        resolutionY = resolutionXY[1][0]
+                    else:
+                        resolutionX = resolutionXY[1][0]
+                        resolutionY = resolutionXY[0][0]
 
                     if resolutionX != None and resolutionY != None and resolutionX != "0" and resolutionY != "0":
                         common.log("Main.add_picture", "Picture has resolution %s x %s"%(str(resolutionX), str(resolutionY)))
@@ -259,8 +255,7 @@ class Main:
                                                                                                                                                                common.quote_param(picpath.encode('utf-8')),
                                                                                                                                                                common.quote_param(picname.encode('utf-8'))
                                                                                                                                                                )))
-                    #TODO : add to favourite
-                    #TODO : ...
+
                 liz.addContextMenuItems(contextmenu,replacemenu)
 
             return xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=fullfilepath,listitem=liz,isFolder=False)

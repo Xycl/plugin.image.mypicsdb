@@ -1,3 +1,6 @@
+2014/03/06 --> v 12.3.9
+Update: Number of selects to display a picture has been reduced.
+
 2014/02/26 --> v 12.3.8
 New:    Plugin settings now available within the main menu.
 Update: A DB cleanup doesn't delete content of tables FilterWizard and FilterWizardItems.
