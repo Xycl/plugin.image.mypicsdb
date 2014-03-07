@@ -23,7 +23,7 @@ import xbmcgui
 import common
 import dbabstractionlayer as dblayer
 
-DB_VERSION        = '12.3.3'
+DB_VERSION        = '12.3.10'
 
 lists_separator   = "||"
 
@@ -87,10 +87,26 @@ class MyPictureDB(object):
         if common.check_version(strVersion, DB_VERSION) >0:
             try:
                 self.cur.execute("""CREATE TABLE GlobalSearch(pkSearch integer %s, strSearchString %s unique)"""%(self.con.get_ddl_primary_key(), self.con.get_ddl_varchar(255)))
+            except:
+                pass
+
+            try:
                 self.cur.execute("""CREATE TABLE DynDataInCollections(idCol integer, fkForeignKey integer, TableName %s)"""%(self.con.get_ddl_varchar(50)))
+            except:
+                pass
+            
+            try:
                 self.cur.execute("""CREATE UNIQUE INDEX idxDDIC1 ON DynDataInCollections(idCol, TableName)""")
             except:
                 pass
+
+            try:
+                self.cur.execute("CREATE INDEX idxTagsInFiles3 ON TagsInFiles(idFile,idTagContent)")
+            except:
+                pass
+            
+            self.cur.execute("UPDATE DBVersion set strVersion = '%s'"%DB_VERSION)
+            self.con.commit()
         
         else:
             common.log("MPDB.version_table", "MyPicsDB database contains already current schema" )
@@ -308,6 +324,7 @@ class MyPictureDB(object):
         try:
             self.cur.execute("CREATE INDEX idxTagsInFiles1 ON TagsInFiles(idTagContent)")
             self.cur.execute("CREATE INDEX idxTagsInFiles2 ON TagsInFiles(idFile)")
+            self.cur.execute("CREATE INDEX idxTagsInFiles3 ON TagsInFiles(idFile,idTagContent)")
         except Exception,msg:
             pass
     
@@ -1579,6 +1596,15 @@ class MyPictureDB(object):
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
             return None
 
+
+    def get_pic_date_rating(self, path, filename):
+        try:
+            (date, rating) = [row for row in self.cur.request( "SELECT coalesce(ImageDateTime, '0'), ImageRating FROM Files WHERE strPath=? AND strFilename=? ",(path,filename) )][0]
+            return (date, rating)
+        except Exception,msg:
+            common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+            return None
+        
 
 if __name__=="__main__":
     pass

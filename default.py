@@ -170,6 +170,10 @@ class Main:
 
 
     def add_picture(self,picname,picpath,count=0, info="*",fanart=None,contextmenu=None,replacemenu=True):
+        suffix=""
+        rating=""
+        coords=None
+        extension = splitext(picname)[1].upper()
         try:
             fullfilepath = join(picpath,picname)
             common.log("Main.add_picture", "Name = %s"%fullfilepath)
@@ -179,23 +183,20 @@ class Main:
             common.log("",picname)
             
             try:
-                exiftime = MPDB.get_pic_date(picpath,picname)
+                (exiftime,rating) = MPDB.get_pic_date_rating(picpath,picname)
+                
                 if exiftime:
                     date = exiftime and strftime("%d.%m.%Y",strptime(exiftime,"%Y-%m-%d %H:%M:%S")) or ""
             except Exception,msg:
                 #common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
                 date = None
-            suffix=""
-            rating=""
-            coords=None
-            extension = splitext(picname)[1].upper()
+
             #is the file a video ?
             if extension in ["."+ext.replace(".","").upper() for ext in common.getaddon_setting("vidsext").split("|")]:
                 infolabels = { "date": date }
                 liz.setInfo( type="video", infoLabels=infolabels )
             #or is the file a picture ?
             elif extension in ["."+ext.replace(".","").upper() for ext in common.getaddon_setting("picsext").split("|")]:
-                rating = MPDB.get_rating(picpath,picname)
                 if int(common.getaddon_setting("ratingmini"))>0:
                     if not rating:  
                         return
@@ -215,7 +216,7 @@ class Main:
                                                            and fi.strFilename = ?  """,(picpath,picname))
 
                 infolabels = { "picturepath":picname+" "+suffix, "date": date, "count": count  }
-                #infolabels = { "picturepath":fullfilepath, "date": date, "count": count  }
+
                 try:
                     if exiftime != None and exiftime != "0":
                         common.log("Main.add_picture", "Picture has EXIF Date/Time %s"%exiftime)
