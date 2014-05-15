@@ -913,16 +913,65 @@ class Main:
         xbmcplugin.endOfDirectory( int(sys.argv[1]),updateListing=refresh)
 
 
+    def get_picture_sources(self):
+        jsonResult = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "Files.GetSources", "params": {"media": "pictures"}, "id": 1}')
+        shares = eval(jsonResult)
+        
+        shares = shares['result']
+        shares = shares.get('sources')
+        
+        if(shares == None):
+            shares = []
+        
+        names = []
+        sources = []
+        for s in shares:
+            
+            if s['file'].startswith('addons://'):
+                pass
+            else:
+                sources.append(s['file'])
+                names.append(s['label'])
+        return names, sources
+
     def show_roots(self):
         #show the root folders
 
-        if self.args.do=="addroot":#add a root to scan
-            dialog = xbmcgui.Dialog()
-            newroot = dialog.browse(0, common.getstring(30201) , 'pictures')
+        if self.args.do=="addroot" or self.args.do=="addpicturessource":#add a root to scan
+            
+            if self.args.do=="addroot":
+                dialog = xbmcgui.Dialog()
+                newroot = dialog.browse(0, common.getstring(30201) , 'pictures')
+    
+                if not newroot:
+                    return
+            elif self.args.do=="addpicturessource":
+                _names, sources = self.get_picture_sources()
+                
+                for source in sources:
+                    try:
+                        if source.startswith('multipath://'):
+                            common.log("Main.show_roots", 'Adding Multipath: "%s"'%unquote_plus(source))
+                            newpartialroot = source[12:-1].split('/')
+                            for item in newpartialroot:
+                                MPDB.add_root_folder(unquote_plus(item),True,True,0)#TODO : traiter le exclude (=0 pour le moment) pour gérer les chemins à exclure
+                                common.log("Main.show_roots", 'Multipath addroot for part "%s" done'%unquote_plus(item))
+                        else:
+                            MPDB.add_root_folder(source,True,True,0)#TODO : traiter le exclude (=0 pour le moment) pour gérer les chemins à exclure
+                            common.log("Main.show_roots", 'Singlepath addroot "%s" done'%source)
+    
+                        xbmc.executebuiltin( "Container.Refresh(\"%s?action='rootfolders'&do='showroots'&exclude='0'&viewmode='view'\",)"%(sys.argv[0],))
+    
+                    except:
+                        common.log("Main.show_roots", 'MPDB.add_root_folder failed for "%s"'%source, xbmc.LOGERROR)                
 
-            if not newroot:
+                if not(xbmc.getInfoLabel( "Window.Property(DialogAddonScan.IsAlive)" ) == "true"):
+                    common.run_script("%s,--refresh"% join( home, "scanpath.py"))
+                    return
+
+                
+            else :
                 return
-
             if str(self.args.exclude)=="1":
                 MPDB.add_root_folder(newroot,0,0,1)
                 xbmc.executebuiltin( "Container.Refresh(\"%s?action='rootfolders'&do='showroots'&exclude='1'&viewmode='view'\",)"%(sys.argv[0],))
@@ -1020,6 +1069,14 @@ class Main:
                 else:
                     includefolders.append([path,recursive,update])
 
+
+            # Add XBMC picutre sources to database
+            self.add_action(name      = common.getstring(30216),#add a root path
+                        params    = [("do","addpicturessource"),("viewmode","view"),("exclude","0")],#paramètres
+                        action    = "rootfolders",#action
+                        iconimage = join(PIC_PATH,"newsettings.png"),#icone
+                        fanart    = join(PIC_PATH,"fanart-setting.png"),
+                        contextmenu   = None)#menucontextuel
 
             # Add a path to database
             self.add_action(name      = common.getstring(30208),#add a root path

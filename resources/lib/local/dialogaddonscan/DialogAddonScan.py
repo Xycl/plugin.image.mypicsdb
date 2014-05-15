@@ -4,6 +4,7 @@ import sys
 from traceback import print_exc
 
 import xbmc
+import xbmcgui
 from xbmcaddon import Addon
 
 from AddonScan import Window
@@ -14,7 +15,7 @@ __settings__  = Addon( "plugin.image.mypicsdb" )
 __addonName__ = __settings__.getAddonInfo( "name" )
 
 
-class AddonScan( Window ):
+class AddonScanOrg( Window ):
     def __init__( self, parent_win=None, **kwargs ):
         # get class Window object
         Window.__init__( self, parent_win, **kwargs )
@@ -69,9 +70,37 @@ class AddonScan( Window ):
             except: print_exc()
 
 
+class AddonScan( AddonScanOrg ):
+    def __init__( self, parent_win=None, **kwargs ):
+        self.addonscan = AddonScanOrg()
 
+    def close( self ):
+        if self.dialog is None:
+            AddonScanOrg.close()
+        
+    def create( self, line1="", line2="" ):
+        try:
+            self.dialog = xbmcgui.DialogProgressBG()
+            self.dialog.create(line1, line2)
+        except:
+            self.dialog = None
+            self.addonscan.create( line1, line2 )
+        
+    def iscanceled( self ):
+        if self.dialog is None:
+            self.addonscan.iscanceled()
+        else:
+            return self.dialog.isFinished()
+    
+    def update( self, percent1=0, percent2=0, line1="", line2="" ):
+        if self.dialog is None:
+            self.addonscan.update(percent1, percent2, line1, line2)
+        else :
+            self.dialog.update(percent1, line1, line2)
+        
+        
 def Demo():
-    import xbmcgui
+    
     selected = xbmcgui.Dialog().select( "Demo: "+__addonName__, [ "Show demo scan", "Open settings" ] )
     if selected == 0:
         from time import sleep
