@@ -88,7 +88,7 @@ class AddonScan( AddonScanOrg ):
         
     def iscanceled( self ):
         if self.dialog is None:
-            self.addonscan.iscanceled()
+            return self.addonscan.iscanceled()
         else:
             return self.dialog.isFinished()
     
