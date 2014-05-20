@@ -36,6 +36,11 @@ __homepath__ = __settings__.getAddonInfo('path').decode('utf-8')
 __sys_file_encoding__ = sys.getfilesystemencoding()
 
 
+#__addon__       = xbmcaddon.Addon()
+__addonname__   = __settings__.getAddonInfo('name')
+__icon__        = __settings__.getAddonInfo('icon')
+
+
 def getaddon_path():
     return __homepath__
 
@@ -73,7 +78,7 @@ def setaddon_setting(name, value):
 # helpers
 def show_notification(title, message, timeout=5000, image=""):
     if image == "":
-        command = 'Notification(%s,%s,%s)' % (smart_utf8(title), smart_utf8(message), timeout)
+        command = 'Notification(%s,%s,%s,%s)' % (smart_utf8(title), smart_utf8(message), timeout, __icon__)
     else:
         command = 'Notification(%s,%s,%s,%s)' % (smart_utf8(title), smart_utf8(message), timeout, smart_utf8(image))
     xbmc.executebuiltin(command)
