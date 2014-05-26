@@ -70,20 +70,22 @@ class AddonScanOrg( Window ):
             except: print_exc()
 
 
-class AddonScan( AddonScanOrg ):
-    def __init__( self, parent_win=None, **kwargs ):
-        self.addonscan = AddonScanOrg()
+class AddonScan(  ):
 
     def close( self ):
         if self.dialog is None:
-            AddonScanOrg.close()
+            self.addonscan.close()
+        else:
+            self.dialog.close()
         
     def create( self, line1="", line2="" ):
         try:
             self.dialog = xbmcgui.DialogProgressBG()
             self.dialog.create(line1, line2)
         except:
+            print "Create"
             self.dialog = None
+            self.addonscan = AddonScanOrg()
             self.addonscan.create( line1, line2 )
         
     def iscanceled( self ):
