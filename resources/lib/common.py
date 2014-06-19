@@ -34,9 +34,6 @@ __settings__ = xbmcaddon.Addon(id=__addonname__)
 __language__ = __settings__.getLocalizedString
 __homepath__ = __settings__.getAddonInfo('path').decode('utf-8')
 __sys_file_encoding__ = sys.getfilesystemencoding()
-
-
-#__addon__       = xbmcaddon.Addon()
 __addonname__   = __settings__.getAddonInfo('name')
 __icon__        = __settings__.getAddonInfo('icon')
 
