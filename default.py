@@ -1028,7 +1028,7 @@ class Main:
         elif self.args.do=="delroot":
             try:
                 dialog = xbmcgui.Dialog()
-                if dialog.yesno(common.getstring(30250), common.getstring(30251)%common.smart_utf8(self.args.delpath)) :
+                if dialog.yesno(common.getstring(30250), common.smart_utf8(common.getstring(30251))%common.smart_utf8(self.args.delpath)) :
                     common.log("Main.show_roots", 'delroot "%s"'% self.args.delpath)
                     MPDB.delete_root( self.args.delpath) 
                     if self.args.delpath != 'neverexistingpath':
