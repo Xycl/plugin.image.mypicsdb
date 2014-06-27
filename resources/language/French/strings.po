@@ -500,10 +500,6 @@ msgctxt "#30215"
 msgid "No = scan only modified/new pictures."
 msgstr "Non = scanner seulement les photos modifiées / ajoutées."
 
-msgctxt "#30216"
-msgid "[B]Add[/B] all XBMC pictures sources to database"
-msgstr "[B]Ajouter[/B] toutes les sources d'images XBMC à la base de données"
-
 msgctxt "#30217"
 msgid "You must rescan the folders"
 msgstr "Vous devez rescanner les dossiers"
