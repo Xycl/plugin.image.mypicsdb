@@ -681,7 +681,7 @@ class MyPictureDB(object):
         set_tags_array = set_tags.split("|||")
         unset_tags_array = unset_tags.split("|||")    
 
-        outer_select = "SELECT distinct strPath,strFilename, ImageDateTime FROM FILES WHERE 1=1 "
+        outer_select = "SELECT distinct strPath,strFilename, ImageDateTime FROM Files WHERE 1=1 "
 
         # These selects are joined with an IN clause
         inner_select = "SELECT tif.idfile FROM TagContents tc, TagsInFiles tif , TagTypes tt WHERE tif.idTagContent = tc.idTagContent AND tc.idTagType = tt.idTagType "
