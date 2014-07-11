@@ -545,21 +545,30 @@ class VFSScanner:
 
         for k in info.data.keys():
             if k in IPTC_FIELDS:
+                
+                try:
+    
+                    if isinstance(info.data[k],unicode):
+                        try:
+                            iptc[IPTC_FIELDS[k]] = info.data[k]
+                        except UnicodeDecodeError:
+                            iptc[IPTC_FIELDS[k]] = unicode(info.data[k].encode("utf8").__str__(),"utf8")
 
-                if isinstance(info.data[k],unicode):
-                    try:
-                        iptc[IPTC_FIELDS[k]] = info.data[k]
-                    except UnicodeDecodeError:
-                        iptc[IPTC_FIELDS[k]] = unicode(info.data[k].encode("utf8").__str__(),"utf8")
-                elif isinstance(info.data[k],list):
-                    iptc[IPTC_FIELDS[k]] = self.lists_separator.join([i for i in info.data[k]])
-                elif isinstance(info.data[k],str):
-                    iptc[IPTC_FIELDS[k]] = info.data[k].decode("utf8")
-                else:
-                    common.log("VFSScanner._get_iptc", "%s"%fullpath )
-                    common.log("VFSScanner._get_iptc",  "WARNING : type returned by iptc field is not handled :" )
-                    common.log("VFSScanner._get_iptc", repr(type(info.data[k])) )
+                    elif isinstance(info.data[k],list):
+                        iptc[IPTC_FIELDS[k]] = self.lists_separator.join([i for i in info.data[k]])
 
+                    elif isinstance(info.data[k],str):
+                        iptc[IPTC_FIELDS[k]] = info.data[k].decode("utf8")
+
+                    else:
+                        common.log("VFSScanner._get_iptc", "%s"%fullpath )
+                        common.log("VFSScanner._get_iptc",  "WARNING : type returned by iptc field is not handled :" )
+                        common.log("VFSScanner._get_iptc", repr(type(info.data[k])) )
+
+                except:
+                    pass
+
+            """
             else:
                 common.log("VFSScanner._get_iptc", "IPTC problem with file: %s"%fullpath, xbmc.LOGERROR)
                 try:
@@ -569,7 +578,7 @@ class VFSScanner:
                 common.log("VFSScanner._get_iptc", "IPTC data for picture %s will be ignored"%fullpath , xbmc.LOGERROR)
                 ipt = {}
                 return ipt
-
+            """
         return iptc
 
 
