@@ -17,13 +17,15 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 from os.path import join
 from traceback import print_exc
 from time import strftime,strptime
+import json
+
 
 import xbmc
 import xbmcgui
 import common
 import dbabstractionlayer as dblayer
 
-DB_VERSION        = '12.3.10'
+DB_VERSION        = '13.0.0'
 
 lists_separator   = "||"
 
@@ -104,7 +106,12 @@ class MyPictureDB(object):
                 self.cur.execute("CREATE INDEX idxTagsInFiles3 ON TagsInFiles(idFile,idTagContent)")
             except:
                 pass
-            
+                
+            try:
+                self.cur.execute("ALTER TABLE Collections ADD PlayListName %s)"%(self.con.get_ddl_varchar(255)))
+            except:
+                pass
+                
             self.cur.execute("UPDATE DBVersion set strVersion = '%s'"%DB_VERSION)
             self.con.commit()
         
@@ -193,7 +200,7 @@ class MyPictureDB(object):
 
         #table 'Collections'
         try:
-            self.cur.execute("CREATE TABLE Collections (idCol INTEGER %s, CollectionName %s UNIQUE)"%(self.con.get_ddl_primary_key(), self.con.get_ddl_varchar(255)))
+            self.cur.execute("CREATE TABLE Collections (idCol INTEGER %s, CollectionName %s UNIQUE, PlayListName %s)"%(self.con.get_ddl_primary_key(), self.con.get_ddl_varchar(255), self.con.get_ddl_varchar(255)))
         except Exception,msg:
             if str(msg).find("already exists") > -1:
                 pass
@@ -922,6 +929,14 @@ class MyPictureDB(object):
             common.log( "collection_delete",  "User did not specify a name for the collection" )
 
 
+    def collection_get_playlist(self, colname):
+        try:
+            playlist = self.cur.request("""SELECT PlayListName FROM Collections c where c.CollectionName = ?""",(colname,))[0][0]
+        except:
+            playlist = ''
+        return playlist
+
+
     def collection_get_pics(self, colname):
         try:
 
@@ -940,13 +955,19 @@ class MyPictureDB(object):
 
 
     def collection_rename(self, colname,newname):   
+        common.log("", "collection_rename")
         if colname:
             self.cur.request( """UPDATE Collections SET CollectionName = ? WHERE CollectionName=? """, (newname, colname) )
             self.con.commit()
         else:
             common.log( "collection_rename",  "User did not specify a name for the collection")
 
-
+    def collection_add_playlist(self, colname, playlist):   
+        common.log("", "collection_add_playlist")
+        if colname:
+            self.cur.request( """UPDATE Collections SET PlayListName = ? WHERE CollectionName=? """, (playlist, colname) )
+            self.con.commit()
+        
     def collection_add_pic(self, colname, filepath, filename):    
 
         self.cur.request( """INSERT INTO FilesInCollections(idCol,idFile) VALUES ( (SELECT idCol FROM Collections WHERE CollectionName=?) , (SELECT idFile FROM Files WHERE strPath=? AND strFilename=?) )""",(colname,filepath,filename) )

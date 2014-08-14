@@ -842,7 +842,9 @@ class Main:
                         action    = "showpics",#action
                         iconimage = join(PIC_PATH,"collection.png"),#icone
                         fanart    = join(PIC_PATH,"fanart-collection.png"),
-                        contextmenu   = [(common.getstring(30158),"XBMC.RunPlugin(\"%s?action='removecollection'&viewmode='view'&collect='%s'\")"%(sys.argv[0],common.quote_param(collection[0].encode('utf-8')) ) ),
+                        contextmenu   = [
+                                         (common.getstring(30149),"XBMC.RunPlugin(\"%s?action='collectionaddplaylist'&viewmode='view'&collect='%s'\")"%(sys.argv[0],common.quote_param(collection[0].encode('utf-8')) ) ),
+                                         (common.getstring(30158),"XBMC.RunPlugin(\"%s?action='removecollection'&viewmode='view'&collect='%s'\")"%(sys.argv[0],common.quote_param(collection[0].encode('utf-8')) ) ),
                                          (common.getstring(30159),"XBMC.RunPlugin(\"%s?action='renamecollection'&viewmode='view'&collect='%s'\")"%(sys.argv[0],common.quote_param(collection[0].encode('utf-8'))) ),
                                          (common.getstring(30061),"XBMC.RunPlugin(\"%s?action='showpics'&method='collection'&page=''&viewmode='zip'&name='%s'&collect='%s'\")"%(sys.argv[0],common.quote_param(collection[0].encode('utf-8')),common.quote_param(collection[0].encode('utf-8'))) ),
                                          (common.getstring(30062),"XBMC.RunPlugin(\"%s?action='showpics'&method='collection'&page=''&viewmode='export'&name='%s'&collect='%s'\")"%(sys.argv[0],common.quote_param(collection[0].encode('utf-8')),common.quote_param(collection[0].encode('utf-8'))) )
@@ -1259,6 +1261,29 @@ class Main:
         xbmc.executebuiltin( "Container.Update(\"%s?action='showcollection'&viewmode='view'&collect=''&method='show'\" , replace)"%sys.argv[0] , )
 
 
+    def collection_add_playlist(self):
+
+        ''' Purpose: launch Select Window populated with music playlists '''
+        colname = self.args.collect
+        common.log("", "collection_add_playlist")
+        try:    
+            result = xbmc.executeJSONRPC('{"jsonrpc": "2.0","id": 1, "method": "Files.GetDirectory", "params": {"directory": "special://musicplaylists/", "media": "music"}}')
+            playlist_files = eval(result)['result']['files']
+        except:
+            return
+    
+        if playlist_files != None:
+        
+            plist_files   = dict((x['label'],x['file']) for x in playlist_files)
+            common.log("", plist_files)
+            playlist_list =  plist_files.keys()
+        
+            playlist_list.sort()
+            inputchoice = xbmcgui.Dialog().select(common.getstring(30148), playlist_list)
+        
+            MPDB.collection_add_playlist(self.args.collect, plist_files[playlist_list[inputchoice]])
+
+
     def collection_del_pic(self):
         MPDB.collection_del_pic(self.args.collect,self.args.path,self.args.filename)
         xbmc.executebuiltin( "Container.Update(\"%s?action='showpics'&viewmode='view'&page='1'&collect='%s'&method='collection'\" , replace)"%(sys.argv[0],common.quote_param(self.args.collect)) , )
@@ -1487,6 +1512,12 @@ class Main:
         elif self.args.method == "collection":
             picfanart = join(PIC_PATH,"fanart-collection.png")
             filelist = MPDB.collection_get_pics(self.args.collect)
+            
+            playlist = MPDB.collection_get_playlist(self.args.collect)
+            if len(playlist) > 0:
+                listitem = xbmcgui.ListItem(playlist)
+                listitem.setInfo('music', {'Title': playlist})
+                xbmc.Player(xbmc.PLAYER_CORE_AUTO).play( playlist, listitem)                
 
         elif self.args.method == "search":
             picfanart = join(PIC_PATH,"fanart-collection.png")
@@ -1790,7 +1821,10 @@ if __name__=="__main__":
 
     elif m.args.action=='globalsearch':
         m.global_search()
-
+    
+    elif m.args.action=='collectionaddplaylist':
+        m.collection_add_playlist()
+        
     elif m.args.action=='addfolder':
         m.collection_add_folder()
 
