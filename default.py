@@ -1567,7 +1567,9 @@ class Main:
                 playlist = xbmc.PlayList( xbmc.PLAYLIST_MUSIC )
                 playlist.clear()
                 playlist.add(playlist_ondisk)
+              
                 xbmc.Player().play( playlist)            
+                xbmc.executebuiltin("PlayerControl(RepeatAll)")
                     
             xbmc.executebuiltin( "SlideShow(%s?action=%%27showpics%%27&method=%%27collection%%27&viewmode=%%27view%%27&page=%%271%%27&collect=%%27%s%%27&name=%%27%s%%27, random) "%(sys.argv[0], self.args.collect, self.args.collect) )
             return

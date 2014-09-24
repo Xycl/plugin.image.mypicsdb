@@ -1,3 +1,6 @@
+2014/09/24 --> v 13.0.3
+Update: Player is set to "RepeatAll"
+
 2014/09/24 --> v 13.0.2
 New:    Selecting a collection will start a slideshow and playing the music playlist associated with it.
 
