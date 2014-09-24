@@ -837,12 +837,13 @@ class Main:
                     contextmenu   = None)#menucontextuel
         #/herve520
         for collection in MPDB.collections_list():
-            self.add_directory(name      = collection[0],
-                        params    = [("method","collection"),("collect",collection[0]),("page","1"),("viewmode","view")],#paramètres
+            self.add_action(name      = collection[0],
+                        params    = [("method","collection"),("collect",collection[0]),("page","1"),("viewmode","slideshow")],#paramètres
                         action    = "showpics",#action
                         iconimage = join(PIC_PATH,"collection.png"),#icone
                         fanart    = join(PIC_PATH,"fanart-collection.png"),
                         contextmenu   = [
+                                         (common.getstring(30169),"Container.Update(\"%s?action='showpics'&method='collection'&page=''&viewmode='view'&name='%s'&collect='%s'\")"%(sys.argv[0],common.quote_param(collection[0].encode('utf-8')),common.quote_param(collection[0].encode('utf-8'))) ),                                         
                                          (common.getstring(30149),"XBMC.RunPlugin(\"%s?action='collectionaddplaylist'&viewmode='view'&collect='%s'\")"%(sys.argv[0],common.quote_param(collection[0].encode('utf-8')) ) ),
                                          (common.getstring(30158),"XBMC.RunPlugin(\"%s?action='removecollection'&viewmode='view'&collect='%s'\")"%(sys.argv[0],common.quote_param(collection[0].encode('utf-8')) ) ),
                                          (common.getstring(30159),"XBMC.RunPlugin(\"%s?action='renamecollection'&viewmode='view'&collect='%s'\")"%(sys.argv[0],common.quote_param(collection[0].encode('utf-8'))) ),
@@ -1246,8 +1247,11 @@ class Main:
 
 
     def collection_delete(self):
-        MPDB.collection_delete(self.args.collect)
-        xbmc.executebuiltin( "Container.Update(\"%s?action='showcollection'&viewmode='view'&collect=''&method='show'\" , replace)"%sys.argv[0] , )
+        dialog = xbmcgui.Dialog()
+        
+        if dialog.yesno(common.getstring(30150), common.getstring(30251)%self.args.collect ):
+            MPDB.collection_delete(self.args.collect)
+            xbmc.executebuiltin( "Container.Update(\"%s?action='showcollection'&viewmode='view'&collect=''&method='show'\" , replace)"%sys.argv[0] , )
 
 
     def collection_rename(self):
@@ -1551,23 +1555,21 @@ class Main:
             #si viewmode = view : on liste les images
             #si viewmode = scan : on liste les photos qu'on retourne
             #si viewmode = zip  : on liste les photos qu'on zip
-            #si viewmode = diapo: on liste les photos qu'on ajoute au diaporama
+            #si viewmode = slideshow: on liste les photos qu'on ajoute au diaporama
         if self.args.viewmode=="scan":
             return filelist
-        if self.args.viewmode=="diapo":
-            pDialog = xbmcgui.DialogProgress()
-            pDialog.create(common.getstring(30000), 'Preparing SlideShow :','')
-            from urllib import urlopen
-            HTTP_API_url = "http://%s/xbmcCmds/xbmcHttp?command="%xbmc.getIPAddress()
-            urlopen(HTTP_API_url + "ClearSlideshow" )
-            c=0
-            for path,filename in filelist:
-                c=c+1
-                pDialog.update(int(100*(float(c)/len(filelist))) , "Adding pictures to the slideshow",filename)
-                if pDialog.iscanceled():break
-                urlopen(HTTP_API_url + "AddToSlideshow(%s)" % common.quote_param(join(path,filename)))
-            if not pDialog.iscanceled(): xbmc.executebuiltin( "SlideShow(,,notrandom)" )
-            pDialog.close()
+        if self.args.viewmode=="slideshow":
+            
+            playlist_ondisk = MPDB.collection_get_playlist(self.args.collect)
+            
+            if len(playlist_ondisk) > 0:
+            
+                playlist = xbmc.PlayList( xbmc.PLAYLIST_MUSIC )
+                playlist.clear()
+                playlist.add(playlist_ondisk)
+                xbmc.Player().play( playlist)            
+                    
+            xbmc.executebuiltin( "SlideShow(%s?action=%%27showpics%%27&method=%%27collection%%27&viewmode=%%27view%%27&page=%%271%%27&collect=%%27%s%%27&name=%%27%s%%27, random) "%(sys.argv[0], self.args.collect, self.args.collect) )
             return
 
         if self.args.viewmode=="zip":
