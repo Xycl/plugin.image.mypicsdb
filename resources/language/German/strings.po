@@ -614,7 +614,7 @@ msgstr "Diashow"
 
 msgctxt "#30600"
 msgid "Filter Wizard"
-msgstr "Filter Assistent"
+msgstr "Filter-Assistent"
 
 msgctxt "#30601"
 msgid "Tags"
