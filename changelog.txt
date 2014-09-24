@@ -1,3 +1,6 @@
+2014/09/24 --> v 13.0.4
+Update: To delete the music playlist press escape in the selection box
+
 2014/09/24 --> v 13.0.3
 Update: Player is set to "RepeatAll"
 

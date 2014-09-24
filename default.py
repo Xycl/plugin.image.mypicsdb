@@ -1284,8 +1284,10 @@ class Main:
         
             playlist_list.sort()
             inputchoice = xbmcgui.Dialog().select(common.getstring(30148), playlist_list)
-        
-            MPDB.collection_add_playlist(self.args.collect, plist_files[playlist_list[inputchoice]])
+            if inputchoice > -1:
+                MPDB.collection_add_playlist(self.args.collect, plist_files[playlist_list[inputchoice]])
+            else:
+                MPDB.collection_add_playlist(self.args.collect, '')
 
 
     def collection_del_pic(self):
@@ -1517,12 +1519,6 @@ class Main:
             picfanart = join(PIC_PATH,"fanart-collection.png")
             filelist = MPDB.collection_get_pics(self.args.collect)
             
-            playlist = MPDB.collection_get_playlist(self.args.collect)
-            if len(playlist) > 0:
-                listitem = xbmcgui.ListItem(playlist)
-                listitem.setInfo('music', {'Title': playlist})
-                xbmc.Player(xbmc.PLAYER_CORE_AUTO).play( playlist, listitem)                
-
         elif self.args.method == "search":
             picfanart = join(PIC_PATH,"fanart-collection.png")
             filelist = MPDB.search_in_files(self.args.field,self.args.searchterm,count=False)
@@ -1562,7 +1558,7 @@ class Main:
             
             playlist_ondisk = MPDB.collection_get_playlist(self.args.collect)
             
-            if len(playlist_ondisk) > 0:
+            if playlist_ondisk is not None and len(playlist_ondisk) > 0:
             
                 playlist = xbmc.PlayList( xbmc.PLAYLIST_MUSIC )
                 playlist.clear()
