@@ -680,7 +680,7 @@ class MyPictureDB(object):
     # Filter Wizard functions
     #####################################
     
-    def filterwizard_result(self, set_tags, unset_tags, match_all, start_date='', end_date=''):
+    def filterwizard_result(self, set_tags, unset_tags, match_all, start_date='', end_date='', min_rating = 0):
 
         if len(set_tags) == 0 and len(unset_tags) == 0 and start_date == '' and end_date == '':
             return
@@ -688,7 +688,10 @@ class MyPictureDB(object):
         set_tags_array = set_tags.split("|||")
         unset_tags_array = unset_tags.split("|||")    
 
-        outer_select = "SELECT distinct strPath,strFilename, ImageDateTime FROM Files WHERE 1=1 "
+        if min_rating > 0:
+            outer_select = "SELECT distinct strPath,strFilename, ImageDateTime FROM Files WHERE ImageRating != '' AND COALESCE(ImageRating, '0') > '%s' " % (min_rating)
+        else:
+            outer_select = "SELECT distinct strPath,strFilename, ImageDateTime FROM Files WHERE 1=1 "
 
         # These selects are joined with an IN clause
         inner_select = "SELECT tif.idfile FROM TagContents tc, TagsInFiles tif , TagTypes tt WHERE tif.idTagContent = tc.idTagContent AND tc.idTagType = tt.idTagType "
@@ -882,7 +885,7 @@ class MyPictureDB(object):
         return items, match_all, start_date, end_date
 
 
-    def filterwizard_get_pics_from_filter(self, filter_name):
+    def filterwizard_get_pics_from_filter(self, filter_name, min_rating):
         (items, match_all, start_date, end_date) = self.filterwizard_load_filter(filter_name)
         set_tags = ""
         unset_tags = ""
@@ -900,7 +903,7 @@ class MyPictureDB(object):
                     unset_tags += "|||" + key    
 
         common.log("", "match_all = %s"%(match_all), xbmc.LOGNOTICE)                    
-        return self.filterwizard_result(set_tags, unset_tags, match_all, start_date, end_date)
+        return self.filterwizard_result(set_tags, unset_tags, match_all, start_date, end_date, min_rating)
 
 
 
@@ -937,7 +940,7 @@ class MyPictureDB(object):
         return playlist
 
 
-    def collection_get_pics(self, colname):
+    def collection_get_pics(self, colname, min_rating):
         try:
 
             filter_name = self.cur.request( """SELECT f.strFilterName FROM Collections c, DynDataInCollections d, FilterWizard f 
@@ -949,7 +952,10 @@ class MyPictureDB(object):
         except:
             rows_from_filter = []
         #filterwizard_get_pics_from_filter      
-        row = [row for row in self.cur.request( """SELECT strPath,strFilename FROM Files WHERE idFile IN (SELECT idFile FROM FilesInCollections WHERE idCol IN (SELECT idCol FROM Collections WHERE CollectionName=?)) ORDER BY ImageDateTime ASC""",(colname,))]
+        if min_rating > 0:
+            row = [row for row in self.cur.request( """SELECT strPath,strFilename FROM Files WHERE ImageRating != '' and COALESCE(ImageRating, '0') > ? AND idFile IN (SELECT idFile FROM FilesInCollections WHERE idCol IN (SELECT idCol FROM Collections WHERE CollectionName=?)) ORDER BY ImageDateTime ASC""",(min_rating, colname,))]
+        else:
+            row = [row for row in self.cur.request( """SELECT strPath,strFilename FROM Files WHERE idFile IN (SELECT idFile FROM FilesInCollections WHERE idCol IN (SELECT idCol FROM Collections WHERE CollectionName=?)) ORDER BY ImageDateTime ASC""",(colname,))]
         row.extend(rows_from_filter)
         return row
 
@@ -1086,17 +1092,21 @@ class MyPictureDB(object):
         except:
             pass
         
-    def search_in_files(self, tag_type, tagvalue, count=False):
+    def search_in_files(self, tag_type, tagvalue, min_rating, count=False):
         val = tagvalue.lower().replace("'", "''")
     
         if self.con.get_backend() == 'mysql':
             val = val.replace("\\", "\\\\\\\\")
 
+        if min_rating>0:
+            rating_select = " and fi.idFile = tif.idFile and fi.ImageRating != '' and coalesce(fi.ImageRating,'0') > '%s' "%min_rating
+        else:
+            rating_select = ""
         if count:
             return [row for row in self.cur.request( """select count(*) from (select distinct fi.strFilename, fi.strPath
                                                           from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
                                                          where tt.idTagType = tc.idTagType
-                                                           and tc.idTagContent = tif.idTagContent
+                                                           and tc.idTagContent = tif.idTagContent""" + rating_select + """
                                                            and tt.TagTranslation = ?
                                                            and lower(tc.TagContent) LIKE '%%%s%%'
                                                            and tif.idFile = fi.idFile) a"""%val, (tag_type,))][0][0]
@@ -1104,7 +1114,7 @@ class MyPictureDB(object):
             return [row for row in self.cur.request( """select distinct fi.strPath, fi.strFilename
                                                           from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
                                                          where tt.idTagType = tc.idTagType
-                                                           and tc.idTagContent = tif.idTagContent
+                                                           and tc.idTagContent = tif.idTagContent""" + rating_select + """
                                                            and tt.TagTranslation = ?
                                                            and lower(tc.TagContent) LIKE '%%%s%%'
                                                            and tif.idFile = fi.idFile"""%val, (tag_type, ))]
@@ -1377,16 +1387,28 @@ class MyPictureDB(object):
     and tc.idTagContent = tif.idTagContent
     ORDER BY TagTranslation ASC""" )]
     
-    def list_tagtypes_count(self):
+    def list_tagtypes_count(self, min_rating=0):
     
-        return [row for row in self.cur.request( """
+        if min_rating == 0:
+            return [row for row in self.cur.request( """
     SELECT tt.TagTranslation, count(distinct tagcontent)
       FROM TagTypes tt, TagContents tc, TagsInFiles tf 
      where length(trim(TagTranslation)) > 0 
        and tf.idTagContent              = tc.idTagContent
        and tt.idTagType                 = tc.idTagType
     group by tt.tagtranslation """   )]
-    
+        else:
+            return [row for row in self.cur.request( """
+    SELECT tt.TagTranslation, count(distinct tagcontent)
+      FROM TagTypes tt, TagContents tc, TagsInFiles tf , Files f
+     where length(trim(TagTranslation)) > 0 
+       and f.ImageRating != ''
+       and coalesce(f.ImageRating, '0') > '%s'
+       and f.idFile = tf.idFile
+       and tf.idTagContent              = tc.idTagContent
+       and tt.idTagType                 = tc.idTagType
+    group by tt.tagtranslation """%min_rating   )]
+        
     def count_tagtypes(self, tagType, limit=-1, offset=-1):
         try:
             if tagType is not None:
@@ -1408,15 +1430,27 @@ class MyPictureDB(object):
         """Return a list of all tags in database"""
         return [row for (row,) in self.cur.request( """select distinct TagContent from TagContents tc, TagsInFiles tif, TagTypes tt  where tc.idTagContent = tif.idTagContent and tc.idTagType = tt.idTagType and tt.TagTranslation='%s' ORDER BY LOWER(TagContent) ASC"""%tagType.encode("utf8") )]
     
-    def list_tags_count(self, tagType):
+    def list_tags_count(self, tagType, min_rating=0):
         """Return a list of all tags in database"""
-        return [row for row in self.cur.request( """
-        select TagContent, count(distinct idFile) 
-      from TagContents tc, TagsInFiles tif, TagTypes tt  
-     where tc.idTagContent = tif.idTagContent
-       and tc.idTagType = tt.idTagType 
-       and tt.TagTranslation = ? 
-    group BY TagContent""",(tagType.encode("utf8"),) )]
+        if min_rating == 0:
+            return [row for row in self.cur.request( """
+            select TagContent, count(distinct idFile) 
+          from TagContents tc, TagsInFiles tif, TagTypes tt  
+         where tc.idTagContent = tif.idTagContent
+           and tc.idTagType = tt.idTagType 
+           and tt.TagTranslation = ? 
+        group BY TagContent""",(tagType.encode("utf8"),) )]
+        else:
+            return [row for row in self.cur.request( """
+            select TagContent, count(distinct f.idFile) 
+          from TagContents tc, TagsInFiles tif, TagTypes tt, Files f
+         where tc.idTagContent = tif.idTagContent
+           and f.ImageRating != ''
+           and coalesce(f.ImageRating, '0') > ?
+           and f.idFile = tif.idFile         
+           and tc.idTagType = tt.idTagType 
+           and tt.TagTranslation = ? 
+        group BY TagContent""",(min_rating, tagType.encode("utf8"),) )]
     
     def count_tags(self, kw, tagType, limit=-1, offset=-1):
         try:
@@ -1428,7 +1462,7 @@ class MyPictureDB(object):
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
             return 0
     
-    def count_pics_in_folder(self,folderid):
+    def count_pics_in_folder(self, folderid, min_rating=0):
         # new part
         count = 0
         try:
@@ -1447,37 +1481,41 @@ class MyPictureDB(object):
             if self.con.get_backend() == 'mysql':
                 folderPath = folderPath.replace("\\", "\\\\\\\\")            
             
+            if min_rating > 0:
+                rating_select = " AND f.ImageRating != '' AND COALESCE(f.ImageRating, '0') > '%s' "%(min_rating)
+            else:
+                rating_select = ''
             if parent_folder:
                 if self.con.get_backend() == 'mysql':
-                    count = self.cur.request("""select count(*) from Files f, Folders p where f.idFolder=p.idFolder and (p.FullPath like '%s' or p.FullPath like '%s%%' or p.FullPath like '%s%%')"""%(folderPath, folderPath + '/', folderPath + '\\\\\\\\'))[0][0]
+                    count = self.cur.request("""select count(*) from Files f, Folders p where f.idFolder=p.idFolder and (p.FullPath like '%s' or p.FullPath like '%s%%' or p.FullPath like '%s%%') %s"""%(folderPath, folderPath + '/', folderPath + '\\\\\\\\', rating_select))[0][0]
                 else:
-                    count = self.cur.request("""select count(*) from Files f, Folders p where f.idFolder=p.idFolder and (p.FullPath = '%s' or p.FullPath like '%s%%' or p.FullPath like '%s%%')"""%(folderPath, folderPath + '/', folderPath + '\\'))[0][0]
+                    count = self.cur.request("""select count(*) from Files f, Folders p where f.idFolder=p.idFolder and (p.FullPath = '%s' or p.FullPath like '%s%%' or p.FullPath like '%s%%') %s"""%(folderPath, folderPath + '/', folderPath + '\\', rating_select))[0][0]
             else:
-                count = self.cur.request("""select count(*) from Files f, Folders p where f.idFolder=p.idFolder and p.FullPath like '%s%%'"""%(folderPath))[0][0]            
+                count = self.cur.request("""select count(*) from Files f, Folders p where f.idFolder=p.idFolder and p.FullPath like '%s%%' %s"""%(folderPath, rating_select))[0][0]            
             
         except Exception,msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
         
         return count
 
-    def count_pics_in_period(self, period, value):
+    def count_pics_in_period(self, period, value, min_rating=0):
 
         formatstring = {"year":"%Y","month":"%Y-%m","date":"%Y-%m-%d","":"%Y"}[period]
         if period=="year" or period=="":
             if value:
-                filelist = self.pics_for_period('year',value)
+                filelist = self.pics_for_period('year', value, min_rating)
             else:
-                filelist = self.search_all_dates()
+                filelist = self.search_all_dates(min_rating)
 
         elif period in ["month","date"]:
-            filelist = self.pics_for_period(period,value)
+            filelist = self.pics_for_period(period, value, min_rating)
 
         else:
             listyears=self.get_years()
             amini=min(listyears)
             amaxi=max(listyears)
             if amini and amaxi:
-                filelist = self.search_between_dates( ("%s"%(amini),formatstring) , ( "%s"%(amaxi),formatstring) )
+                filelist = self.search_between_dates( ("%s"%(amini),formatstring) , ( "%s"%(amaxi),formatstring) , min_rating)
             else:
                 filelist = []
         return len(filelist)
@@ -1506,8 +1544,12 @@ class MyPictureDB(object):
         return enfants
 
 
-    def search_between_dates(self, DateStart=("2007","%Y"),DateEnd=("2008","%Y")):
+    def search_between_dates(self, DateStart=("2007","%Y"),DateEnd=("2008","%Y"), MinRating=0):
         """Cherche les photos qui ont été prises entre 'datestart' et 'dateend'."""
+        if MinRating>0:
+            rating_select = " AND ImageRating != '' AND COALESCE(ImageRating, '0') > '%s' "%MinRating
+        else:
+            rating_select = ''
         common.log( "search_between_dates", DateStart)
         common.log( "search_between_dates", DateEnd)
         DS = strftime("%Y-%m-%d %H:%M:%S",strptime(DateStart[0],DateStart[1]))
@@ -1526,7 +1568,7 @@ class MyPictureDB(object):
                 Emodifier = "''"
                 Smodifier = "''"
         
-            request = """SELECT strPath,strFilename FROM Files WHERE ImageDateTime BETWEEN %s AND %s ORDER BY ImageDateTime ASC"""%(Smodifier, Emodifier)
+            request = """SELECT strPath,strFilename FROM Files WHERE ImageDateTime BETWEEN %s AND %s """%(Smodifier, Emodifier) + rating_select + """ ORDER BY ImageDateTime ASC"""
         else:
             if DateEnd[1]=="%Y-%m-%d":
                 Emodifier = "'start of day','+1 days','-1 minutes'"
@@ -1541,7 +1583,7 @@ class MyPictureDB(object):
                 Emodifier = "''"
                 Smodifier = "''"
         
-            request = """SELECT strPath,strFilename FROM Files WHERE datetime(ImageDateTime) BETWEEN datetime('%s',%s) AND datetime('%s',%s) ORDER BY ImageDateTime ASC"""%(DS,Smodifier,DE,Emodifier)
+            request = """SELECT strPath,strFilename FROM Files WHERE datetime(ImageDateTime) BETWEEN datetime('%s',%s) AND datetime('%s',%s)"""%(DS,Smodifier,DE,Emodifier) + rating_select + """ ORDER BY ImageDateTime ASC"""
         return [row for row in self.cur.request(request)]
 
         
@@ -1552,7 +1594,7 @@ class MyPictureDB(object):
             self.cur.request("delete from Files where Sha is null");
         return count
 
-    def pics_for_period(self, periodtype, date):
+    def pics_for_period(self, periodtype, date, min_rating=0):
         if self.con.get_backend() == "mysql":
             try:
                 sdate,edate = {'year' :["date_format('%s-01-01', '%%Y-%%m-%%d')"%date,"date_format(date_format('%s-01-01', '%%Y-%%m-%%d') + INTERVAL 1 YEAR - INTERVAL 1 MINUTE, '%%Y-%%m-%%d %%H:%%i:%%S')"%date],
@@ -1561,7 +1603,10 @@ class MyPictureDB(object):
             except:
                 print_exc()
                 #log ("pics_for_period ( periodtype = ['date'|'month'|'year'] , date = corresponding to the period (year|year-month|year-month-day)")
-            request = """SELECT strPath,strFilename FROM Files WHERE ImageDateTime BETWEEN %s AND %s ORDER BY ImageDateTime ASC"""%(sdate,edate)
+            if min_rating > 0:
+                request = """SELECT strPath,strFilename FROM Files WHERE ImageRating != '' and COALESCE(ImageRating,0) > '%s' AND ImageDateTime BETWEEN %s AND %s ORDER BY ImageDateTime ASC"""%(min_rating, sdate, edate)
+            else:
+                request = """SELECT strPath,strFilename FROM Files WHERE ImageDateTime BETWEEN %s AND %s ORDER BY ImageDateTime ASC"""%(sdate, edate)
         else:
             try:
                 sdate,modif1,modif2 = {'year' :['%s-01-01'%date,'start of year','+1 years'],
@@ -1570,42 +1615,68 @@ class MyPictureDB(object):
             except:
                 print_exc()
                 #log ("pics_for_period ( periodtype = ['date'|'month'|'year'] , date = corresponding to the period (year|year-month|year-month-day)")
-            request = """SELECT strPath,strFilename FROM Files WHERE datetime(ImageDateTime) BETWEEN datetime('%s','%s') AND datetime('%s','%s','%s') ORDER BY ImageDateTime ASC;"""%(sdate,modif1,sdate,modif1,modif2)
+            if min_rating > 0:
+                request = """SELECT strPath,strFilename FROM Files WHERE ImageRating != '' and COALESCE(ImageRating,0) > '%s' AND datetime(ImageDateTime) BETWEEN datetime('%s','%s') AND datetime('%s','%s','%s') ORDER BY ImageDateTime ASC;"""%(min_rating,sdate,modif1,sdate,modif1,modif2)
+            else:
+                request = """SELECT strPath,strFilename FROM Files WHERE datetime(ImageDateTime) BETWEEN datetime('%s','%s') AND datetime('%s','%s','%s') ORDER BY ImageDateTime ASC;"""%(sdate,modif1,sdate,modif1,modif2)
         return [row for row in self.cur.request(request)]
 
 
-    def get_years(self):
-        if self.con.get_backend() == "mysql":    
-            return [t for (t,) in self.cur.request("""SELECT DISTINCT date_format(ImageDateTime, '%Y') FROM Files where ImageDateTime is NOT NULL ORDER BY ImageDateTime ASC""")]
+    def get_years(self, min_rating = 0):
+        if min_rating > 0:
+            rating_select = " AND f.ImageRating != '' AND COALESCE(f.ImageRating, '0') > '%s' "%(min_rating)
         else:
-            return [t for (t,) in self.cur.request("""SELECT DISTINCT strftime("%Y",ImageDateTime) FROM Files where ImageDateTime NOT NULL ORDER BY ImageDateTime ASC""")]
-
-
-    def get_months(self, year):
+            rating_select = ''
+            
         if self.con.get_backend() == "mysql":    
-            return [t for (t,) in self.cur.request("""SELECT distinct date_format(ImageDateTime, '%%Y-%%m') FROM Files where date_format(ImageDateTime, '%%Y') = '%s' ORDER BY ImageDateTime ASC"""%year)]
+            return [t for (t,) in self.cur.request("""SELECT DISTINCT date_format(ImageDateTime, '%Y') FROM Files f where ImageDateTime is NOT NULL %s ORDER BY ImageDateTime ASC"""%rating_select)]
         else:
-            return [t for (t,) in self.cur.request("""SELECT distinct strftime("%%Y-%%m",ImageDateTime) FROM Files where strftime("%%Y",ImageDateTime) = '%s' ORDER BY ImageDateTime ASC"""%year)]
+            return [t for (t,) in self.cur.request("""SELECT DISTINCT strftime("%Y",ImageDateTime) FROM Files f where ImageDateTime NOT NULL """ + rating_select + """ ORDER BY ImageDateTime ASC""")]
 
 
-    def get_dates(self, year_month):
+    def get_months(self, year, min_rating = 0):
+        if min_rating > 0:
+            rating_select = " AND f.ImageRating != '' AND COALESCE(f.ImageRating, '0') > '%s' "%(min_rating)
+        else:
+            rating_select = ''
+            
         if self.con.get_backend() == "mysql":    
-            return [t for (t,) in self.cur.request("""SELECT distinct date_format(ImageDateTime, '%%Y-%%m-%%d') FROM Files where date_format(ImageDateTime, '%%Y-%%m') = '%s' ORDER BY ImageDateTime ASC"""%year_month)]
+            return [t for (t,) in self.cur.request("""SELECT distinct date_format(ImageDateTime, '%%Y-%%m') FROM Files f where date_format(ImageDateTime, '%%Y') = '%s' """%year + rating_select + """ ORDER BY ImageDateTime ASC""")]
         else:
-            return [t for (t,) in self.cur.request("""SELECT distinct strftime("%%Y-%%m-%%d",ImageDateTime) FROM Files where strftime("%%Y-%%m",ImageDateTime) = '%s' ORDER BY ImageDateTime ASC"""%year_month)]
+            return [t for (t,) in self.cur.request("""SELECT distinct strftime("%%Y-%%m",ImageDateTime) FROM Files f where strftime("%%Y",ImageDateTime) = '%s' """%year + rating_select + """ ORDER BY ImageDateTime ASC""")]
 
 
-    def search_all_dates(self):# TODO check if it is really usefull (check 'get_pics_dates' to see if it is not the same)
+    def get_dates(self, year_month, min_rating = 0):
+        if min_rating > 0:
+            rating_select = " AND f.ImageRating != '' AND COALESCE(f.ImageRating, '0') > '%s' "%(min_rating)
+        else:
+            rating_select = ''
+            
+        if self.con.get_backend() == "mysql":    
+            return [t for (t,) in self.cur.request("""SELECT distinct date_format(ImageDateTime, '%%Y-%%m-%%d') FROM Files f where date_format(ImageDateTime, '%%Y-%%m') = '%s' """%year_month + rating_select + """ ORDER BY ImageDateTime ASC""")]
+        else:
+            return [t for (t,) in self.cur.request("""SELECT distinct strftime("%%Y-%%m-%%d",ImageDateTime) FROM Files f where strftime("%%Y-%%m",ImageDateTime) = '%s' """%year_month + rating_select + """ ORDER BY ImageDateTime ASC""")]
+
+
+    def search_all_dates(self, min_rating=0):# TODO check if it is really usefull (check 'get_pics_dates' to see if it is not the same)
         """return all Files from database sorted by 'EXIF DateTimeOriginal' """
-        return [t for t in self.cur.request("""SELECT strPath,strFilename FROM Files ORDER BY ImageDateTime ASC""")]
+        if min_rating > 0:
+            rating_select = " AND f.ImageRating != '' AND COALESCE(f.ImageRating, '0') > '%s' "%(min_rating)
+        else:
+            rating_select = ''
+            
+        if min_rating > 0:
+            return [t for t in self.cur.request("""SELECT strPath,strFilename FROM Files f WHERE ImageRating != '' AND COALESCE(ImageRating, '0')>'%s' """ + rating_select + """ ORDER BY ImageDateTime ASC""")]
+        else:
+            return [t for t in self.cur.request("""SELECT strPath,strFilename FROM Files f WHERE 1=1 """ + rating_select + """ ORDER BY ImageDateTime ASC""")]
 
 
     def get_pics_dates(self):
         """return all different dates from 'EXIF DateTimeOriginal'"""
         if self.con.get_backend() == "mysql":
-            return [t for (t,) in self.cur.request("""SELECT DISTINCT date_format(ImageDateTime, '%Y-%m-%d') FROM Files WHERE length(trim(ImageDateTime))>8 AND ImageDateTime> 0 ORDER BY ImageDateTime ASC""")]
+            return [t for (t,) in self.cur.request("""SELECT DISTINCT date_format(ImageDateTime, '%Y-%m-%d') FROM Files f WHERE length(trim(ImageDateTime))>8 AND ImageDateTime> 0 ORDER BY ImageDateTime ASC""")]
         else:
-            return [t for (t,) in self.cur.request("""SELECT DISTINCT strftime("%Y-%m-%d",ImageDateTime) FROM Files WHERE length(trim(ImageDateTime))>8  ORDER BY ImageDateTime ASC""")]
+            return [t for (t,) in self.cur.request("""SELECT DISTINCT strftime("%Y-%m-%d",ImageDateTime) FROM Files f WHERE length(trim(ImageDateTime))>8  ORDER BY ImageDateTime ASC""")]
 
 
     def get_pic_date(self, path, filename):

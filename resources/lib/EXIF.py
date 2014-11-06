@@ -204,6 +204,7 @@ EXIF_TAGS = {
     0x0214: ('ReferenceBlackWhite', ),
     
     0x4746: ('Rating', ),
+    0x4749: ('RatingPercent', ),
     
     0x828D: ('CFARepeatPatternDim', ),
     0x828E: ('CFAPattern', ),

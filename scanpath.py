@@ -296,7 +296,7 @@ class VFSScanner:
                 # videos aren't scanned and therefore never updated
                 elif extension in self.video_extensions:
                     common.log( "VFSScanner._addpath", 'Adding video file "%s"'%common.smart_utf8(pic))
-
+                    
                     if pic in filesfromdb:  # then it's an update
                         sqlupdate   = True
                         filesfromdb.pop(filesfromdb.index(pic))
@@ -305,6 +305,7 @@ class VFSScanner:
                     else:
                         sqlupdate  = False
                         self.picsadded   += 1
+                        picentry["Image Rating"] = 5
                         moddate = self.filescanner.getfiledatetime(pic)
                         if moddate != "0000-00-00 00:00:00":
                             picentry["EXIF DateTimeOriginal"] = moddate
@@ -402,8 +403,28 @@ class VFSScanner:
                 common.log( "VFSScanner._get_metas()._get_xmp()", "Exception", xbmc.LOGERROR)
                 common.log( "VFSScanner._get_metas()._get_xmp()", msg, xbmc.LOGERROR)
 
-
-
+            
+            if picentry['Image Rating'] is None or picentry['Image Rating'] == '' or picentry['Image Rating'] < '1':
+                if 'xmp:Rating' in picentry and ( picentry['xmp:Rating'] is not None or picentry['xmp:Rating'] != ''):
+                    picentry['Image Rating'] = picentry['xmp:Rating']
+                elif 'xap:Rating' in picentry and ( picentry['xap:Rating'] is not None or picentry['xap:Rating'] != ''):
+                    picentry['Image Rating'] = picentry['xap:Rating']
+                elif 'Image RatingPercent' in picentry and ( picentry['Image RatingPercent'] is not None or picentry['Image RatingPercent'] != ''):
+                    a = int( picentry['Image RatingPercent'])
+                    if a >= 85:
+                        new_rating = 5
+                    elif a >= 65:
+                        new_rating = 4
+                    elif a >= 45:
+                        new_rating = 3
+                    elif a >= 25:
+                        new_rating = 2                        
+                    elif a >= 5:
+                        new_rating = 1                        
+                    else:
+                        new_rating = 0
+                    picentry['Image Rating'] = new_rating
+                    
         return picentry
 
 
@@ -413,6 +434,7 @@ class VFSScanner:
                     "Image Model",
                     "Image Orientation",
                     "Image Rating",
+                    "Image RatingPercent",
 					"Image Artist",
                     "GPS GPSLatitude",
                     "GPS GPSLatitudeRef",

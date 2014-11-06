@@ -366,6 +366,12 @@ class Main:
         xbmcplugin.endOfDirectory(int(sys.argv[1]),cacheToDisc=True)
 
     def show_date(self):
+
+        if int(common.getaddon_setting("ratingmini"))>0:
+            min_rating = int(common.getaddon_setting("ratingmini"))
+        else:
+            min_rating = 0
+            
         #period = year|month|date
         #value  = "2009"|"12/2009"|"25/12/2009"
         common.log("Main.show_date", "start")
@@ -374,7 +380,7 @@ class Main:
         fullmonthname = common.getstring(30008).split("|")
         if self.args.period=="year":
             common.log("Main.show_date", "period=year")
-            listperiod=MPDB.get_years()
+            listperiod=MPDB.get_years(min_rating)
             nextperiod="month"
             allperiod =""
             action="showdate"
@@ -384,7 +390,7 @@ class Main:
             displaythisdate=""
         elif self.args.period=="month":
             common.log("Main.show_date", "period=month")
-            listperiod=MPDB.get_months(self.args.value)
+            listperiod=MPDB.get_months(self.args.value, min_rating)
             nextperiod="date"
             allperiod="year"
             action="showdate"
@@ -394,7 +400,7 @@ class Main:
             displaythisdate=common.getstring(30004)#%Y
         elif self.args.period=="date":
             common.log("Main.show_date", "period=date")
-            listperiod=MPDB.get_dates(self.args.value)
+            listperiod=MPDB.get_dates(self.args.value,min_rating)
             nextperiod="date"
             allperiod = "month"
             action="showpics"
@@ -413,7 +419,9 @@ class Main:
         dptd = dptd.replace("%b",monthname[strptime(self.args.value,thisdateformat).tm_mon - 1])    #replace %b marker by short month name
         dptd = dptd.replace("%B",fullmonthname[strptime(self.args.value,thisdateformat).tm_mon - 1])#replace %B marker by long month name
         nameperiode = strftime(dptd.encode("utf8"),strptime(self.args.value,thisdateformat))
-        self.add_directory(name      = common.getstring(30100)%(nameperiode.decode("utf8"),MPDB.count_pics_in_period(allperiod,self.args.value)), #libellé#"All the period %s (%s pics)"%(self.args.value,MPDB.count_pics_in _period(allperiod,self.args.value)), #libellé
+        count = MPDB.count_pics_in_period(allperiod, self.args.value, min_rating)
+        if count > 0:
+            self.add_directory(name      = common.getstring(30100)%(nameperiode.decode("utf8"), count), #libellé#"All the period %s (%s pics)"%(self.args.value,MPDB.count_pics_in _period(allperiod,self.args.value)), #libellé
                     params    = [("method","date"),("period",allperiod),("value",self.args.value),("page",""),("viewmode","view")],#paramètres
                     action    = "showpics",#action
                     iconimage = join(PIC_PATH,"dates.png"),#icone
@@ -431,7 +439,7 @@ class Main:
                 try:
                     dateformat = strptime(period,periodformat)
                     self.add_directory(name      = "%s (%s %s)"%(strftime(self.prettydate(displaydate,dateformat).encode("utf8"),dateformat).decode("utf8"),
-                                                          MPDB.count_pics_in_period(self.args.period,period),
+                                                          MPDB.count_pics_in_period(self.args.period,period, min_rating),
                                                           common.getstring(30050).encode("utf8")), #libellé
                                 params    = [("method","date"),("period",nextperiod),("value",period),("viewmode","view")],#paramètres
                                 action    = action,#action
@@ -448,6 +456,10 @@ class Main:
     def show_folders(self):
         common.log("Main.show_folders", "start")
         #get the subfolders if any
+        if int(common.getaddon_setting("ratingmini"))>0:
+            min_rating = int(common.getaddon_setting("ratingmini"))
+        else:
+            min_rating = 0
         if not self.args.folderid: #No Id given, get all the root folders
             childrenfolders=[row for row in MPDB.cur.request("SELECT idFolder,FolderName FROM Folders WHERE ParentFolder is null")]
         else:#else, get subfolders for given folder Id
@@ -457,7 +469,9 @@ class Main:
         for idchildren, childrenfolder in childrenfolders:
             common.log("Main.show_folders", "children folder = %s"%childrenfolder)
             path = MPDB.cur.request_with_binds( "SELECT FullPath FROM Folders WHERE idFolder = ?",(idchildren,) )[0][0]
-            self.add_directory(name      = "%s (%s %s)"%(childrenfolder,MPDB.count_pics_in_folder(idchildren),common.getstring(30050)), #libellé
+            count = MPDB.count_pics_in_folder(idchildren, min_rating)
+            if count > 0:
+                self.add_directory(name      = "%s (%s %s)"%(childrenfolder, count, common.getstring(30050)), #libellé
                         params    = [("method","folders"),("folderid",str(idchildren)),("onlypics","non"),("viewmode","view")],#paramètres
                         action    = "showfolder",#action
                         iconimage = join(PIC_PATH,"folders.png"),#icone
@@ -466,10 +480,13 @@ class Main:
                         total = len(childrenfolders))#nb total d'éléments
 
         #maintenant, on liste les photos si il y en a, du dossier en cours
-        picsfromfolder = [row for row in MPDB.cur.request_with_binds("SELECT p.FullPath,f.strFilename FROM Files f, Folders p WHERE f.idFolder=p.idFolder AND f.idFolder=? order by f.imagedatetime", (self.args.folderid, ) )]
+        if min_rating > 0:
+            picsfromfolder = [row for row in MPDB.cur.request_with_binds("SELECT p.FullPath,f.strFilename FROM Files f, Folders p WHERE f.idFolder=p.idFolder AND f.idFolder=? AND f.ImageRating > ? order by f.imagedatetime", (self.args.folderid, min_rating, ) )]
+        else:
+            picsfromfolder = [row for row in MPDB.cur.request_with_binds("SELECT p.FullPath,f.strFilename FROM Files f, Folders p WHERE f.idFolder=p.idFolder AND f.idFolder=? order by f.imagedatetime", (self.args.folderid, ) )]
 
         count = 0
-        for path,filename in picsfromfolder:
+        for path, filename in picsfromfolder:
             path     = common.smart_unicode(path)
             filename = common.smart_unicode(filename)
 
@@ -482,7 +499,7 @@ class Main:
                                                                                                                          common.quote_param(path.encode('utf-8')),
                                                                                                                          common.quote_param(filename.encode('utf-8')))  )
                             )
-            self.add_picture(filename,path, count=count, contextmenu=context,
+            self.add_picture(filename, path, count=count, contextmenu=context,
                         fanart = xbmcplugin.getSetting(int(sys.argv[1]),'usepicasfanart')=='true' and join(path,filename) or join(PIC_PATH,"fanart-folder.png")
                         )
 
@@ -581,7 +598,12 @@ class Main:
                 
 
     def show_tagtypes(self):
-        listtags =  MPDB.list_tagtypes_count()
+        if int(common.getaddon_setting("ratingmini"))>0:
+            min_rating = int(common.getaddon_setting("ratingmini"))
+        else:
+            min_rating = 0
+            
+        listtags =  MPDB.list_tagtypes_count(min_rating)
         total = len(listtags)
         common.log("Main.show_tagtypes", "total # of tag types = %s"%total)
         for tag, nb in listtags:
@@ -598,8 +620,13 @@ class Main:
 
 
     def show_tags(self):
+        if int(common.getaddon_setting("ratingmini"))>0:
+            min_rating = int(common.getaddon_setting("ratingmini"))
+        else:
+            min_rating = 0
+            
         tagtype = self.args.tagtype.decode("utf8")
-        listtags = [k  for k in MPDB.list_tags_count(tagtype)]
+        listtags = [k  for k in MPDB.list_tags_count(tagtype, min_rating)]
         total = len(listtags)
         common.log("Main.show_tags", "total # of tags = %s"%total)
         for tag, nb in listtags:
@@ -707,6 +734,11 @@ class Main:
 
 
     def show_collection(self):
+        if int(common.getaddon_setting("ratingmini"))>0:
+            min_rating = int(common.getaddon_setting("ratingmini"))
+        else:
+            min_rating = 0    
+            
         #herve502
         from xml.dom.minidom import parseString
         #/herve502
@@ -738,7 +770,7 @@ class Main:
 
                     #MPDB.collection_add_dyn_data(collection_name, filters[ret], 'FilterWizard')
 
-                    rows = MPDB.filterwizard_get_pics_from_filter(filters[ret])
+                    rows = MPDB.filterwizard_get_pics_from_filter(filters[ret], 0)
 
                     if rows != None:
                         MPDB.collection_new(collection_name)
@@ -856,6 +888,11 @@ class Main:
 
 
     def global_search(self):
+        if int(common.getaddon_setting("ratingmini"))>0:
+            min_rating = int(common.getaddon_setting("ratingmini"))
+        else:
+            min_rating = 0
+            
         if not self.args.searchterm:
             refresh=0
             filters = MPDB.search_list_saved()
@@ -892,12 +929,12 @@ class Main:
             common.log("Main.global_search", "search %s"%motrecherche)
             refresh=1
 
-        listtags = [k for k in MPDB.list_tagtypes_count()]
+        listtags = [k for k in MPDB.list_tagtypes_count(min_rating)]
 
         result = False
         for tag, _ in listtags:            
             common.log("Main.global_search","Search %s in %s"%(motrecherche, tag))
-            compte = MPDB.search_in_files(tag, motrecherche, count=True)
+            compte = MPDB.search_in_files(tag, motrecherche, min_rating, count=True)
             if compte:
                 result = True
                 self.add_directory(name      = common.getstring(30116)%(compte,motrecherche.decode("utf8"),tag ), #files_fields_description.has_key(colname) and files_fields_description[colname] or colname),
@@ -1429,6 +1466,12 @@ class Main:
 
 
     def show_pics(self):
+        
+        if int(common.getaddon_setting("ratingmini"))>0:
+            min_rating = int(common.getaddon_setting("ratingmini"))
+        else:
+            min_rating = 0
+                    
         if not self.args.page: #0 ou "" ou None : pas de pagination ; on affiche toutes les photos de la requête sans limite
             limit = -1  # SQL 'LIMIT' statement equals to -1 returns all resulting rows
             offset = -1 # SQL 'OFFSET' statement equals to -1  : return resulting rows with no offset
@@ -1443,7 +1486,7 @@ class Main:
             pass
 
         elif self.args.method =="wizard_settings":
-            filelist = MPDB.filterwizard_get_pics_from_filter(self.args.filtername)
+            filelist = MPDB.filterwizard_get_pics_from_filter(self.args.filtername, min_rating)
             
         # we are showing pictures for a RANDOM selection
         elif self.args.method == "random":
@@ -1453,16 +1496,20 @@ class Main:
                 limit = 10        
 
             try:
-                count = [row for row in MPDB.cur.request( """SELECT count(*) FROM Files""")][0][0]
+                count = [row for row in MPDB.cur.request( """SELECT count(*) FROM Files WHERE ImageRating != '' and COALESCE(ImageRating,'0') > ?""", (min_rating,))][0][0]
             except:
                 count = 0
 
             modulo = float(count)/float(limit)
 
             if MPDB.db_backend.lower() == 'mysql':
-                filelist = [row for row in MPDB.cur.request( """SELECT strPath, strFilename FROM Files ORDER BY RAND() LIMIT %s OFFSET %s"""%(limit, offset) )]
+                filelist = [row for row in MPDB.cur.request( """SELECT strPath, strFilename FROM Files WHERE ImageRating != '' and COALESCE(ImageRating,'0') > ? ORDER BY RAND() LIMIT %s OFFSET %s"""%(limit, offset),(min_rating,) )]
             else:
-                filelist = [row for row in MPDB.cur.request( """SELECT strPath, strFilename FROM Files WHERE RANDOM() %% %s ORDER BY RANDOM() LIMIT %s OFFSET %s"""%(modulo, limit, offset) )]
+                if count < limit:
+                    select =  """SELECT strPath, strFilename FROM Files WHERE ImageRating != '' and COALESCE(ImageRating,'0') > '%s' ORDER BY RANDOM() LIMIT %s OFFSET %s"""%(min_rating, limit, offset)
+                else:
+                    select =  """SELECT strPath, strFilename FROM Files WHERE ImageRating != '' and COALESCE(ImageRating,'0') > '%s' AND RANDOM() %% %s ORDER BY RANDOM() LIMIT %s OFFSET %s"""%(min_rating, modulo, limit, offset)
+                filelist = [row for row in MPDB.cur.request(select )]
 
         # we are showing pictures for a DATE selection
         elif self.args.method == "date":
@@ -1471,29 +1518,28 @@ class Main:
             formatstring = {"year":"%Y","month":"%Y-%m","date":"%Y-%m-%d","":"%Y","period":"%Y-%m-%d"}[self.args.period]
             if self.args.period=="year" or self.args.period=="":
                 if self.args.value:
-                    filelist = MPDB.pics_for_period('year',self.args.value)
+                    filelist = MPDB.pics_for_period('year', self.args.value, min_rating)
                 else:
-                    filelist = MPDB.search_all_dates()
+                    filelist = MPDB.search_all_dates(min_rating)
 
             elif self.args.period in ["month","date"]:
-                filelist = MPDB.pics_for_period(self.args.period,self.args.value)
+                filelist = MPDB.pics_for_period(self.args.period, self.args.value, min_rating)
 
             elif self.args.period=="period":
                 picfanart = join(PIC_PATH,"fanart-period.png")
-                filelist = MPDB.search_between_dates(DateStart=(self.args.datestart,formatstring),
-                                                     DateEnd=(self.args.dateend,formatstring))
+                filelist = MPDB.search_between_dates(DateStart=(self.args.datestart,formatstring), DateEnd=(self.args.dateend,formatstring), MinRating=min_rating)
             else:#period not recognized, show whole pics : TODO check if useful and if it can not be optimized for something better
                 listyears=MPDB.get_years()
                 amini=min(listyears)
                 amaxi=max(listyears)
                 if amini and amaxi:
-                    filelist = MPDB.search_between_dates( ("%s"%(amini),formatstring) , ( "%s"%(amaxi),formatstring) )
+                    filelist = MPDB.search_between_dates( ("%s"%(amini),formatstring) , ( "%s"%(amaxi),formatstring), MinRating=min_rating )
                 else:
                     filelist = []
 
         # we are showing pictures for a TAG selection
         elif self.args.method == "wizard":
-            filelist = MPDB.filterwizard_result(self.args.kw.decode("utf8"), self.args.nkw.decode("utf8"), self.args.matchall, self.args.start, self.args.end)
+            filelist = MPDB.filterwizard_result(self.args.kw.decode("utf8"), self.args.nkw.decode("utf8"), self.args.matchall, self.args.start, self.args.end, min_rating)
 
         # we are showing pictures for a TAG selection
         elif self.args.method == "tag":
@@ -1511,37 +1557,45 @@ class Main:
             #   il faut la modifier pour récupérer les photos filles des sous dossiers
             picfanart = join(PIC_PATH,"fanart-folder.png")
             listid = MPDB.all_children_of_folder(self.args.folderid)
-            filelist = [row for row in MPDB.cur.request( """SELECT p.FullPath,f.strFilename FROM Files f, Folders p WHERE f.idFolder=p.idFolder AND p.ParentFolder in ('%s') ORDER BY ImageDateTime ASC LIMIT %s OFFSET %s"""%("','".join([str(i) for i in listid]),
+            filelist = [row for row in MPDB.cur.request( """SELECT p.FullPath,f.strFilename FROM Files f, Folders p WHERE ImageRating != '' and COALESCE(ImageRating,'0') > ? AND f.idFolder=p.idFolder AND p.ParentFolder in ('%s') ORDER BY ImageDateTime ASC LIMIT %s OFFSET %s"""%("','".join([str(i) for i in listid]),
                                                                                                                                                                                                                                     limit,
-                                                                                                                                                                                                                                    offset) )]
+                                                                                                                                                                                                                                    offset),(min_rating,))]
 
         elif self.args.method == "collection":
+            if int(common.getaddon_setting("ratingmini"))>0:
+                min_rating = int(common.getaddon_setting("ratingmini"))
+            else:
+                min_rating = 0        
             picfanart = join(PIC_PATH,"fanart-collection.png")
-            filelist = MPDB.collection_get_pics(self.args.collect)
+            filelist = MPDB.collection_get_pics(self.args.collect, min_rating)
             
         elif self.args.method == "search":
             picfanart = join(PIC_PATH,"fanart-collection.png")
-            filelist = MPDB.search_in_files(self.args.field,self.args.searchterm,count=False)
+            if int(common.getaddon_setting("ratingmini"))>0:
+                min_rating = int(common.getaddon_setting("ratingmini"))
+            else:
+                min_rating = 0            
+            filelist = MPDB.search_in_files(self.args.field,self.args.searchterm, min_rating, count=False)
 
         elif self.args.method == "lastmonth":
             #show pics taken within last month
             picfanart = join(PIC_PATH,"fanart-date.png")
             if MPDB.con.get_backend() == "mysql":
-                filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE datetime(ImageDateTime) BETWEEN SysDate() - INTERVAL 1 MONTH AND SysDate() ORDER BY ImageDateTime ASC LIMIT %s OFFSET %s"""%(limit,offset))]
+                filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE ImageRating != '' and COALESCE(ImageRating,'0') > ? AND datetime(ImageDateTime) BETWEEN SysDate() - INTERVAL 1 MONTH AND SysDate() ORDER BY ImageDateTime ASC LIMIT %s OFFSET %s"""%(limit,offset),(min_rating,))]
             else:
-                filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE datetime(ImageDateTime) BETWEEN datetime('now','-1 months') AND datetime('now') ORDER BY ImageDateTime ASC LIMIT %s OFFSET %s"""%(limit,offset))]
+                filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE ImageRating != '' and COALESCE(ImageRating,'0') > ? AND datetime(ImageDateTime) BETWEEN datetime('now','-1 months') AND datetime('now') ORDER BY ImageDateTime ASC LIMIT %s OFFSET %s"""%(limit,offset),(min_rating,))]
 
         elif self.args.method == "recentpicsdb":#pictures added to database within x last days __OK
             picfanart = join(PIC_PATH,"fanart-date.png")
             numberofdays = common.getaddon_setting("recentnbdays")
             if MPDB.con.get_backend() == "mysql":
-                filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE DateAdded>=SysDate() - INTERVAL %s DAY ORDER BY DateAdded ASC LIMIT %s OFFSET %s"""%(numberofdays,limit,offset))]
+                filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE ImageRating != '' and COALESCE(ImageRating,'0') > ? AND DateAdded>=SysDate() - INTERVAL %s DAY ORDER BY DateAdded ASC LIMIT %s OFFSET %s"""%(numberofdays,limit,offset),(min_rating,))]
             else:
-                filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE DateAdded >= datetime('now','start of day','-%s days') ORDER BY DateAdded ASC LIMIT %s OFFSET %s"""%(numberofdays,limit,offset))]
+                filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE ImageRating != '' and COALESCE(ImageRating,'0') > ? AND DateAdded >= datetime('now','start of day','-%s days') ORDER BY DateAdded ASC LIMIT %s OFFSET %s"""%(numberofdays,limit,offset),(min_rating,))]
 
         elif self.args.method =="lastpicsshooted":#X last pictures shooted __OK
             picfanart = join(PIC_PATH,"fanart-date.png")
-            filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE ImageDateTime IS NOT NULL ORDER BY ImageDateTime DESC LIMIT %s"""%common.getaddon_setting('lastpicsnumber') )]
+            filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE ImageRating != '' and COALESCE(ImageRating,'0') > ? AND ImageDateTime IS NOT NULL ORDER BY ImageDateTime DESC LIMIT %s"""%common.getaddon_setting('lastpicsnumber'),(min_rating,) )]
 
         elif self.args.method =="videos":#show all videos __OK
             picfanart = join(PIC_PATH,"fanart-videos.png")
