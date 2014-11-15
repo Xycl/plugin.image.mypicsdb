@@ -1627,9 +1627,9 @@ class MyPictureDB(object):
             rating_select = " AND f.ImageRating != '' AND COALESCE(f.ImageRating, '0') > '%s' "%(min_rating)
         else:
             rating_select = ''
-            
+
         if self.con.get_backend() == "mysql":    
-            return [t for (t,) in self.cur.request("""SELECT DISTINCT date_format(ImageDateTime, '%Y') FROM Files f where ImageDateTime is NOT NULL %s ORDER BY ImageDateTime ASC"""%rating_select)]
+            return [t for (t,) in self.cur.request("""SELECT DISTINCT date_format(ImageDateTime, '%%Y') FROM Files f where ImageDateTime is NOT NULL %s ORDER BY ImageDateTime ASC"""%rating_select)]
         else:
             return [t for (t,) in self.cur.request("""SELECT DISTINCT strftime("%Y",ImageDateTime) FROM Files f where ImageDateTime NOT NULL """ + rating_select + """ ORDER BY ImageDateTime ASC""")]
 
