@@ -1,5 +1,8 @@
+2014/11/18--> v 13.0.8
+Update: Percent rating to star rating conversion changed
+
 2014/11/17 --> v 13.0.7
-Update: Bug fixed introduced with star rating
+Fix:    Bug fixed introduced with star rating
 
 2014/11/14 --> v 13.0.6
 Update: Star rating filter improved

@@ -149,8 +149,9 @@ class MyPictureDB(object):
                 try:
                     self.cur.execute("""DROP TABLE %s"""%table)
                 except Exception,msg:
-                    common.log("MPDB.make_new_base", "DROP TABLE %s"%table, xbmc.LOGERROR )
-                    common.log("MPDB.make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+                    pass
+                    #common.log("MPDB.make_new_base", "DROP TABLE %s"%table, xbmc.LOGERROR )
+                    #common.log("MPDB.make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
     
         # table: version
         try:
@@ -670,7 +671,7 @@ class MyPictureDB(object):
     
     def get_rating(self, path, filename):   
         try:
-            return [row for row in self.cur.request( """SELECT COALESCE(Files.ImageRating, '0') FROM Files WHERE strPath=? AND strFilename=? """, (path, filename) )][0][0]
+            return [row for row in self.cur.request( """SELECT COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') FROM Files WHERE strPath=? AND strFilename=? """, (path, filename) )][0][0]
         except IndexError:
             return None
     
@@ -689,13 +690,13 @@ class MyPictureDB(object):
         unset_tags_array = unset_tags.split("|||")    
 
         if min_rating > 0:
-            outer_select = "SELECT distinct strPath,strFilename, ImageDateTime FROM Files WHERE COALESCE(ImageRating, '0') >= '%s' " % (min_rating)
+            outer_select = "SELECT distinct strPath,strFilename, ImageDateTime FROM Files WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') >= '%s' " % (min_rating)
         else:
             outer_select = "SELECT distinct strPath,strFilename, ImageDateTime FROM Files WHERE 1=1 "
 
         # These selects are joined with an IN clause
         inner_select = "SELECT tif.idfile FROM TagContents tc, TagsInFiles tif , TagTypes tt WHERE tif.idTagContent = tc.idTagContent AND tc.idTagType = tt.idTagType "
-        
+
         common.log("", "match_all = %s"%(match_all), xbmc.LOGNOTICE)
         # Build the conditions
         if match_all == 1 or match_all == "1":
@@ -953,7 +954,7 @@ class MyPictureDB(object):
             rows_from_filter = []
         #filterwizard_get_pics_from_filter      
         if min_rating > 0:
-            row = [row for row in self.cur.request( """SELECT strPath,strFilename FROM Files WHERE COALESCE(ImageRating, '0') >= ? AND idFile IN (SELECT idFile FROM FilesInCollections WHERE idCol IN (SELECT idCol FROM Collections WHERE CollectionName=?)) ORDER BY ImageDateTime ASC""",(min_rating, colname,))]
+            row = [row for row in self.cur.request( """SELECT strPath,strFilename FROM Files WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') >= ? AND idFile IN (SELECT idFile FROM FilesInCollections WHERE idCol IN (SELECT idCol FROM Collections WHERE CollectionName=?)) ORDER BY ImageDateTime ASC""",(min_rating, colname,))]
         else:
             row = [row for row in self.cur.request( """SELECT strPath,strFilename FROM Files WHERE idFile IN (SELECT idFile FROM FilesInCollections WHERE idCol IN (SELECT idCol FROM Collections WHERE CollectionName=?)) ORDER BY ImageDateTime ASC""",(colname,))]
         row.extend(rows_from_filter)
@@ -1099,7 +1100,7 @@ class MyPictureDB(object):
             val = val.replace("\\", "\\\\\\\\")
 
         if min_rating>0:
-            rating_select = " and fi.idFile = tif.idFile and coalesce(fi.ImageRating,'0') >= '%s' "%min_rating
+            rating_select = " and fi.idFile = tif.idFile and COALESCE(case fi.ImageRating when '' then '0' else fi.ImageRating end,'0') >= '%s' "%min_rating
         else:
             rating_select = ""
         if count:
@@ -1402,7 +1403,7 @@ class MyPictureDB(object):
     SELECT tt.TagTranslation, count(distinct tagcontent)
       FROM TagTypes tt, TagContents tc, TagsInFiles tf , Files f
      where length(trim(TagTranslation)) > 0 
-       and coalesce(f.ImageRating, '0') >= '%s'
+       and COALESCE(case f.ImageRating when '' then '0' else f.ImageRating end,'0') >= '%s'
        and f.idFile = tf.idFile
        and tf.idTagContent              = tc.idTagContent
        and tt.idTagType                 = tc.idTagType
@@ -1444,7 +1445,7 @@ class MyPictureDB(object):
             select TagContent, count(distinct f.idFile) 
           from TagContents tc, TagsInFiles tif, TagTypes tt, Files f
          where tc.idTagContent = tif.idTagContent
-           and coalesce(f.ImageRating, '0') >= ?
+           and COALESCE(case f.ImageRating when '' then '0' else f.ImageRating end,'0') >= ?
            and f.idFile = tif.idFile         
            and tc.idTagType = tt.idTagType 
            and tt.TagTranslation = ? 
@@ -1480,7 +1481,7 @@ class MyPictureDB(object):
                 folderPath = folderPath.replace("\\", "\\\\\\\\")            
             
             if min_rating > 0:
-                rating_select = " AND COALESCE(f.ImageRating, '0') >= '%s' "%(min_rating)
+                rating_select = " AND COALESCE(case f.ImageRating when '' then '0' else f.ImageRating end,'0') >= '%s' "%(min_rating)
             else:
                 rating_select = ''
             if parent_folder:
@@ -1545,7 +1546,7 @@ class MyPictureDB(object):
     def search_between_dates(self, DateStart=("2007","%Y"),DateEnd=("2008","%Y"), MinRating=0):
         """Cherche les photos qui ont été prises entre 'datestart' et 'dateend'."""
         if MinRating>0:
-            rating_select = " AND COALESCE(ImageRating, '0') >= '%s' "%MinRating
+            rating_select = " AND COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') >= '%s' "%MinRating
         else:
             rating_select = ''
         common.log( "search_between_dates", DateStart)
@@ -1602,7 +1603,7 @@ class MyPictureDB(object):
                 print_exc()
                 #log ("pics_for_period ( periodtype = ['date'|'month'|'year'] , date = corresponding to the period (year|year-month|year-month-day)")
             if min_rating > 0:
-                request = """SELECT strPath,strFilename FROM Files WHERE COALESCE(ImageRating,'0') >= '%s' AND ImageDateTime BETWEEN %s AND %s ORDER BY ImageDateTime ASC"""%(min_rating, sdate, edate)
+                request = """SELECT strPath,strFilename FROM Files WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') >= '%s' AND ImageDateTime BETWEEN %s AND %s ORDER BY ImageDateTime ASC"""%(min_rating, sdate, edate)
             else:
                 request = """SELECT strPath,strFilename FROM Files WHERE ImageDateTime BETWEEN %s AND %s ORDER BY ImageDateTime ASC"""%(sdate, edate)
         else:
@@ -1614,7 +1615,7 @@ class MyPictureDB(object):
                 print_exc()
                 #log ("pics_for_period ( periodtype = ['date'|'month'|'year'] , date = corresponding to the period (year|year-month|year-month-day)")
             if min_rating > 0:
-                request = """SELECT strPath,strFilename FROM Files WHERE COALESCE(ImageRating,'0') >= '%s' AND datetime(ImageDateTime) BETWEEN datetime('%s','%s') AND datetime('%s','%s','%s') ORDER BY ImageDateTime ASC;"""%(min_rating,sdate,modif1,sdate,modif1,modif2)
+                request = """SELECT strPath,strFilename FROM Files WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') >= '%s' AND datetime(ImageDateTime) BETWEEN datetime('%s','%s') AND datetime('%s','%s','%s') ORDER BY ImageDateTime ASC;"""%(min_rating,sdate,modif1,sdate,modif1,modif2)
             else:
                 request = """SELECT strPath,strFilename FROM Files WHERE datetime(ImageDateTime) BETWEEN datetime('%s','%s') AND datetime('%s','%s','%s') ORDER BY ImageDateTime ASC;"""%(sdate,modif1,sdate,modif1,modif2)
         return [row for row in self.cur.request(request)]
@@ -1622,7 +1623,7 @@ class MyPictureDB(object):
 
     def get_years(self, min_rating = 0):
         if min_rating > 0:
-            rating_select = " AND COALESCE(f.ImageRating, '0') >= '%s' "%(min_rating)
+            rating_select = " AND COALESCE(case f.ImageRating when '' then '0' else f.ImageRating end,'0') >= '%s' "%(min_rating)
         else:
             rating_select = ''
 
@@ -1634,7 +1635,7 @@ class MyPictureDB(object):
 
     def get_months(self, year, min_rating = 0):
         if min_rating > 0:
-            rating_select = " AND COALESCE(f.ImageRating, '0') >= '%s' "%(min_rating)
+            rating_select = " AND COALESCE(case f.ImageRating when '' then '0' else f.ImageRating end,'0') >= '%s' "%(min_rating)
         else:
             rating_select = ''
             
@@ -1646,7 +1647,7 @@ class MyPictureDB(object):
 
     def get_dates(self, year_month, min_rating = 0):
         if min_rating > 0:
-            rating_select = " AND COALESCE(f.ImageRating, '0') >= '%s' "%(min_rating)
+            rating_select = " AND COALESCE(case f.ImageRating when '' then '0' else f.ImageRating end,'0') >= '%s' "%(min_rating)
         else:
             rating_select = ''
             
@@ -1659,12 +1660,12 @@ class MyPictureDB(object):
     def search_all_dates(self, min_rating=0):# TODO check if it is really usefull (check 'get_pics_dates' to see if it is not the same)
         """return all Files from database sorted by 'EXIF DateTimeOriginal' """
         if min_rating > 0:
-            rating_select = " AND COALESCE(f.ImageRating, '0') >= '%s' "%(min_rating)
+            rating_select = " AND COALESCE(case f.ImageRating when '' then '0' else f.ImageRating end,'0') >= '%s' "%(min_rating)
         else:
             rating_select = ''
             
         if min_rating > 0:
-            return [t for t in self.cur.request("""SELECT strPath,strFilename FROM Files f WHERE COALESCE(ImageRating, '0')>'%s' """ + rating_select + """ ORDER BY ImageDateTime ASC""")]
+            return [t for t in self.cur.request("""SELECT strPath,strFilename FROM Files f WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0')>'%s' """ + rating_select + """ ORDER BY ImageDateTime ASC""")]
         else:
             return [t for t in self.cur.request("""SELECT strPath,strFilename FROM Files f WHERE 1=1 """ + rating_select + """ ORDER BY ImageDateTime ASC""")]
 

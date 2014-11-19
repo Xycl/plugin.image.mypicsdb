@@ -1496,19 +1496,19 @@ class Main:
                 limit = 10        
 
             try:
-                count = [row for row in MPDB.cur.request( """SELECT count(*) FROM Files WHERE COALESCE(ImageRating,'0') >= ?""", (min_rating,))][0][0]
+                count = [row for row in MPDB.cur.request( """SELECT count(*) FROM Files WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') >= ?""", (min_rating,))][0][0]
             except:
                 count = 0
 
             modulo = float(count)/float(limit)
 
             if MPDB.db_backend.lower() == 'mysql':
-                filelist = [row for row in MPDB.cur.request( """SELECT strPath, strFilename FROM Files WHERE COALESCE(ImageRating,'0') >= ? ORDER BY RAND() LIMIT %s OFFSET %s"""%(limit, offset),(min_rating,) )]
+                filelist = [row for row in MPDB.cur.request( """SELECT strPath, strFilename FROM Files WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') >= ? ORDER BY RAND() LIMIT %s OFFSET %s"""%(limit, offset),(min_rating,) )]
             else:
                 if count < limit:
-                    select =  """SELECT strPath, strFilename FROM Files WHERE COALESCE(ImageRating,'0') >= '%s' ORDER BY RANDOM() LIMIT %s OFFSET %s"""%(min_rating, limit, offset)
+                    select =  """SELECT strPath, strFilename FROM Files WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') >= '%s' ORDER BY RANDOM() LIMIT %s OFFSET %s"""%(min_rating, limit, offset)
                 else:
-                    select =  """SELECT strPath, strFilename FROM Files WHERE COALESCE(ImageRating,'0') >= '%s' AND RANDOM() %% %s ORDER BY RANDOM() LIMIT %s OFFSET %s"""%(min_rating, modulo, limit, offset)
+                    select =  """SELECT strPath, strFilename FROM Files WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') >= '%s' AND RANDOM() %% %s ORDER BY RANDOM() LIMIT %s OFFSET %s"""%(min_rating, modulo, limit, offset)
                 filelist = [row for row in MPDB.cur.request(select )]
 
         # we are showing pictures for a DATE selection
@@ -1557,7 +1557,7 @@ class Main:
             #   il faut la modifier pour récupérer les photos filles des sous dossiers
             picfanart = join(PIC_PATH,"fanart-folder.png")
             listid = MPDB.all_children_of_folder(self.args.folderid)
-            filelist = [row for row in MPDB.cur.request( """SELECT p.FullPath,f.strFilename FROM Files f, Folders p WHERE COALESCE(ImageRating,'0') >= ? AND f.idFolder=p.idFolder AND p.ParentFolder in ('%s') ORDER BY ImageDateTime ASC LIMIT %s OFFSET %s"""%("','".join([str(i) for i in listid]),
+            filelist = [row for row in MPDB.cur.request( """SELECT p.FullPath,f.strFilename FROM Files f, Folders p WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') >= ? AND f.idFolder=p.idFolder AND p.ParentFolder in ('%s') ORDER BY ImageDateTime ASC LIMIT %s OFFSET %s"""%("','".join([str(i) for i in listid]),
                                                                                                                                                                                                                                     limit,
                                                                                                                                                                                                                                     offset),(min_rating,))]
 
@@ -1581,21 +1581,21 @@ class Main:
             #show pics taken within last month
             picfanart = join(PIC_PATH,"fanart-date.png")
             if MPDB.con.get_backend() == "mysql":
-                filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE COALESCE(ImageRating,'0') >= ? AND datetime(ImageDateTime) BETWEEN SysDate() - INTERVAL 1 MONTH AND SysDate() ORDER BY ImageDateTime ASC LIMIT %s OFFSET %s"""%(limit,offset),(min_rating,))]
+                filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') >= ? AND datetime(ImageDateTime) BETWEEN SysDate() - INTERVAL 1 MONTH AND SysDate() ORDER BY ImageDateTime ASC LIMIT %s OFFSET %s"""%(limit,offset),(min_rating,))]
             else:
-                filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE COALESCE(ImageRating,'0') >= ? AND datetime(ImageDateTime) BETWEEN datetime('now','-1 months') AND datetime('now') ORDER BY ImageDateTime ASC LIMIT %s OFFSET %s"""%(limit,offset),(min_rating,))]
+                filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') >= ? AND datetime(ImageDateTime) BETWEEN datetime('now','-1 months') AND datetime('now') ORDER BY ImageDateTime ASC LIMIT %s OFFSET %s"""%(limit,offset),(min_rating,))]
 
         elif self.args.method == "recentpicsdb":#pictures added to database within x last days __OK
             picfanart = join(PIC_PATH,"fanart-date.png")
             numberofdays = common.getaddon_setting("recentnbdays")
             if MPDB.con.get_backend() == "mysql":
-                filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE COALESCE(ImageRating,'0') >= ? AND DateAdded>=SysDate() - INTERVAL %s DAY ORDER BY DateAdded ASC LIMIT %s OFFSET %s"""%(numberofdays,limit,offset),(min_rating,))]
+                filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') >= ? AND DateAdded>=SysDate() - INTERVAL %s DAY ORDER BY DateAdded ASC LIMIT %s OFFSET %s"""%(numberofdays,limit,offset),(min_rating,))]
             else:
-                filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE COALESCE(ImageRating,'0') >= ? AND DateAdded >= datetime('now','start of day','-%s days') ORDER BY DateAdded ASC LIMIT %s OFFSET %s"""%(numberofdays,limit,offset),(min_rating,))]
+                filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') >= ? AND DateAdded >= datetime('now','start of day','-%s days') ORDER BY DateAdded ASC LIMIT %s OFFSET %s"""%(numberofdays,limit,offset),(min_rating,))]
 
         elif self.args.method =="lastpicsshooted":#X last pictures shooted __OK
             picfanart = join(PIC_PATH,"fanart-date.png")
-            filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE COALESCE(ImageRating,'0') >= ? AND ImageDateTime IS NOT NULL ORDER BY ImageDateTime DESC LIMIT %s"""%common.getaddon_setting('lastpicsnumber'),(min_rating,) )]
+            filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') >= ? AND ImageDateTime IS NOT NULL ORDER BY ImageDateTime DESC LIMIT %s"""%common.getaddon_setting('lastpicsnumber'),(min_rating,) )]
 
         elif self.args.method =="videos":#show all videos __OK
             picfanart = join(PIC_PATH,"fanart-videos.png")
@@ -1803,7 +1803,7 @@ if __name__=="__main__":
 
     m=Main()
     MPDB = MypicsDB.MyPictureDB()
-
+        
     if not sys.argv[ 2 ]: 
         if common.getaddon_setting("initDB") == "true":
             MPDB.make_new_base(True)

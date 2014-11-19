@@ -411,15 +411,15 @@ class VFSScanner:
                     picentry['Image Rating'] = picentry['xap:Rating']
                 elif 'Image RatingPercent' in picentry and ( picentry['Image RatingPercent'] is not None or picentry['Image RatingPercent'] != ''):
                     a = int( picentry['Image RatingPercent'])
-                    if a >= 85:
+                    if a >= 95:
                         new_rating = 5
-                    elif a >= 65:
+                    elif a >= 75:
                         new_rating = 4
-                    elif a >= 45:
+                    elif a >= 50:
                         new_rating = 3
                     elif a >= 25:
                         new_rating = 2                        
-                    elif a >= 5:
+                    elif a >= 1:
                         new_rating = 1                        
                     else:
                         new_rating = 0
