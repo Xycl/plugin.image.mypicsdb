@@ -1595,8 +1595,9 @@ class Main:
 
         elif self.args.method =="lastpicsshooted":#X last pictures shooted __OK
             picfanart = join(PIC_PATH,"fanart-date.png")
-            filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') >= ? AND ImageDateTime IS NOT NULL ORDER BY ImageDateTime DESC LIMIT %s"""%common.getaddon_setting('lastpicsnumber'),(min_rating,) )]
-
+            select = """SELECT strPath,strFilename FROM Files WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') >= '%s' AND ImageDateTime IS NOT NULL ORDER BY ImageDateTime DESC LIMIT %s"""%(min_rating, common.getaddon_setting('lastpicsnumber'))
+            filelist = [row for row in MPDB.cur.request( select )]
+            
         elif self.args.method =="videos":#show all videos __OK
             picfanart = join(PIC_PATH,"fanart-videos.png")
             filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE ftype="video" ORDER BY ImageDateTime DESC LIMIT %s OFFSET %s"""%(limit,offset) )]

@@ -80,8 +80,10 @@ class XMP_Tags(object):
         content = f.read()
         f.close()
 
+        #print "__get_xmp_metadata"
         start = content.find("<" + xmptag)
         end   = content.rfind("</" + xmptag) + 4 + len(xmptag)
+        
         inner = content[start:end]
         self.get_xmp_inner = inner
 
@@ -114,6 +116,8 @@ class XMP_Tags(object):
                         break
 
                     tag_found = inner[start:end]
+                    #print "Found: Tag Name = " +  tagname
+                    #print tag_found
                     i = 0
                     val_inner_tag = ''
                     while i < len(tag_found):
@@ -156,9 +160,7 @@ class XMP_Tags(object):
                                                 key += '||' + face
                                             else:
                                                 key = face
-                                     
                                     else:
-
                                         if len(key) > 0:
                                             key += '||' + inner
                                         else:
@@ -178,5 +180,23 @@ class XMP_Tags(object):
                     inner = inner[start:]
                     end = inner.find("</" + tagname)
                     j = j+ 1
-
+                    
+            # XMP pictures tags are attributes of <rdf: ...
+            else:
+                start = self.get_xmp_inner.find(tagname+'="')
+                end   = self.get_xmp_inner.rfind("</" + tagname) + 4 + len(tagname)
+                inner = self.get_xmp_inner[start:]            
+                #print "Notfound: Tag Name = " +  tagname
+                matched=re.compile(tagname + '="(.*?)"',re.DOTALL).findall(inner)
+                for value in matched:
+                    value = value.strip(' \t\n\r')
+                    if len(value) > 0:
+                        #print "Found value = " + inner
+                        if len(value) > 0:
+                            value = HTMLParser().unescape(value)
+                            if xmp.has_key(storedtag):
+                                xmp[storedtag] += '||' + value
+                            else:
+                                xmp[storedtag] = value
+            
         return xmp
