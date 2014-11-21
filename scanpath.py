@@ -423,8 +423,13 @@ class VFSScanner:
                         new_rating = 1                        
                     else:
                         new_rating = 0
+                       
                     picentry['Image Rating'] = new_rating
                     
+        #print "Rating = " + picentry['Image Rating'] 
+        if picentry['Image Rating'] is None or len(picentry['Image Rating']) == 0:
+            picentry['Image Rating'] = "0"
+            
         return picentry
 
 
