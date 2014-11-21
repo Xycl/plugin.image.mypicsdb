@@ -220,7 +220,7 @@ class VFSScanner:
                              "ftype": extension in self.picture_extensions and "picture" or extension in self.video_extensions and "video" or "",
                              "DateAdded": strftime("%Y-%m-%d %H:%M:%S"),
                              "Thumb": "",
-                             "Image Rating": None
+                             "Image Rating": "0"
                              }
 
 

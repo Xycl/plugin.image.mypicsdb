@@ -1778,8 +1778,6 @@ class Main:
         xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_PROGRAM_COUNT )
         xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_LABEL )
 
-
-
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 
@@ -1805,7 +1803,8 @@ if __name__=="__main__":
     m=Main()
     MPDB = MypicsDB.MyPictureDB()
         
-    if not sys.argv[ 2 ]: 
+    if not sys.argv[ 2 ] or len(sys.argv[ 2 ]) == 0: 
+        
         if common.getaddon_setting("initDB") == "true":
             MPDB.make_new_base(True)
             common.setaddon_setting("initDB","false")
