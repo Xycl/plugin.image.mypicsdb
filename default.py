@@ -734,11 +734,7 @@ class Main:
 
 
     def show_collection(self):
-        if int(common.getaddon_setting("ratingmini"))>0:
-            min_rating = int(common.getaddon_setting("ratingmini"))
-        else:
-            min_rating = 0    
-            
+
         #herve502
         from xml.dom.minidom import parseString
         #/herve502
