@@ -430,17 +430,16 @@ class MyPictureDB(object):
             if self.con.get_backend() == "mysql":
                 imagedatetime = "0000-00-00 00:00:00"
             else:
-                imagedatetime = "null"
+                imagedatetime = ""
                 
             if  "EXIF DateTimeOriginal" in dictionnary:
                 imagedatetime = dictionnary["EXIF DateTimeOriginal"]
-                #print "1 = " + str(imagedatetime)
-            if len(imagedatetime.strip()) < 10 and "ImageDateTime" in dictionnary:
+            elif len(imagedatetime.strip()) < 10 and "Image DateTime" in dictionnary:
+                imagedatetime = dictionnary["Image DateTime"]                
+            elif len(imagedatetime.strip()) < 10 and "ImageDateTime" in dictionnary:
                 imagedatetime = dictionnary["ImageDateTime"]
-                #print "2 = " + str(imagedatetime)
-            if len(imagedatetime.strip()) < 10 and "EXIF DateTimeDigitized" in dictionnary:
+            elif len(imagedatetime.strip()) < 10 and "EXIF DateTimeDigitized" in dictionnary:
                 imagedatetime = dictionnary["EXIF DateTimeDigitized"]
-                #print "3 = " + str(imagedatetime)
              
             dictionnary['YYYY-MM'] = imagedatetime[:7]
 
@@ -1526,6 +1525,19 @@ class MyPictureDB(object):
             else:
                 filelist = []
         return len(filelist)
+        
+    def count_pics_wo_imagedatetime(self, period, value, min_rating=0):
+        if min_rating>0:
+            rating_select = " AND COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') >= '%s' "%min_rating
+        else:
+            rating_select = ''    
+
+        if self.con.get_backend() == "mysql":
+            return [row for (row,) in self.cur.request( """SELECT DISTINCT count(*) FROM Files where (ImageDateTime is null or ImageDateTime = date_format('0000-00-00', '%%Y-%%m-%%d') ) """ + rating_select)][0]
+        else:
+            return [row for (row,) in self.cur.request( """SELECT DISTINCT count(*) FROM Files where (ImageDateTime is null or ImageDateTime = ''  or ImageDateTime = 'null' ) """ + rating_select)][0]
+
+        
 
     def list_path(self):
         """retourne la liste des chemins en base de données"""
@@ -1665,17 +1677,33 @@ class MyPictureDB(object):
             return [t for (t,) in self.cur.request("""SELECT distinct strftime("%%Y-%%m-%%d",ImageDateTime) FROM Files f where strftime("%%Y-%%m",ImageDateTime) = '%s' """%year_month + rating_select + """ ORDER BY ImageDateTime ASC""")]
 
 
+    def get_all_files_wo_date(self, min_rating = 0):
+        if min_rating > 0:
+            rating_select = " AND COALESCE(case f.ImageRating when '' then '0' else f.ImageRating end,'0') >= '%s' "%(min_rating)
+        else:
+            rating_select = ''
+         
+        if self.con.get_backend() == "mysql":
+            select = """SELECT strPath,strFilename FROM Files where (ImageDateTime is null or ImageDateTime = date_format('0000-00-00', '%%Y-%%m-%%d') ) """ + rating_select + """ ORDER BY ImageDateTime ASC"""
+        else:
+            select = """SELECT strPath,strFilename FROM Files where (ImageDateTime is null or ImageDateTime = ''  or ImageDateTime = 'null' ) """ + rating_select + """ ORDER BY ImageDateTime ASC"""
+
+            
+        #select = """SELECT strPath,strFilename FROM Files f WHERE (ImageDateTime is NULL or ImageDateTime = '' or ImageDateTime = 'null') """ + rating_select + """ ORDER BY ImageDateTime ASC"""
+        return [t for t in self.cur.request(select)]
+        
     def search_all_dates(self, min_rating=0):# TODO check if it is really usefull (check 'get_pics_dates' to see if it is not the same)
         """return all Files from database sorted by 'EXIF DateTimeOriginal' """
         if min_rating > 0:
             rating_select = " AND COALESCE(case f.ImageRating when '' then '0' else f.ImageRating end,'0') >= '%s' "%(min_rating)
         else:
             rating_select = ''
-            
-        if min_rating > 0:
-            return [t for t in self.cur.request("""SELECT strPath,strFilename FROM Files f WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0')>'%s' """ + rating_select + """ ORDER BY ImageDateTime ASC""")]
-        else:
-            return [t for t in self.cur.request("""SELECT strPath,strFilename FROM Files f WHERE 1=1 """ + rating_select + """ ORDER BY ImageDateTime ASC""")]
+         
+        #if min_rating > 0:
+        #    return [t for t in self.cur.request("""SELECT strPath,strFilename FROM Files f WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0')>'%s' """ + rating_select + """ ORDER BY ImageDateTime #ASC""")]
+        # else:
+        
+        return [t for t in self.cur.request("""SELECT strPath,strFilename FROM Files f WHERE 1=1 """ + rating_select + """ ORDER BY ImageDateTime ASC""")]
 
 
     def get_pics_dates(self):

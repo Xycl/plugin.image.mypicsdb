@@ -173,14 +173,15 @@ class Main:
         suffix=""
         rating=""
         coords=None
+        date = None
         extension = splitext(picname)[1].upper()
         try:
             fullfilepath = join(picpath,picname)
             common.log("Main.add_picture", "Name = %s"%fullfilepath)
 
             liz=xbmcgui.ListItem(picname,info)
-            common.log("",picpath)
-            common.log("",picname)
+            common.log("", picpath)
+            common.log("", picname)
             
             try:
                 (exiftime,rating) = MPDB.get_pic_date_rating(picpath,picname)
@@ -188,21 +189,25 @@ class Main:
                 if exiftime:
                     date = exiftime and strftime("%d.%m.%Y",strptime(exiftime,"%Y-%m-%d %H:%M:%S")) or ""
             except Exception,msg:
-                #common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
-                date = None
-
+                common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+                
+            common.log("", "date")
+            common.log("", date)
+            common.log("", "1")
             #is the file a video ?
             if extension in ["."+ext.replace(".","").upper() for ext in common.getaddon_setting("vidsext").split("|")]:
                 infolabels = { "date": date }
                 liz.setInfo( type="video", infoLabels=infolabels )
+                common.log("", "2")
             #or is the file a picture ?
             elif extension in ["."+ext.replace(".","").upper() for ext in common.getaddon_setting("picsext").split("|")]:
+                common.log("", "3")
                 if int(common.getaddon_setting("ratingmini"))>0:
                     if not rating:  
                         return
                     if int(rating) < int(common.getaddon_setting("ratingmini")): 
                         return 
-
+                common.log("", "4")
                 coords = MPDB.get_gps(picpath,picname)
                 if coords: 
                     suffix = suffix + "[COLOR=C0C0C0C0][G][/COLOR]"
@@ -215,8 +220,16 @@ class Main:
                                                            and fi.strPath = ?
                                                            and fi.strFilename = ?  """,(picpath,picname))
 
-                infolabels = { "picturepath":picname+" "+suffix, "date": date, "count": count  }
-
+                common.log("", "5")
+                if date is None:
+                    common.log("", "5a")
+                    infolabels = { "picturepath":picname+" "+suffix, "count": count  }
+                    common.log("", "5b")
+                else:
+                    common.log("", "5c")
+                    infolabels = { "picturepath":picname+" "+suffix, "date": date, "count": count  }
+                    common.log("", "5d")
+                common.log("", "6")
                 try:
                     if exiftime != None and exiftime != "0":
                         common.log("Main.add_picture", "Picture has EXIF Date/Time %s"%exiftime)
@@ -260,8 +273,8 @@ class Main:
                 liz.addContextMenuItems(contextmenu,replacemenu)
 
             return xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=fullfilepath,listitem=liz,isFolder=False)
-        except:
-            pass
+        except Exception,msg:
+            common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
 
 
     def show_home(self):
@@ -419,6 +432,12 @@ class Main:
         dptd = dptd.replace("%b",monthname[strptime(self.args.value,thisdateformat).tm_mon - 1])    #replace %b marker by short month name
         dptd = dptd.replace("%B",fullmonthname[strptime(self.args.value,thisdateformat).tm_mon - 1])#replace %B marker by long month name
         nameperiode = strftime(dptd.encode("utf8"),strptime(self.args.value,thisdateformat))
+        
+        common.log("", "dptd = " + dptd)
+        common.log("", "nameperiode = " + nameperiode)
+        common.log("", "allperiod = " + allperiod)
+        
+        
         count = MPDB.count_pics_in_period(allperiod, self.args.value, min_rating)
         if count > 0:
             self.add_directory(name      = common.getstring(30100)%(nameperiode.decode("utf8"), count), #libellé#"All the period %s (%s pics)"%(self.args.value,MPDB.count_pics_in _period(allperiod,self.args.value)), #libellé
@@ -428,6 +447,16 @@ class Main:
                     fanart    = join(PIC_PATH,"fanart-date.png"),
                     contextmenu   = [(common.getstring(30152),"XBMC.RunPlugin(\"%s?action='addfolder'&method='date'&period='%s'&value='%s'&viewmode='scan'\")"%(sys.argv[0],allperiod,self.args.value)),]
                     )
+        count = MPDB.count_pics_wo_imagedatetime(allperiod, self.args.value, min_rating)
+        if count > 0 and self.args.period=="year":
+            self.add_directory(name      = common.getstring(30054)%(count), 
+                    params    = [("method","date"),("period","wo"),("value",self.args.value),("page",""),("viewmode","view")],#paramètres
+                    action    = "showpics",#action
+                    iconimage = join(PIC_PATH,"dates.png"),#icone
+                    fanart    = join(PIC_PATH,"fanart-date.png"),
+                    contextmenu   = [(common.getstring(30152),"XBMC.RunPlugin(\"%s?action='addfolder'&method='date'&period='%s'&value='%s'&viewmode='scan'\")"%(sys.argv[0],allperiod,self.args.value)),]
+                    )
+        
         total=len(listperiod)
         for period in listperiod:
             if period:
@@ -734,7 +763,11 @@ class Main:
 
 
     def show_collection(self):
-
+        if int(common.getaddon_setting("ratingmini"))>0:
+            min_rating = int(common.getaddon_setting("ratingmini"))
+        else:
+            min_rating = 0    
+            
         #herve502
         from xml.dom.minidom import parseString
         #/herve502
@@ -1511,8 +1544,11 @@ class Main:
         elif self.args.method == "date":
             #   lister les images pour une date donnée
             picfanart = join(PIC_PATH,"fanart-date.png")
-            formatstring = {"year":"%Y","month":"%Y-%m","date":"%Y-%m-%d","":"%Y","period":"%Y-%m-%d"}[self.args.period]
-            if self.args.period=="year" or self.args.period=="":
+            formatstring = {"wo":"","year":"%Y","month":"%Y-%m","date":"%Y-%m-%d","":"%Y","period":"%Y-%m-%d"}[self.args.period]
+            if self.args.period =="wo":
+                filelist = MPDB.get_all_files_wo_date(min_rating)
+            
+            elif self.args.period=="year" or self.args.period=="":
                 if self.args.value:
                     filelist = MPDB.pics_for_period('year', self.args.value, min_rating)
                 else:
@@ -1532,7 +1568,8 @@ class Main:
                     filelist = MPDB.search_between_dates( ("%s"%(amini),formatstring) , ( "%s"%(amaxi),formatstring), MinRating=min_rating )
                 else:
                     filelist = []
-
+            #print filelist
+             
         # we are showing pictures for a TAG selection
         elif self.args.method == "wizard":
             filelist = MPDB.filterwizard_result(self.args.kw.decode("utf8"), self.args.nkw.decode("utf8"), self.args.matchall, self.args.start, self.args.end, min_rating)

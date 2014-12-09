@@ -521,9 +521,11 @@ class VFSScanner:
                         common.log("VFSScanner._get_exif",  "ERROR : the datetime format is not recognize (%s)"%tags[tag].__str__(), xbmc.LOGERROR )
 
                 else:
-                    tagvalue = tags[tag].__str__()
+                    tagvalue = '' #tags[tag].__str__()
                 try:
                     picentry[tag]=tagvalue
+                    #common.log("", picfile)
+                    #common.log("", tag + " = " + tagvalue)                    
                 except Exception, msg:
                     common.log("VFSScanner._get_exif",  picfile , xbmc.LOGERROR)
                     common.log("VFSScanner._get_exif",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
