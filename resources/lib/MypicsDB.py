@@ -432,15 +432,20 @@ class MyPictureDB(object):
             else:
                 imagedatetime = ""
                 
+            
             if  "EXIF DateTimeOriginal" in dictionnary:
                 imagedatetime = dictionnary["EXIF DateTimeOriginal"]
-            elif len(imagedatetime.strip()) < 10 and "Image DateTime" in dictionnary:
+
+            elif (len(imagedatetime.strip()) < 10 or imagedatetime == "0000-00-00 00:00:00" ) and "Image DateTime" in dictionnary:
                 imagedatetime = dictionnary["Image DateTime"]                
-            elif len(imagedatetime.strip()) < 10 and "ImageDateTime" in dictionnary:
+
+            elif (len(imagedatetime.strip()) < 10 or imagedatetime == "0000-00-00 00:00:00" ) and "ImageDateTime" in dictionnary:
                 imagedatetime = dictionnary["ImageDateTime"]
-            elif len(imagedatetime.strip()) < 10 and "EXIF DateTimeDigitized" in dictionnary:
+
+            elif (len(imagedatetime.strip()) < 10 or imagedatetime == "0000-00-00 00:00:00" ) and "EXIF DateTimeDigitized" in dictionnary:
                 imagedatetime = dictionnary["EXIF DateTimeDigitized"]
-             
+
+                
             dictionnary['YYYY-MM'] = imagedatetime[:7]
 
         except:
@@ -468,7 +473,6 @@ class MyPictureDB(object):
                         pass
                     
             else:
-             
                 self.cur.execute( """INSERT INTO Files(idFolder, strPath, strFilename, ftype, DateAdded,  Thumb,  ImageRating, ImageDateTime, Sha) values (?, ?, ?, ?, ?, ?, ?, ?, ?)""", 
                           ( dictionnary["idFolder"],  dictionnary["strPath"], dictionnary["strFilename"], dictionnary["ftype"], dictionnary["DateAdded"], dictionnary["Thumb"], dictionnary["Image Rating"], imagedatetime, sha ) )
 
@@ -1289,6 +1293,7 @@ class MyPictureDB(object):
         
         self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Photoshop:DateCreated'", (common.getstring(30708),))
         self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'Image DateTime'", (common.getstring(30708),))
+        self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation =  'ImageDateTime'", (common.getstring(30708),))
     
         self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation = 'Caption/abstract'", (common.getstring(30709),))
         self.cur.request("update TagTypes set TagTranslation = ? where TagTranslation = 'Dc:description'", (common.getstring(30709),))
@@ -1533,7 +1538,7 @@ class MyPictureDB(object):
             rating_select = ''    
 
         if self.con.get_backend() == "mysql":
-            return [row for (row,) in self.cur.request( """SELECT DISTINCT count(*) FROM Files where (ImageDateTime is null or ImageDateTime = date_format('0000-00-00', '%%Y-%%m-%%d') ) """ + rating_select)][0]
+            return [row for (row,) in self.cur.request( """SELECT DISTINCT count(*) FROM Files where (ImageDateTime is null or DATE(ImageDateTime) = '0000-00-00') """ + rating_select)][0]
         else:
             return [row for (row,) in self.cur.request( """SELECT DISTINCT count(*) FROM Files where (ImageDateTime is null or ImageDateTime = ''  or ImageDateTime = 'null' ) """ + rating_select)][0]
 
@@ -1684,7 +1689,7 @@ class MyPictureDB(object):
             rating_select = ''
          
         if self.con.get_backend() == "mysql":
-            select = """SELECT strPath,strFilename FROM Files where (ImageDateTime is null or ImageDateTime = date_format('0000-00-00', '%%Y-%%m-%%d') ) """ + rating_select + """ ORDER BY ImageDateTime ASC"""
+            select = """SELECT strPath,strFilename FROM Files where (ImageDateTime is null or DATE(ImageDateTime) = '0000-00-00')  """ + rating_select + """ ORDER BY ImageDateTime ASC"""
         else:
             select = """SELECT strPath,strFilename FROM Files where (ImageDateTime is null or ImageDateTime = ''  or ImageDateTime = 'null' ) """ + rating_select + """ ORDER BY ImageDateTime ASC"""
 
