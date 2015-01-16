@@ -279,100 +279,96 @@ class Main:
 
     def show_home(self):
         common.log("Main.show_home", "start")
-##        # last month
-##        self.add_directory("last month (betatest)",[("method","lastmonth"),("period",""),("value",""),("page","1"),("viewmode","view")],
-##                    "showpics",join(PIC_PATH,"dates.png"),
-##                    fanart=join(PIC_PATH,"fanart-date.png"))
+
         display_all = common.getaddon_setting('m_all')=='true'
-        # last scan picture added
+         # last scan picture added
         if common.getaddon_setting('m_1')=='true' or display_all:
             self.add_directory(common.getstring(30209)%common.getaddon_setting("recentnbdays"),[("method","recentpicsdb"),("period",""),("value",""),("page","1"),("viewmode","view")],
-                        "showpics",join(PIC_PATH,"dates.png"),
-                        fanart=join(PIC_PATH,"fanart-date.png"))
+                        "showpics",join(PIC_PATH,"folder_recent_added.png"))
+
 
         # Last pictures
         if common.getaddon_setting('m_2')=='true' or display_all:
             self.add_directory(common.getstring(30130)%common.getaddon_setting("lastpicsnumber"),[("method","lastpicsshooted"),("page","1"),("viewmode","view")],
-                    "showpics",join(PIC_PATH,"dates.png"),
-                    fanart=join(PIC_PATH,"fanart-date.png"))
+                    "showpics",join(PIC_PATH,"folder_recent_shot.png"))
+
 
         # N random pictures
         if common.getaddon_setting('m_13')=='true' or display_all:
             self.add_directory(common.getstring(30654)%common.getaddon_setting("randompicsnumber"),[("method","random"),("page","1"),("viewmode","view")],
-                    "showpics",join(PIC_PATH,"collection.png"),
-                    fanart=join(PIC_PATH,"fanart-collection.png"))
+                    "showpics",join(PIC_PATH,"folder_random.png"))
 
+                    
         # videos
         if common.getaddon_setting('m_3')=='true' or display_all and common.getaddon_setting("usevids") == "true":
             self.add_directory(common.getstring(30051),[("method","videos"),("page","1"),("viewmode","view")],
-                        "showpics",join(PIC_PATH,"videos.png"),
-                        fanart=join(PIC_PATH,"fanart-videos.png"))
+                        "showpics",join(PIC_PATH,"folder_videos.png"))
 
         # Saved filter wizard settings
         self.add_directory(common.getstring(30655),[("wizard","settings"),("viewmode","view")],"showwizard",
-                    join(PIC_PATH,"keywords.png"),
-                    fanart=join(PIC_PATH,"fanart-keyword.png"))
+                    join(PIC_PATH,"folder_wizard.png"))
 
 
         # show filter wizard
         self.add_action(common.getstring(30600),[("wizard","dialog"),("viewmode","view")],"showwizard",
-                    join(PIC_PATH,"keywords.png"),
-                    fanart=join(PIC_PATH,"fanart-keyword.png"))
+                    join(PIC_PATH,"folder_wizard.png"))
+
 
         # Browse by Date
         if common.getaddon_setting('m_4')=='true' or display_all:
             self.add_directory(common.getstring(30101),[("period","year"),("value",""),("viewmode","view")],
-                    "showdate",join(PIC_PATH,"dates.png"),
-                    fanart=join(PIC_PATH,"fanart-date.png") )
+                    "showdate",join(PIC_PATH,"folder_date.png"))
+
 
         # Browse by Folders
         if common.getaddon_setting('m_5')=='true' or display_all:
             self.add_directory(common.getstring(30102),[("method","folders"),("folderid",""),("onlypics","non"),("viewmode","view")],
-                    "showfolder",join(PIC_PATH,"folders.png"),
-                    fanart=join(PIC_PATH,"fanart-folder.png"))
+                    "showfolder",join(PIC_PATH,"folder_pictures.png"))
 
-        # tags submenu
+
+        # Browse by Tags
         if common.getaddon_setting('m_14')=='true' or display_all:
             self.add_directory(common.getstring(30122),[("tags",""),("viewmode","view")],"showtagtypes",
-                        join(PIC_PATH,"keywords.png"),
-                        fanart=join(PIC_PATH,"fanart-keyword.png"))
+                        join(PIC_PATH,"folder_tags.png"))
+
 
         # Periods
         if common.getaddon_setting('m_10')=='true' or display_all:
             self.add_directory(common.getstring(30105),[("period",""),("viewmode","view"),],"showperiod",
-                    join(PIC_PATH,"period.png"),
-                    fanart=join(PIC_PATH,"fanart-period.png"))
+                    join(PIC_PATH,"folder_date_ranges.png"))
+
+                    
         # Collections
         if common.getaddon_setting('m_11')=='true' or display_all:
             self.add_directory(common.getstring(30150),[("collect",""),("method","show"),("viewmode","view")],"showcollection",
-                    join(PIC_PATH,"collection.png"),
-                    fanart=join(PIC_PATH,"fanart-collection.png"))
+                    join(PIC_PATH,"folder_collections.png"))
+
+
         # Global search
         if common.getaddon_setting('m_12')=='true' or display_all:
             self.add_directory(common.getstring(30098),[("searchterm",""),("viewmode","view")],"globalsearch",
-                    join(PIC_PATH,"search.png"),
-                    fanart=join(PIC_PATH,"fanart-search.png"))
+                    join(PIC_PATH,"folder_search.png"))
+
 
         # picture sources
         self.add_directory(common.getstring(30099),[("do","showroots"),("viewmode","view")],"rootfolders",
-                    join(PIC_PATH,"settings.png"),
-                    fanart=join(PIC_PATH,"fanart-setting.png"))
+                    join(PIC_PATH,"folder_paths.png")) 
+
 
         # Settings
         self.add_action(common.getstring(30009),[("showsettings", ""),("viewmode","view")],"showsettings",
-                    join(PIC_PATH,"settings.png"),
-                    fanart=join(PIC_PATH,"fanart-setting.png"))
+                    join(PIC_PATH,"folder_settings.png"))
 
 
         # Translation Editor
         self.add_action(common.getstring(30620),[("showtranslationeditor",""),("viewmode","view")],"showtranslationeditor",
-                    join(PIC_PATH,"keywords.png"),
-                    fanart=join(PIC_PATH,"fanart-keyword.png"))
+                    join(PIC_PATH,"folder_translate.png"))
+
 
         # Show readme
         self.add_action(common.getstring(30123),[("help",""),("viewmode","view")],"help",
-                    join(PIC_PATH,"keywords.png"),
-                    fanart=join(PIC_PATH,"fanart-keyword.png"))        
+                    join(PIC_PATH,"folder_help.png"))
+
 
         xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_UNSORTED)
         #xbmcplugin.setPluginCategory( handle=int( sys.argv[ 1 ] ), category=unquote_plus("My Pictures Library".encode("utf-8")) )
@@ -443,8 +439,7 @@ class Main:
             self.add_directory(name      = common.getstring(30100)%(nameperiode.decode("utf8"), count), #libellé#"All the period %s (%s pics)"%(self.args.value,MPDB.count_pics_in _period(allperiod,self.args.value)), #libellé
                     params    = [("method","date"),("period",allperiod),("value",self.args.value),("page",""),("viewmode","view")],#paramètres
                     action    = "showpics",#action
-                    iconimage = join(PIC_PATH,"dates.png"),#icone
-                    fanart    = join(PIC_PATH,"fanart-date.png"),
+                    iconimage = join(PIC_PATH,"folder_date.png"),#icone
                     contextmenu   = [(common.getstring(30152),"XBMC.RunPlugin(\"%s?action='addfolder'&method='date'&period='%s'&value='%s'&viewmode='scan'\")"%(sys.argv[0],allperiod,self.args.value)),]
                     )
         count = MPDB.count_pics_wo_imagedatetime(allperiod, self.args.value, min_rating)
@@ -452,8 +447,7 @@ class Main:
             self.add_directory(name      = common.getstring(30054)%(count), 
                     params    = [("method","date"),("period","wo"),("value",self.args.value),("page",""),("viewmode","view")],#paramètres
                     action    = "showpics",#action
-                    iconimage = join(PIC_PATH,"dates.png"),#icone
-                    fanart    = join(PIC_PATH,"fanart-date.png"),
+                    iconimage = join(PIC_PATH,"folder_date.png"),#icone
                     contextmenu   = [(common.getstring(30152),"XBMC.RunPlugin(\"%s?action='addfolder'&method='date'&period='%s'&value='%s'&viewmode='scan'\")"%(sys.argv[0],allperiod,self.args.value)),]
                     )
         
@@ -472,8 +466,7 @@ class Main:
                                                           common.getstring(30050).encode("utf8")), #libellé
                                 params    = [("method","date"),("period",nextperiod),("value",period),("viewmode","view")],#paramètres
                                 action    = action,#action
-                                iconimage = join(PIC_PATH,"dates.png"),#icone
-                                fanart    = join(PIC_PATH,"fanart-date.png"),
+                                iconimage = join(PIC_PATH,"folder_date.png"),#icone
                                 contextmenu   = context,#menucontextuel
                                 total = total)#nb total d'éléments
                 except:
@@ -503,8 +496,7 @@ class Main:
                 self.add_directory(name      = "%s (%s %s)"%(childrenfolder, count, common.getstring(30050)), #libellé
                         params    = [("method","folders"),("folderid",str(idchildren)),("onlypics","non"),("viewmode","view")],#paramètres
                         action    = "showfolder",#action
-                        iconimage = join(PIC_PATH,"folders.png"),#icone
-                        fanart    = join(PIC_PATH,"fanart-folder.png"),
+                        iconimage = join(PIC_PATH,"folder_pictures.png"),#icone
                         contextmenu   = [(common.getstring(30212),"Container.Update(\"%s?action='rootfolders'&do='addrootfolder'&addpath='%s'&exclude='1'&viewmode='view'\",)"%(sys.argv[0],common.quote_param(path.encode('utf-8'))) ),],
                         total = len(childrenfolders))#nb total d'éléments
 
@@ -529,7 +521,7 @@ class Main:
                                                                                                                          common.quote_param(filename.encode('utf-8')))  )
                             )
             self.add_picture(filename, path, count=count, contextmenu=context,
-                        fanart = xbmcplugin.getSetting(int(sys.argv[1]),'usepicasfanart')=='true' and join(path,filename) or join(PIC_PATH,"fanart-folder.png")
+                        fanart = xbmcplugin.getSetting(int(sys.argv[1]),'usepicasfanart')=='true' and join(path,filename)
                         )
 
 
@@ -617,8 +609,7 @@ class Main:
                 self.add_directory(name      = "%s"%(filtername),
                             params        = [("method","wizard_settings"),("viewmode","view"),("filtername", filtername),("period",""),("value",""),("page","1")],
                             action        = "showpics",
-                            iconimage     = join(PIC_PATH,"keywords.png"),
-                            fanart        = join(PIC_PATH,"fanart-keyword.png"),
+                            iconimage     = join(PIC_PATH,"folder_wizard.png"),
                             contextmenu   = [(common.getstring(30152),"XBMC.RunPlugin(\"%s?action='addfolder'&method='wizard_settings'&filtername='%s'&viewmode='scan'\")"%(sys.argv[0],filtername)),],
                             #contextmenu   = [('','')],
                             total         = total)
@@ -640,8 +631,7 @@ class Main:
                 self.add_directory(name      = "%s (%s %s)"%(tag,nb,common.getstring(30052)), #libellé
                             params    = [("method","tagtype"),("tagtype",tag),("page","1"),("viewmode","view")],#paramètres
                             action    = "showtags",#action
-                            iconimage = join(PIC_PATH,"keywords.png"),#icone
-                            fanart    = join(PIC_PATH,"fanart-keyword.png"),
+                            iconimage = join(PIC_PATH,"folder_tags.png"),#icone
                             contextmenu   = [('','')],
                             total = total)#nb total d'éléments
         xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_LABEL)
@@ -663,8 +653,7 @@ class Main:
                 self.add_directory(name      = "%s (%s %s)"%(tag,nb,common.getstring(30050)), #libellé
                             params    = [("method","tag"),("tag",tag),("tagtype",tagtype),("page","1"),("viewmode","view")],#paramètres
                             action    = "showpics",#action
-                            iconimage = join(PIC_PATH,"keywords.png"),#icone
-                            fanart    = join(PIC_PATH,"fanart-keyword.png"),
+                            iconimage = join(PIC_PATH,"folder_tags.png"),#icone
                             contextmenu   = [( common.getstring(30152),"XBMC.RunPlugin(\"%s?action='addfolder'&method='tag'&tag='%s'&tagtype='%s'&viewmode='scan'\")"%(sys.argv[0],common.quote_param(tag),tagtype)),
                                              ( common.getstring(30061),"XBMC.RunPlugin(\"%s?action='showpics'&method='tag'&page=''&viewmode='zip'&name='%s'&tag='%s'&tagtype='%s'\")"%(sys.argv[0],common.quote_param(tag),common.quote_param(tag),tagtype) ),
                                              ( common.getstring(30062),"XBMC.RunPlugin(\"%s?action='showpics'&method='tag'&page=''&viewmode='export'&name='%s'&tag='%s'&tagtype='%s'\")"%(sys.argv[0],common.quote_param(tag),common.quote_param(tag),tagtype) )
@@ -680,8 +669,7 @@ class Main:
         self.add_directory(name      = common.getstring(30106),
                     params    = [("period","setperiod"),("viewmode","view")],#paramètres
                     action    = "showperiod",#action
-                    iconimage = join(PIC_PATH,"newperiod.png"),#icone
-                    fanart    = join(PIC_PATH,"fanart-period.png"),
+                    iconimage = join(PIC_PATH,"folder_date_ranges.png"),#icone
                     contextmenu   = None)#menucontextuel
         #If We previously choose to add a new period, this test will ask user for setting the period :
         if self.args.period=="setperiod":
@@ -751,8 +739,7 @@ class Main:
                                                                     )), #libellé
                         params    = [("method","date"),("period","period"),("datestart",datestart),("dateend",dateend),("page","1"),("viewmode","view")],#paramètres
                         action    = "showpics",#action
-                        iconimage = join(PIC_PATH,"period.png"),#icone
-                        fanart    = join(PIC_PATH,"fanart-period.png"),
+                        iconimage = join(PIC_PATH,"folder_date_ranges.png"),#icone
                         contextmenu   = [ ( common.getstring(30111),"XBMC.RunPlugin(\"%s?action='removeperiod'&viewmode='view'&periodname='%s'&period='period'\")"%(sys.argv[0],common.quote_param(periodname.encode("utf8"))) ),
                                           ( common.getstring(30112),"XBMC.RunPlugin(\"%s?action='renameperiod'&viewmode='view'&periodname='%s'&period='period'\")"%(sys.argv[0],common.quote_param(periodname.encode("utf8"))) ),
                                           ( common.getstring(30152),"XBMC.RunPlugin(\"%s?action='addfolder'&method='date'&period='period'&datestart='%s'&dateend='%s'&viewmode='scan'\")"%(sys.argv[0],datestart,dateend))
@@ -880,29 +867,26 @@ class Main:
         self.add_directory(name      = common.getstring(30160),
                     params    = [("method","setcollection"),("collect",""),("viewmode","view"),],#paramètres
                     action    = "showcollection",#action
-                    iconimage = join(PIC_PATH,"newcollection.png"),#icone
-                    fanart    = join(PIC_PATH,"fanart-collection.png"),
+                    iconimage = join(PIC_PATH,"folder_collections.png"),#icone
                     contextmenu   = None)#menucontextuel
         self.add_directory(name      = common.getstring(30168),
                     params    = [("method","importcollection_wizard"),("collect",""),("viewmode","view"),],#paramètres
                     action    = "showcollection",#action
-                    iconimage = join(PIC_PATH,"newcollection.png"),#icone
-                    fanart    = join(PIC_PATH,"fanart-collection.png"),
+                    iconimage = join(PIC_PATH,"folder_collections.png"),#icone
                     contextmenu   = None)#menucontextuel
         #herve502
         self.add_directory(name      = common.getstring(30162),
                     params    = [("method","importcollection_picasa"),("collect",""),("viewmode","view"),],#paramètres
                     action    = "showcollection",#action
-                    iconimage = join(PIC_PATH,"newcollection.png"),#icone
-                    fanart    = join(PIC_PATH,"fanart-collection.png"),
+                    iconimage = join(PIC_PATH,"folder_collections.png"),#icone
                     contextmenu   = None)#menucontextuel
         #/herve520
         for collection in MPDB.collections_list():
             self.add_action(name      = collection[0],
                         params    = [("method","collection"),("collect",collection[0]),("page","1"),("viewmode","slideshow")],#paramètres
                         action    = "showpics",#action
-                        iconimage = join(PIC_PATH,"collection.png"),#icone
-                        fanart    = join(PIC_PATH,"fanart-collection.png"),
+                        iconimage = join(PIC_PATH,"folder_collections.png"),#icone
+
                         contextmenu   = [
                                          (common.getstring(30169),"Container.Update(\"%s?action='showpics'&method='collection'&page=''&viewmode='view'&name='%s'&collect='%s'\")"%(sys.argv[0],common.quote_param(collection[0].encode('utf-8')),common.quote_param(collection[0].encode('utf-8'))) ),                                         
                                          (common.getstring(30149),"XBMC.RunPlugin(\"%s?action='collectionaddplaylist'&viewmode='view'&collect='%s'\")"%(sys.argv[0],common.quote_param(collection[0].encode('utf-8')) ) ),
@@ -969,8 +953,7 @@ class Main:
                 self.add_directory(name      = common.getstring(30116)%(compte,motrecherche.decode("utf8"),tag ), #files_fields_description.has_key(colname) and files_fields_description[colname] or colname),
                             params    = [("method","search"),("field",u"%s"%common.smart_unicode(tag)),("searchterm",u"%s"%common.smart_unicode(motrecherche)),("page","1"),("viewmode","view")],#paramètres
                             action    = "showpics",#action
-                            iconimage = join(PIC_PATH,"search.png"),
-                            fanart    = join(PIC_PATH,"fanart-search.png"),
+                            iconimage = join(PIC_PATH,"folder_search.png"),
                             contextmenu   = [(common.getstring(30152),"XBMC.RunPlugin(\"%s?action='addfolder'&method='search'&field='%s'&searchterm='%s'&viewmode='scan'\")"%(sys.argv[0],tag,motrecherche))])#menucontextuel
         if not result:
             dialog = xbmcgui.Dialog()
@@ -1143,16 +1126,14 @@ class Main:
             self.add_action(name      = common.getstring(30216),#add a root path
                         params    = [("do","addpicturessource"),("viewmode","view"),("exclude","0")],#paramètres
                         action    = "rootfolders",#action
-                        iconimage = join(PIC_PATH,"newsettings.png"),#icone
-                        fanart    = join(PIC_PATH,"fanart-setting.png"),
+                        iconimage = join(PIC_PATH,"folder_paths.png"),#icone
                         contextmenu   = None)#menucontextuel
 
             # Add a path to database
             self.add_action(name      = common.getstring(30208),#add a root path
                         params    = [("do","addroot"),("viewmode","view"),("exclude","0")],#paramètres
                         action    = "rootfolders",#action
-                        iconimage = join(PIC_PATH,"newsettings.png"),#icone
-                        fanart    = join(PIC_PATH,"fanart-setting.png"),
+                        iconimage = join(PIC_PATH,"folder_paths.png"),#icone
                         contextmenu   = None)#menucontextuel
 
             # Scan all paths
@@ -1160,16 +1141,14 @@ class Main:
                 self.add_action(name      = common.getstring(30213),#scan all distinct root paths
                             params    = [("do","scanall"),("viewmode","view"),],#paramètres
                             action    = "rootfolders",#action
-                            iconimage = join(PIC_PATH,"settings.png"),#icone
-                            fanart    = join(PIC_PATH,"fanart-setting.png"),
+                            iconimage = join(PIC_PATH,"folder_paths.png"),#icone
                             contextmenu   = None)#menucontextuel
             # Add new pictures
             if len(includefolders) > 0:
                 self.add_action(name      = common.getstring(30249),#scan all distinct root paths
                             params    = [("do","refreshpaths"),("viewmode","view"),],#paramètres
                             action    = "rootfolders",#action
-                            iconimage = join(PIC_PATH,"settings.png"),#icone
-                            fanart    = join(PIC_PATH,"fanart-setting.png"),
+                            iconimage = join(PIC_PATH,"folder_paths.png"),#icone
                             contextmenu   = None)#menucontextuel
 
             # Show included folders
@@ -1181,8 +1160,7 @@ class Main:
                 self.add_action(name      = "[COLOR=FF66CC00][B][ + ][/B][/COLOR] "+path+" [COLOR=FFC0C0C0][recursive="+srec+" , update="+supd+"][/COLOR]",
                             params    = [("do","rootclic"),("rootpath",path),("viewmode","view"),("exclude","0")],#paramètres
                             action    = "rootfolders",#action
-                            iconimage = join(PIC_PATH,"settings.png"),#icone
-                            fanart    = join(PIC_PATH,"fanart-setting.png"),
+                            iconimage = join(PIC_PATH,"folder_paths.png"),#icone
                             #menucontextuel
                             contextmenu   = [( common.getstring(30206),"Notification(TODO : scan folder,scan this folder now !,3000,%s)"%join(home,"icon.png").encode("utf8") ),
                                              ( common.getstring(30207),"Container.Update(\"%s?action='rootfolders'&do='delroot'&delpath='%s'&exclude='1'&viewmode='view'\",)"%(sys.argv[0],common.quote_param(path.encode('utf-8'))))
@@ -1193,8 +1171,7 @@ class Main:
                 self.add_action(name      = common.getstring(30211),#add a folder to exclude
                             params    = [("do","addroot"),("viewmode","view"),("exclude","1")],#paramètres
                             action    = "rootfolders",#action
-                            iconimage = join(PIC_PATH,"newsettings.png"),#icone
-                            fanart    = join(PIC_PATH,"fanart-setting.png"),
+                            iconimage = join(PIC_PATH,"folder_paths.png"),#icone
                             contextmenu   = None)#menucontextuel
 
             #Show excluded folders
@@ -1202,8 +1179,7 @@ class Main:
                 self.add_action(name      = "[COLOR=FFFF0000][B][ - ][/B][/COLOR] "+path,
                             params    = [("do","rootclic"),("rootpath",path),("viewmode","view"),("exclude","1")],#paramètres
                             action    = "rootfolders",#action
-                            iconimage = join(PIC_PATH,"settings.png"),#icone
-                            fanart    = join(PIC_PATH,"fanart-setting.png"),
+                            iconimage = join(PIC_PATH,"folder_paths.png"),#icone
                             #menucontextuel
                             contextmenu   = [( common.getstring(30210),"Container.Update(\"%s?action='rootfolders'&do='delroot'&delpath='%s'&exclude='0'&viewmode='view'\",)"%(sys.argv[0],common.quote_param(path.encode('utf-8'))))])
 
@@ -1510,7 +1486,6 @@ class Main:
             offset = (int(self.args.page)-1)*limit
             page = int(self.args.page)
 
-        picfanart = None
         if self.args.method == "folder":#NON UTILISE : l'affichage par dossiers affiche de lui même les photos
             pass
 
@@ -1543,7 +1518,6 @@ class Main:
         # we are showing pictures for a DATE selection
         elif self.args.method == "date":
             #   lister les images pour une date donnée
-            picfanart = join(PIC_PATH,"fanart-date.png")
             formatstring = {"wo":"","year":"%Y","month":"%Y-%m","date":"%Y-%m-%d","":"%Y","period":"%Y-%m-%d"}[self.args.period]
             if self.args.period =="wo":
                 filelist = MPDB.get_all_files_wo_date(min_rating)
@@ -1558,7 +1532,6 @@ class Main:
                 filelist = MPDB.pics_for_period(self.args.period, self.args.value, min_rating)
 
             elif self.args.period=="period":
-                picfanart = join(PIC_PATH,"fanart-period.png")
                 filelist = MPDB.search_between_dates(DateStart=(self.args.datestart,formatstring), DateEnd=(self.args.dateend,formatstring), MinRating=min_rating)
             else:#period not recognized, show whole pics : TODO check if useful and if it can not be optimized for something better
                 listyears=MPDB.get_years()
@@ -1576,7 +1549,6 @@ class Main:
 
         # we are showing pictures for a TAG selection
         elif self.args.method == "tag":
-            picfanart = join(PIC_PATH,"fanart-keyword.png")
             if not self.args.tag:#p_category
                 filelist = MPDB.search_tag(None)
             else:
@@ -1588,7 +1560,6 @@ class Main:
             #   lister les images du dossier self.args.folderid et ses sous-dossiers
             # BUG CONNU : cette requête ne récupère que les photos du dossier choisi, pas les photos 'filles' des sous dossiers
             #   il faut la modifier pour récupérer les photos filles des sous dossiers
-            picfanart = join(PIC_PATH,"fanart-folder.png")
             listid = MPDB.all_children_of_folder(self.args.folderid)
             filelist = [row for row in MPDB.cur.request( """SELECT p.FullPath,f.strFilename FROM Files f, Folders p WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') >= ? AND f.idFolder=p.idFolder AND p.ParentFolder in ('%s') ORDER BY ImageDateTime ASC LIMIT %s OFFSET %s"""%("','".join([str(i) for i in listid]),
                                                                                                                                                                                                                                     limit,
@@ -1599,11 +1570,9 @@ class Main:
                 min_rating = int(common.getaddon_setting("ratingmini"))
             else:
                 min_rating = 0        
-            picfanart = join(PIC_PATH,"fanart-collection.png")
             filelist = MPDB.collection_get_pics(self.args.collect, min_rating)
             
         elif self.args.method == "search":
-            picfanart = join(PIC_PATH,"fanart-collection.png")
             if int(common.getaddon_setting("ratingmini"))>0:
                 min_rating = int(common.getaddon_setting("ratingmini"))
             else:
@@ -1612,14 +1581,12 @@ class Main:
 
         elif self.args.method == "lastmonth":
             #show pics taken within last month
-            picfanart = join(PIC_PATH,"fanart-date.png")
             if MPDB.con.get_backend() == "mysql":
                 filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') >= ? AND datetime(ImageDateTime) BETWEEN SysDate() - INTERVAL 1 MONTH AND SysDate() ORDER BY ImageDateTime ASC LIMIT %s OFFSET %s"""%(limit,offset),(min_rating,))]
             else:
                 filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') >= ? AND datetime(ImageDateTime) BETWEEN datetime('now','-1 months') AND datetime('now') ORDER BY ImageDateTime ASC LIMIT %s OFFSET %s"""%(limit,offset),(min_rating,))]
 
         elif self.args.method == "recentpicsdb":#pictures added to database within x last days __OK
-            picfanart = join(PIC_PATH,"fanart-date.png")
             numberofdays = common.getaddon_setting("recentnbdays")
             if MPDB.con.get_backend() == "mysql":
                 filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') >= ? AND DateAdded>=SysDate() - INTERVAL %s DAY ORDER BY DateAdded ASC LIMIT %s OFFSET %s"""%(numberofdays,limit,offset),(min_rating,))]
@@ -1627,12 +1594,10 @@ class Main:
                 filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') >= ? AND DateAdded >= datetime('now','start of day','-%s days') ORDER BY DateAdded ASC LIMIT %s OFFSET %s"""%(numberofdays,limit,offset),(min_rating,))]
 
         elif self.args.method =="lastpicsshooted":#X last pictures shooted __OK
-            picfanart = join(PIC_PATH,"fanart-date.png")
             select = """SELECT strPath,strFilename FROM Files WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') >= '%s' AND ImageDateTime IS NOT NULL ORDER BY ImageDateTime DESC LIMIT %s"""%(min_rating, common.getaddon_setting('lastpicsnumber'))
             filelist = [row for row in MPDB.cur.request( select )]
             
         elif self.args.method =="videos":#show all videos __OK
-            picfanart = join(PIC_PATH,"fanart-videos.png")
             filelist = [row for row in MPDB.cur.request( """SELECT strPath,strFilename FROM Files WHERE ftype="video" ORDER BY ImageDateTime DESC LIMIT %s OFFSET %s"""%(limit,offset) )]
 
         #on teste l'argumen 'viewmode'
@@ -1805,7 +1770,7 @@ class Main:
                         path,
                         count = count,
                         contextmenu = context,
-                        fanart = xbmcplugin.getSetting(int(sys.argv[1]),'usepicasfanart')=='true' and join(path,filename) or picfanart
+                        fanart = xbmcplugin.getSetting(int(sys.argv[1]),'usepicasfanart')=='true' and join(path,filename)
                         )
         xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_DATE )
         xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_PROGRAM_COUNT )
