@@ -529,7 +529,7 @@ class MyPictureDB(object):
                                 try:
                                     self.cur.execute(" INSERT INTO TagTypes(tagType, TagTranslation) VALUES(?, ?) ",(tag_type,tag_type))
                                 except Exception,msg:
-                                    if str(msg)=="column TagType is not unique" or "Duplicate entry" in str(msg):
+                                    if str(msg)=="column TagType is not unique" or "Duplicate entry" in str(msg) or "UNIQUE constraint" in str(msg):
                                         pass
                                     else:
                                         common.log("tags_insert", "path = %s"%common.smart_unicode(filename).encode('utf-8'), xbmc.LOGERROR)
@@ -551,7 +551,7 @@ class MyPictureDB(object):
                             try:
                                 self.cur.execute(" INSERT INTO TagContents(idTagType,TagContent) VALUES(?,?) ",(id_tag_type,value))
                             except Exception,msg:
-                                if str(msg)=="columns idTagType, TagContent are not unique" or "Duplicate entry" in str(msg):
+                                if str(msg)=="columns idTagType, TagContent are not unique" or "Duplicate entry" in str(msg) or "UNIQUE constraint" in str(msg):
                                     pass
                                 else:
                                     common.log("tags_insert", "path = %s"%common.smart_unicode(filename).encode('utf-8'), xbmc.LOGERROR)
@@ -567,7 +567,7 @@ class MyPictureDB(object):
 
                             # At first column was named idTag then idTagContent
                             except Exception,msg:
-                                if str(msg)=="PRIMARY KEY must be unique" or "Duplicate entry" in str(msg):
+                                if str(msg)=="PRIMARY KEY must be unique" or "Duplicate entry" in str(msg) or "UNIQUE constraint" in str(msg):
                                     pass
                                 else:
                                     common.log("tags_insert", "Error while adding TagsInFiles")
