@@ -190,17 +190,19 @@ class Main:
                     date = exiftime and strftime("%d.%m.%Y",strptime(exiftime,"%Y-%m-%d %H:%M:%S")) or ""
             except Exception,msg:
                 common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
-                
+            
             common.log("", "date")
             common.log("", date)
             common.log("", "1")
             #is the file a video ?
             if extension in ["."+ext.replace(".","").upper() for ext in common.getaddon_setting("vidsext").split("|")]:
+            
                 infolabels = { "date": date }
                 liz.setInfo( type="video", infoLabels=infolabels )
                 common.log("", "2")
             #or is the file a picture ?
             elif extension in ["."+ext.replace(".","").upper() for ext in common.getaddon_setting("picsext").split("|")]:
+                
                 common.log("", "3")
                 if int(common.getaddon_setting("ratingmini"))>0:
                     if not rating:  
@@ -259,7 +261,8 @@ class Main:
                 liz.setInfo( type="pictures", infoLabels=infolabels )
 
             liz.setLabel(picname+" "+suffix)
-            if fanart is not None:
+
+            if fanart is not None and fanart != False:
                 liz.setProperty('fanart_image',fanart) 
 
             if contextmenu:
@@ -1541,7 +1544,6 @@ class Main:
                     filelist = MPDB.search_between_dates( ("%s"%(amini),formatstring) , ( "%s"%(amaxi),formatstring), MinRating=min_rating )
                 else:
                     filelist = []
-            #print filelist
              
         # we are showing pictures for a TAG selection
         elif self.args.method == "wizard":

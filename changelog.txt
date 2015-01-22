@@ -1,3 +1,6 @@
+2015/01/22 --> v 13.2.1
+Fix:    Fanart bug in default.py fixed
+
 2015/01/22 --> v 13.2.0
 Fix:    Scanner had a bug. All files are marked modified to support a full recan of all pictures.
 Update: New icons
