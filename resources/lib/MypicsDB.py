@@ -25,7 +25,7 @@ import xbmcgui
 import common
 import dbabstractionlayer as dblayer
 
-DB_VERSION        = '13.1.0'
+DB_VERSION        = '13.2.0'
 
 lists_separator   = "||"
 
@@ -118,6 +118,7 @@ class MyPictureDB(object):
             try:
                 common.log("MPDB.version_table", "Updating to version 13.1.0.  Setting min. image rating to 0" ) 
                 self.cur.execute("Update Files set ImageRating = '0' where COALESCE(ImageRating, 'X') not in ('1', '2', '3', '4', '5' )")
+                self.cur.execute("Update Files set Sha = ''")
                 self.cur.execute("UPDATE DBVersion set strVersion = '%s'"%DB_VERSION)
                 self.con.commit()                
             except:
@@ -461,14 +462,14 @@ class MyPictureDB(object):
                         return
                         
                     try:
-
                         id_tagcontents=[row for row in self.cur.request("SELECT idTagContent FROM TagsInFiles WHERE idFile=?", (id_file,))]
                         self.cur.execute("Delete From TagsInFiles Where idFile=?", (id_file,))
                         
                         for id_tagcontent in id_tagcontents:
-                            self.cur.execute("Delete From TagsContents Where idTagContent= ?", (id_tagcontent,))
+                            self.cur.execute("Delete From TagContents Where idTagContent= ?", (id_tagcontent[0],))
+
+                        self.cur.execute( """Update Files set ftype=?, Thumb=?, ImageRating=?, ImageDateTime=?, Sha=? where idFile=?""", ( dictionnary["ftype"], dictionnary["Thumb"], dictionnary["Image Rating"], imagedatetime, sha, str(id_file) ) )
                         
-                        self.cur.execute("""Update Files set ftype=?, Thumb=?, ImageRating=?, ImageDateTime=?, Sha=? where idFile=?""", ( dictionnary["ftype"], dictionnary["Thumb"], dictionnary["Image Rating"], imagedatetime, sha, id_file ) )
                     except:
                         pass
                     
@@ -1145,7 +1146,6 @@ class MyPictureDB(object):
                                           and fi.strFilename = ?""",  (filepath,filename) )
             try:
                 for row in rows:
-                    print row
                     if row[1] == 'GPS GPSLongitude':
                         lon = row[0]
                     elif row[1] == 'GPS GPSLongitudeRef':

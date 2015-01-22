@@ -243,7 +243,6 @@ class VFSScanner:
                                                   int(100*float(self.current_root_entry)/float(self.total_root_entries)),
                                                   common.smart_utf8(common.getstring(30000)+" [%s] (%0.2f%%)"%(self.action,100*float(self.picsscanned)/float(self.totalfiles))),#"MyPicture Database [%s] (%0.2f%%)"
                                                   common.smart_utf8(filename))
-    
                                 continue                            
                         else: 
                             (localfile, isremote) = self.filescanner.getlocalfile(pic)
@@ -251,8 +250,8 @@ class VFSScanner:
                             filesha = self.mpdb.sha_of_file(localfile) 
                             sqlupdate   = True
                             
-                            
                             if self.mpdb.stored_sha(path,filename) != filesha:  # picture was modified
+
                                 self.picsupdated += 1
                                 common.log( "VFSScanner._addpath", "Picture already exists and must be updated")
                                 
@@ -264,7 +263,7 @@ class VFSScanner:
                                     self.filescanner.delete(localfile)                            
     
                             else:
-    
+
                                 common.log( "VFSScanner._addpath", "Picture already exists but not modified")
     
                                 if self.scan and self.totalfiles!=0 and self.total_root_entries!=0:
@@ -403,7 +402,6 @@ class VFSScanner:
                 common.log( "VFSScanner._get_metas()._get_xmp()", "Exception", xbmc.LOGERROR)
                 common.log( "VFSScanner._get_metas()._get_xmp()", msg, xbmc.LOGERROR)
 
-            
             if picentry['Image Rating'] is None or picentry['Image Rating'] == '' or picentry['Image Rating'] < '1':
                 if 'xmp:Rating' in picentry and ( picentry['xmp:Rating'] is not None or picentry['xmp:Rating'] != ''):
                     picentry['Image Rating'] = picentry['xmp:Rating']
@@ -423,13 +421,11 @@ class VFSScanner:
                         new_rating = 1                        
                     else:
                         new_rating = 0
-                       
                     picentry['Image Rating'] = new_rating
-                    
-        #print "Rating = " + picentry['Image Rating'] 
-        if picentry['Image Rating'] is None or len(picentry['Image Rating']) == 0:
-            picentry['Image Rating'] = "0"
-            
+                
+            if picentry['Image Rating'] is None or len(picentry['Image Rating']) == 0:
+                picentry['Image Rating'] = "0"
+        
         return picentry
 
 
@@ -521,11 +517,9 @@ class VFSScanner:
                         common.log("VFSScanner._get_exif",  "ERROR : the datetime format is not recognize (%s)"%tags[tag].__str__(), xbmc.LOGERROR )
 
                 else:
-                    tagvalue = '' #tags[tag].__str__()
+                    tagvalue = tags[tag].__str__()
                 try:
                     picentry[tag]=tagvalue
-                    #common.log("", picfile)
-                    #common.log("", tag + " = " + tagvalue)                    
                 except Exception, msg:
                     common.log("VFSScanner._get_exif",  picfile , xbmc.LOGERROR)
                     common.log("VFSScanner._get_exif",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
