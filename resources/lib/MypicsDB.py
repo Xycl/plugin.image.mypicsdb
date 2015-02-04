@@ -25,7 +25,7 @@ import xbmcgui
 import common
 import dbabstractionlayer as dblayer
 
-DB_VERSION        = '13.2.0'
+DB_VERSION        = '13.3.0'
 
 lists_separator   = "||"
 
@@ -114,16 +114,23 @@ class MyPictureDB(object):
                 
             self.cur.execute("UPDATE DBVersion set strVersion = '%s'"%DB_VERSION)
             self.con.commit()
-        if common.check_version(strVersion, DB_VERSION) >0:
+        if common.check_version(strVersion, '13.2.0') >0:
             try:
-                common.log("MPDB.version_table", "Updating to version 13.1.0.  Setting min. image rating to 0" ) 
+                common.log("MPDB.version_table", "Updating to version 13.2.0.  Setting min. image rating to 0" ) 
                 self.cur.execute("Update Files set ImageRating = '0' where COALESCE(ImageRating, 'X') not in ('1', '2', '3', '4', '5' )")
                 self.cur.execute("Update Files set Sha = ''")
                 self.cur.execute("UPDATE DBVersion set strVersion = '%s'"%DB_VERSION)
                 self.con.commit()                
             except:
                 pass
-        
+        if common.check_version(strVersion, DB_VERSION) >0:
+            try:
+                common.log("MPDB.version_table", "Updating to version 13.3.0" ) 
+                self.cur.execute("Update Files set Sha = ''")
+                self.cur.execute("UPDATE DBVersion set strVersion = '%s'"%DB_VERSION)
+                self.con.commit()                
+            except:
+                pass        
         else:
             common.log("MPDB.version_table", "MyPicsDB database contains already current schema" )
             
