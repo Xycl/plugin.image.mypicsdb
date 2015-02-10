@@ -253,7 +253,28 @@ import shutil
 
 import logging
 LOG = logging.getLogger('iptcinfo')
-LOGDBG = logging.getLogger('iptcinfo.debug')
+#LOGDBG = logging.getLogger('iptcinfo.debug')
+LOGDBG = logging.getLogger('iptcinfo')
+
+
+
+#logger.setLevel(logging.DEBUG)
+# create file handler which logs even debug messages
+fh = logging.FileHandler('spam.log')
+fh.setLevel(logging.DEBUG)
+# create console handler with a higher log level
+ch = logging.StreamHandler()
+ch.setLevel(logging.ERROR)
+# create formatter and add it to the handlers
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
+ch.setFormatter(formatter)
+# add the handlers to the logger
+LOG.addHandler(fh)
+LOG.addHandler(ch)
+
+LOGDBG.addHandler(fh)
+LOGDBG.addHandler(ch)
 
 
 class String(basestring):
