@@ -252,28 +252,17 @@ import tempfile
 import shutil
 
 import logging
-LOG = logging.getLogger('iptcinfo')
-#LOGDBG = logging.getLogger('iptcinfo.debug')
-LOGDBG = logging.getLogger('iptcinfo')
+LOG = logging.getLogger('iptcinfo.py')
+LOGDBG = logging.getLogger('iptcinfo,py')
 
-
-
-#logger.setLevel(logging.DEBUG)
-# create file handler which logs even debug messages
-fh = logging.FileHandler('spam.log')
-fh.setLevel(logging.DEBUG)
-# create console handler with a higher log level
+# create console handler
 ch = logging.StreamHandler()
 ch.setLevel(logging.ERROR)
-# create formatter and add it to the handlers
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-fh.setFormatter(formatter)
-ch.setFormatter(formatter)
-# add the handlers to the logger
-LOG.addHandler(fh)
-LOG.addHandler(ch)
 
-LOGDBG.addHandler(fh)
+formatter = logging.Formatter('[My Pictures Database] line %(lineno)5d in %(name)s object %(module)s.%(funcName)s >> %(message)s')
+
+ch.setFormatter(formatter)
+LOG.addHandler(ch)
 LOGDBG.addHandler(ch)
 
 
