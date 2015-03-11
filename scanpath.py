@@ -512,7 +512,8 @@ class VFSScanner:
                             tagvalue = strftime("%Y-%m-%d %H:%M:%S",strptime(tags[tag].__str__(),datetimeformat))
                             break
                         except:
-                            common.log("VFSScanner._get_exif",  "Datetime (%s) did not match for '%s' format... trying an other one..."%(tags[tag].__str__(),datetimeformat), xbmc.LOGERROR )
+                            pass
+                            #common.log("VFSScanner._get_exif",  "Datetime (%s) did not match for '%s' format... trying an other one..."%(tags[tag].__str__(),datetimeformat), xbmc.LOGERROR )
                     if not tagvalue:
                         common.log("VFSScanner._get_exif",  "ERROR : the datetime format is not recognize (%s)"%tags[tag].__str__(), xbmc.LOGERROR )
 
@@ -548,7 +549,7 @@ class VFSScanner:
     def _get_iptc(self, fullpath):
 
         try:
-            info = IPTCInfo(fullpath, inp_charset="iso-8859-1")
+            info = IPTCInfo(fullpath)
         except Exception,msg:
             if not type(msg.args[0])==type(int()):
                 if msg.args[0].startswith("No IPTC data found."):
@@ -568,28 +569,35 @@ class VFSScanner:
 
         try:
             for k in info.data.keys():
+                common.log("VFSScanner._get_iptc k = ", "%s"%k )
                 if k in IPTC_FIELDS:
                     
                     try:
         
                         if isinstance(info.data[k],unicode):
+                            print "1"
                             try:
                                 iptc[IPTC_FIELDS[k]] = info.data[k]
                             except UnicodeDecodeError:
-                                iptc[IPTC_FIELDS[k]] = unicode(info.data[k].encode("utf8").__str__(),"utf8")
+                                iptc[IPTC_FIELDS[k]] = common.smart_unicode(info.data[k])
+                                #unicode(info.data[k].encode("utf8").__str__(),"utf8")
 
                         elif isinstance(info.data[k],list):
-                            iptc[IPTC_FIELDS[k]] = self.lists_separator.join([i for i in info.data[k]])
+                            print "2"
+                            iptc[IPTC_FIELDS[k]] = common.smart_unicode(self.lists_separator.join([i for i in info.data[k]]))
 
                         elif isinstance(info.data[k],str):
-                            iptc[IPTC_FIELDS[k]] = info.data[k].decode("utf8")
+                            print "3"
+                            iptc[IPTC_FIELDS[k]] = common.smart_unicode(info.data[k])
 
                         else:
                             common.log("VFSScanner._get_iptc", "%s"%fullpath )
                             common.log("VFSScanner._get_iptc",  "WARNING : type returned by iptc field is not handled :" )
                             common.log("VFSScanner._get_iptc", repr(type(info.data[k])) )
 
+                        common.log("Ausgabe", iptc[IPTC_FIELDS[k]])
                     except:
+                        common.log("VFSScanner._get_iptc","failure")
                         pass
         except:
             pass

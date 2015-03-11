@@ -25,7 +25,7 @@ import xbmcgui
 import common
 import dbabstractionlayer as dblayer
 
-DB_VERSION        = '13.3.0'
+DB_VERSION        = '13.3.1'
 
 lists_separator   = "||"
 
@@ -557,7 +557,7 @@ class MyPictureDB(object):
                                 common.log("tags_insert", '%s = self.tagTypeDBKeys["%s"]'%(id_tag_type, tag_type))
                                 
                             try:
-                                self.cur.execute(" INSERT INTO TagContents(idTagType,TagContent) VALUES(?,?) ",(id_tag_type,value))
+                                self.cur.execute(" INSERT INTO TagContents(idTagType,TagContent) VALUES(?,?) ",(id_tag_type,common.smart_unicode(value)))
                             except Exception,msg:
                                 if str(msg)=="columns idTagType, TagContent are not unique" or "Duplicate entry" in str(msg) or "UNIQUE constraint" in str(msg):
                                     pass
@@ -571,7 +571,7 @@ class MyPictureDB(object):
        
                             #Then, add the corresponding id of file and id of tag inside the TagsInFiles database
                             try:
-                                self.cur.execute(" INSERT INTO TagsInFiles(idTagContent,idFile) SELECT t.idTagContent, %d FROM TagContents t WHERE t.idTagType=%d AND t.TagContent = ? "%(idfile,id_tag_type), (value,))
+                                self.cur.execute(" INSERT INTO TagsInFiles(idTagContent,idFile) SELECT t.idTagContent, %d FROM TagContents t WHERE t.idTagType=%d AND t.TagContent = ? "%(idfile,id_tag_type), (common.smart_unicode(value),))
 
                             # At first column was named idTag then idTagContent
                             except Exception,msg:
