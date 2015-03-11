@@ -1,3 +1,6 @@
+2015/03/11 --> v 13.3.2
+Update: Debug messages removed
+
 2015/03/11 --> v 13.3.1
 Update: Language files from Transifex
 Fix:    IPTC parser had a bug.

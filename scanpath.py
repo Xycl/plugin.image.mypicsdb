@@ -569,13 +569,9 @@ class VFSScanner:
 
         try:
             for k in info.data.keys():
-                common.log("VFSScanner._get_iptc k = ", "%s"%k )
                 if k in IPTC_FIELDS:
-                    
                     try:
-        
                         if isinstance(info.data[k],unicode):
-                            print "1"
                             try:
                                 iptc[IPTC_FIELDS[k]] = info.data[k]
                             except UnicodeDecodeError:
@@ -583,35 +579,20 @@ class VFSScanner:
                                 #unicode(info.data[k].encode("utf8").__str__(),"utf8")
 
                         elif isinstance(info.data[k],list):
-                            print "2"
                             iptc[IPTC_FIELDS[k]] = common.smart_unicode(self.lists_separator.join([i for i in info.data[k]]))
 
                         elif isinstance(info.data[k],str):
-                            print "3"
                             iptc[IPTC_FIELDS[k]] = common.smart_unicode(info.data[k])
 
                         else:
                             common.log("VFSScanner._get_iptc", "%s"%fullpath )
                             common.log("VFSScanner._get_iptc",  "WARNING : type returned by iptc field is not handled :" )
                             common.log("VFSScanner._get_iptc", repr(type(info.data[k])) )
-
-                        common.log("Ausgabe", iptc[IPTC_FIELDS[k]])
                     except:
                         common.log("VFSScanner._get_iptc","failure")
                         pass
         except:
             pass
-            """
-            else:
-                common.log("VFSScanner._get_iptc", "IPTC problem with file: %s"%fullpath, xbmc.LOGERROR)
-                try:
-                    common.log("VFSScanner._get_iptc", " '%s' IPTC field is not handled. Data for this field : \n%s"%(k,info.data[k][:80]) , xbmc.LOGERROR)
-                except:
-                    common.log("VFSScanner._get_iptc",  " '%s' IPTC field is not handled (unreadable data for this field)"%k , xbmc.LOGERROR)
-                common.log("VFSScanner._get_iptc", "IPTC data for picture %s will be ignored"%fullpath , xbmc.LOGERROR)
-                ipt = {}
-                return ipt
-            """
         return iptc
 
 
