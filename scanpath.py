@@ -35,6 +35,7 @@ from time import strftime, strptime
 
 #local modules
 from resources.lib.pathscanner import Scanner
+from resources.lib.ImageRating import Reader as ImageRatingReader
 
 import resources.lib.MypicsDB as MypicsDB
 
@@ -402,32 +403,9 @@ class VFSScanner:
                 common.log( "VFSScanner._get_metas()._get_xmp()", "Exception", xbmc.LOGERROR)
                 common.log( "VFSScanner._get_metas()._get_xmp()", msg, xbmc.LOGERROR)
 
-            if picentry['Image Rating'] is None or picentry['Image Rating'] == '' or picentry['Image Rating'] < '1':
-                if 'xmp:Rating' in picentry and ( picentry['xmp:Rating'] is not None or picentry['xmp:Rating'] != ''):
-                    picentry['Image Rating'] = picentry['xmp:Rating']
-                elif 'xap:Rating' in picentry and ( picentry['xap:Rating'] is not None or picentry['xap:Rating'] != ''):
-                    picentry['Image Rating'] = picentry['xap:Rating']
-                elif 'Image RatingPercent' in picentry and ( picentry['Image RatingPercent'] is not None or picentry['Image RatingPercent'] != ''):
-                    a = int( picentry['Image RatingPercent'])
-                    if a >= 95:
-                        new_rating = 5
-                    elif a >= 75:
-                        new_rating = 4
-                    elif a >= 50:
-                        new_rating = 3
-                    elif a >= 25:
-                        new_rating = 2                        
-                    elif a >= 1:
-                        new_rating = 1                        
-                    else:
-                        new_rating = 0
-                    picentry['Image Rating'] = new_rating
-                
-            if picentry['Image Rating'] is None or len(picentry['Image Rating']) == 0:
-                picentry['Image Rating'] = "0"
-        
-        return picentry
+            picentry['Image Rating'] = ImageRatingReader(picentry).get_rating()
 
+        return picentry
 
     def _get_exif(self, picfile):
 
