@@ -26,30 +26,22 @@ import xbmc
 import resources.lib.common as common
 
 # python modules
-import mmap
 import optparse
 import os
 from urllib import unquote_plus
 from traceback import print_exc
-from time import strftime, strptime
+from time import strftime
 
-#local modules
+# local modules
 from resources.lib.pathscanner import Scanner
-from resources.lib.ImageRating import Reader as ImageRatingReader
 
 import resources.lib.MypicsDB as MypicsDB
 
 # local tag parsers
-from resources.lib.iptcinfo import IPTCInfo
-from resources.lib.iptcinfo import c_datasets as IPTC_FIELDS
-from resources.lib.EXIF import process_file as EXIF_file
-from resources.lib.XMP import XMP_Tags
+from resources.lib.Meta import Reader as MetaReader
 
-
-
-#xbmc addons
+# xbmc addons
 from resources.lib.local.dialogaddonscan.DialogAddonScan import AddonScan
-
 
 
 class VFSScanner:
@@ -60,8 +52,7 @@ class VFSScanner:
         self.all_extensions     = []
         self.picture_extensions = []
         self.video_extensions   = []
-        self.lists_separator = "||"
-        
+
         self.scan_is_cancelled = False
         
         self.picsdeleted = 0
@@ -149,7 +140,6 @@ class VFSScanner:
         self.picsdeleted += self.mpdb.del_pics_wo_sha(self.scan_is_cancelled)
 
         common.show_notification(common.getstring(30000), common.getstring(30248)%(self.picsscanned,self.picsadded,self.picsdeleted,self.picsupdated) )
-        
 
 
     def _countfiles(self, path, reset = True, recursive = True):
@@ -361,218 +351,11 @@ class VFSScanner:
         """
 
     def _get_metas(self, fullpath):
-        picentry = {}
         extension = os.path.splitext(fullpath)[1].upper()
         if extension in self.picture_extensions:
-            ###############################
-            #    getting  EXIF  infos     #
-            ###############################
-            try:
-                common.log( "VFSScanner._get_metas()._get_exif()", 'Reading EXIF tags from "%s"'%fullpath)
-                exif = self._get_exif(fullpath)
-                picentry.update(exif)
-                common.log( "VFSScanner._get_metas()._get_exif()", "Finished reading EXIF tags")
-            except Exception,msg:
-                common.log( "VFSScanner._get_metas()._get_exif()", "Exception", xbmc.LOGERROR)
-                common.log( "VFSScanner._get_metas()._get_exif()", msg, xbmc.LOGERROR)
-
-
-            ###############################
-            #    getting  IPTC  infos     #
-            ###############################
-            try:
-                common.log( "VFSScanner._get_metas()._get_iptc()", 'Reading IPTC tags from "%s"'%fullpath)
-                iptc = self._get_iptc(fullpath)
-                picentry.update(iptc)
-                common.log( "VFSScanner._get_metas()._get_iptc()", "Finished reading IPTC tags")
-            except Exception,msg:
-                common.log( "VFSScanner._get_metas()_get_iptc()", "Exception", xbmc.LOGERROR)
-                common.log( "VFSScanner._get_metas()._get_iptc()", msg, xbmc.LOGERROR)
-
-
-
-            ###############################
-            #    getting  XMP infos       #
-            ###############################
-            try:
-                common.log( "VFSScanner._get_metas()._get_xmp()", 'Reading XMP tags from "%s"'%fullpath)
-                xmp = self._get_xmp(fullpath)
-                picentry.update(xmp)
-                common.log( "VFSScanner._get_metas()._get_xmp()", "Finished reading XMP tags")
-            except Exception,msg:
-                common.log( "VFSScanner._get_metas()._get_xmp()", "Exception", xbmc.LOGERROR)
-                common.log( "VFSScanner._get_metas()._get_xmp()", msg, xbmc.LOGERROR)
-
-            picentry['Image Rating'] = ImageRatingReader(picentry).get_rating()
-
-        return picentry
-
-    def _get_exif(self, picfile):
-
-        EXIF_fields =[
-                    "Image Model",
-                    "Image Orientation",
-                    "Image Rating",
-                    "Image RatingPercent",
-					"Image Artist",
-                    "GPS GPSLatitude",
-                    "GPS GPSLatitudeRef",
-                    "GPS GPSLongitude",
-                    "GPS GPSLongitudeRef",
-                    "Image DateTime",
-                    "EXIF DateTimeOriginal",
-                    "EXIF DateTimeDigitized",
-                    "EXIF ExifImageWidth",
-                    "EXIF ExifImageLength",
-                    "EXIF Flash",
-                    "Image ResolutionUnit",
-                    "Image XResolution",
-                    "Image YResolution",
-                    "Image Make",
-                    "EXIF FileSource",
-                    "EXIF SceneCaptureType",
-                    "EXIF DigitalZoomRatio",
-                    "EXIF ExifVersion"
-                      ]
-
-        # try to open picfile in modify/write mode. Windows needs this for memory mapped file support.
-        try:
-            # General for all OS. Use unicode for picfile.
-            # This fails with OpenElec or if modify/write attribute isn't set.
-            f=open(picfile,"r+b")
-            common.log( "VFSScanner._get_exif()", 'File opened with statement: %s'%'f=open(picfile,"r+b")')
-        except:
-            try:
-                # Special for OpenElec. Use utf-8 for picfile.
-                # If modify/write attribute isn't set then it'll fail.
-                f=open(picfile.encode("utf-8"),"r+b")
-                common.log( "VFSScanner._get_exif()", 'File opened with statement: %s'%'f=open(picfile.encode("utf-8"),"r+b")')
-            except:
-                # Where're here because write/modify attribute is missing and file could not be opened.
-                try:
-                    # General for all OS. Use unicode for picfile.
-                    f=open(picfile,"rb")
-                    common.log( "VFSScanner._get_exif()", 'File opened with statement: %s'%'f=open(picfile,"rb")')
-                except:
-                    # Special for OpenElec. Use utf-8 for picfile.
-                    f=open(picfile.encode('utf-8'),"rb")
-                    common.log( "VFSScanner._get_exif()", 'File opened with statement: %s'%'f=open(picfile.encode("utf-8"),"rb")')
-        common.log( "VFSScanner._get_exif()", 'Calling function EXIF_file for "%s"'%picfile)
-
-        mmapfile = 0
-        try:
-            # If write/modify attribute isn't set then this will fail on Windows because above the file was opened read only!
-            mmapfile = mmap.mmap(f.fileno(), 0)
-            tags = EXIF_file(mmapfile, details=False)
-            common.log( "VFSScanner._get_exif()", 'EXIF_file with mmap support returned')
-        except:
-            try:
-                # We've to open the file without memory mapped file support.
-                tags = EXIF_file(f, details=False)
-                common.log( "VFSScanner._get_exif()", 'EXIF_file without mmap support returned')
-            except Exception,msg:
-                common.log("VFSScanner._get_exif", picfile , xbmc.LOGERROR)
-                common.log("VFSScanner._get_exif", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
-                    
-        if mmapfile != 0:
-            mmapfile.close()
-                
-        f.close()
-
-        picentry={}
-
-        for tag in EXIF_fields:
-            if tag in tags.keys():
-                if tag in ["EXIF DateTimeOriginal","EXIF DateTimeDigitized","Image DateTime"]:
-                    tagvalue=None
-                    for datetimeformat in ["%Y:%m:%d %H:%M:%S","%Y.%m.%d %H.%M.%S","%Y-%m-%d %H:%M:%S"]:
-                        try:
-                            tagvalue = strftime("%Y-%m-%d %H:%M:%S",strptime(tags[tag].__str__(),datetimeformat))
-                            break
-                        except:
-                            pass
-                            #common.log("VFSScanner._get_exif",  "Datetime (%s) did not match for '%s' format... trying an other one..."%(tags[tag].__str__(),datetimeformat), xbmc.LOGERROR )
-                    if not tagvalue:
-                        common.log("VFSScanner._get_exif",  "ERROR : the datetime format is not recognize (%s)"%tags[tag].__str__(), xbmc.LOGERROR )
-
-                else:
-                    tagvalue = tags[tag].__str__()
-                try:
-                    picentry[tag]=tagvalue
-                except Exception, msg:
-                    common.log("VFSScanner._get_exif",  picfile , xbmc.LOGERROR)
-                    common.log("VFSScanner._get_exif",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
-                    
-        if not picentry.has_key("Image Rating"):
-            picentry["Image Rating"] = ""
-        return picentry
-
-
-    def _get_xmp(self, fullpath):
-        ###############################
-        # get XMP infos               #
-        ###############################
-        tags = {}
-        try:
-            xmpclass = XMP_Tags()
-
-            tags = xmpclass.get_xmp(os.path.dirname(fullpath), os.path.basename(fullpath))
-
-        except Exception, msg:
-            common.log("VFSScanner._get_xmp", 'Error reading XMP tags for "%s"'%(fullpath), xbmc.LOGERROR)
-            common.log("VFSScanner._get_xmp",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
-        
-        return tags
-
-    def _get_iptc(self, fullpath):
-
-        try:
-            info = IPTCInfo(fullpath)
-        except Exception,msg:
-            if not type(msg.args[0])==type(int()):
-                if msg.args[0].startswith("No IPTC data found."):
-                    return {}
-                else:
-                    common.log("VFSScanner._get_iptc", "%s"%fullpath )
-                    common.log("VFSScanner._get_iptc", "%s - %s"%(Exception,msg) )
-                    return {}
-            else:
-                common.log("VFSScanner._get_iptc", "%s"%fullpath )
-                common.log("VFSScanner._get_iptc", "%s - %s"%(Exception,msg) )
-                return {}
-        iptc = {}
-
-        if len(info.data) < 2:
-            return iptc
-
-        try:
-            for k in info.data.keys():
-                if k in IPTC_FIELDS:
-                    try:
-                        if isinstance(info.data[k],unicode):
-                            try:
-                                iptc[IPTC_FIELDS[k]] = info.data[k]
-                            except UnicodeDecodeError:
-                                iptc[IPTC_FIELDS[k]] = common.smart_unicode(info.data[k])
-                                #unicode(info.data[k].encode("utf8").__str__(),"utf8")
-
-                        elif isinstance(info.data[k],list):
-                            iptc[IPTC_FIELDS[k]] = common.smart_unicode(self.lists_separator.join([i for i in info.data[k]]))
-
-                        elif isinstance(info.data[k],str):
-                            iptc[IPTC_FIELDS[k]] = common.smart_unicode(info.data[k])
-
-                        else:
-                            common.log("VFSScanner._get_iptc", "%s"%fullpath )
-                            common.log("VFSScanner._get_iptc",  "WARNING : type returned by iptc field is not handled :" )
-                            common.log("VFSScanner._get_iptc", repr(type(info.data[k])) )
-                    except:
-                        common.log("VFSScanner._get_iptc","failure")
-                        pass
-        except:
-            pass
-        return iptc
-
+            return MetaReader(fullpath).get_metas()
+        else:
+            return {}
 
 
 if __name__=="__main__":
