@@ -191,30 +191,25 @@ class Main:
             except Exception,msg:
                 common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
             
-            common.log("", "date")
-            common.log("", date)
-            common.log("", "1")
+
             #is the file a video ?
             if extension in ["."+ext.replace(".","").upper() for ext in common.getaddon_setting("vidsext").split("|")]:
             
                 infolabels = { "date": date }
                 liz.setInfo( type="video", infoLabels=infolabels )
-                common.log("", "2")
             #or is the file a picture ?
             elif extension in ["."+ext.replace(".","").upper() for ext in common.getaddon_setting("picsext").split("|")]:
                 
-                common.log("", "3")
                 if int(common.getaddon_setting("ratingmini"))>0:
                     if not rating:  
                         return
                     if int(rating) < int(common.getaddon_setting("ratingmini")): 
                         return 
-                common.log("", "4")
                 coords = MPDB.get_gps(picpath,picname)
                 if coords: 
                     suffix = suffix + "[COLOR=C0C0C0C0][G][/COLOR]"
 
-                resolutionXY = MPDB.cur.request_with_binds( """select coalesce(tc.TagContent,0), tt.TagType from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
+                resolutionXY = MPDB.cur.request( """select coalesce(tc.TagContent,0), tt.TagType from TagTypes tt, TagContents tc, TagsInFiles tif, Files fi
                                                          where tt.TagType in ( 'EXIF ExifImageLength', 'EXIF ExifImageWidth' )
                                                            and tt.idTagType = tc.idTagType
                                                            and tc.idTagContent = tif.idTagContent
@@ -222,16 +217,11 @@ class Main:
                                                            and fi.strPath = ?
                                                            and fi.strFilename = ?  """,(picpath,picname))
 
-                common.log("", "5")
                 if date is None:
-                    common.log("", "5a")
                     infolabels = { "picturepath":picname+" "+suffix, "count": count  }
-                    common.log("", "5b")
                 else:
-                    common.log("", "5c")
                     infolabels = { "picturepath":picname+" "+suffix, "date": date, "count": count  }
-                    common.log("", "5d")
-                common.log("", "6")
+
                 try:
                     if exiftime != None and exiftime != "0":
                         common.log("Main.add_picture", "Picture has EXIF Date/Time %s"%exiftime)
