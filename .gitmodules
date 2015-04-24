@@ -1,0 +1,3 @@
+[submodule "tests/xbmcstubs"]
+	path = tests/xbmcstubs
+	url = https://github.com/romanvm/xbmcstubs.git
