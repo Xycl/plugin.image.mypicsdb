@@ -313,6 +313,7 @@ class VFSScanner:
                     continue
 
                 try:
+
                     self.mpdb.file_insert(path, filename, picentry, sqlupdate, filesha)
                 except Exception, msg:
                     common.log("VFSScanner._addpath", 'Unable to insert picture "%s"'%pic, xbmc.LOGERROR)
@@ -426,6 +427,28 @@ class VFSScanner:
             if picentry['Image Rating'] is None or len(picentry['Image Rating']) == 0:
                 picentry['Image Rating'] = "0"
         
+        
+            # Use partial paths (sub directory names) as tags
+            partialPath = ''
+            check_path =  os.path.dirname(fullpath)
+            while 1:
+                check_path, folder = os.path.split(check_path)
+            
+                if folder != "":
+                    if len(partialPath) == 0:
+                        partialPath = folder
+                    else:
+                        partialPath = partialPath + '||' + folder
+                else:
+                    if check_path != "":
+                        if len(partialPath) == 0:
+                            partialPath = check_path
+                        else:
+                            partialPath = partialPath + '||' + check_path        
+                    break
+            
+            picentry['partialPath'] = partialPath                    
+            
         return picentry
 
 
