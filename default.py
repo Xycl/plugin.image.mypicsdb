@@ -525,7 +525,7 @@ class Main:
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
     def show_translationeditor(self):
-        ui = translationeditor.TranslationEditor( "translationeditor.xml" , common.getaddon_path(), "Default")
+        ui = translationeditor.TranslationEditor( "script-mypicsdb-translationeditor.xml" , common.getaddon_path(), "Default")
         ui.doModal()
         del ui
 
@@ -545,7 +545,7 @@ class Main:
             except:
                 return
 
-        ui = googlemaps.GoogleMap( "googlemaps.xml" , common.getaddon_path(), "Default")
+        ui = googlemaps.GoogleMap( "script-mypicsdb-googlemaps.xml" , common.getaddon_path(), "Default")
         ui.set_file(joined)
         ui.set_place(self.args.place)
         ui.set_datapath(DATA_PATH)
@@ -562,7 +562,7 @@ class Main:
     def show_wizard(self):
         if self.args.wizard == 'dialog':
             global GlobalFilterTrue, GlobalFilterFalse, GlobalMatchAll, g_start_date, g_end_date
-            ui = filterwizard.FilterWizard( "filterwizard.xml" , common.getaddon_path(), "Default")
+            ui = filterwizard.FilterWizard( "script-mypicsdb-filterwizard.xml" , common.getaddon_path(), "Default")
             ui.set_delegate(filterwizard_delegate)
             ui.doModal()
             del ui

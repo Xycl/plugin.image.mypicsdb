@@ -218,7 +218,7 @@ class Window:
         if xbmc.getInfoLabel( "Window.Property(DialogAddonScan.IsAlive)" ) == "true":
             raise xbmcguiWindowError( "DialogAddonScan IsAlive: Not possible to overscan!" )
 
-        windowXml = DialogAddonScanXML( "DialogAddonScan.xml", __addonDir__, ADDON_SKIN )
+        windowXml = DialogAddonScanXML( "script-mypicsdb-DialogAddonScan.xml", __addonDir__, ADDON_SKIN )
         self.controls = windowXml.controls
         del windowXml
 
