@@ -1,3 +1,6 @@
+2016/01/26 --> v 14.0.0
+New:    Thumbnail view used by default
+
 2015/09/07 --> v 13.3.6
 New:    Tag called partialPart
 

@@ -269,7 +269,25 @@ class Main:
         except Exception,msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
 
-
+    def change_view(self):
+        view_modes = {
+                'skin.confluence': 500,
+                'skin.aeon.nox': 551,
+                'skin.confluence-vertical': 500,
+                'skin.jx720': 52,
+                'skin.pm3-hd': 53,
+                'skin.rapier': 50,
+                'skin.simplicity': 500,
+                'skin.slik': 53,
+                'skin.touched': 500,
+                'skin.transparency': 53,
+                'skin.xeebo': 55
+        }
+    
+        skin_dir = xbmc.getSkinDir()    
+        if skin_dir in view_modes:
+            xbmc.executebuiltin('Container.SetViewMode('+ str(view_modes[skin_dir]) +')')
+        
     def show_home(self):
         common.log("Main.show_home", "start")
 
@@ -522,6 +540,8 @@ class Main:
         xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_DATE )
         xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_PROGRAM_COUNT )
 
+        self.change_view()
+        
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
     def show_translationeditor(self):
@@ -739,6 +759,9 @@ class Main:
                                         ] )#menucontextuel
 
         xbmcplugin.addSortMethod( int(sys.argv[1]), xbmcplugin.SORT_METHOD_UNSORTED )
+
+        self.change_view()
+
         xbmcplugin.endOfDirectory( int(sys.argv[1]),updateListing=update )
 
 
@@ -890,6 +913,10 @@ class Main:
                                          ] )#menucontextuel
 
         xbmcplugin.addSortMethod( int(sys.argv[1]), xbmcplugin.SORT_METHOD_UNSORTED )
+        
+        self.change_view()
+
+
         xbmcplugin.endOfDirectory( int(sys.argv[1]),updateListing=refresh)
 
 
@@ -955,6 +982,9 @@ class Main:
             xbmcplugin.endOfDirectory( int(sys.argv[1]),updateListing=refresh)
             return
         xbmcplugin.addSortMethod( int(sys.argv[1]), xbmcplugin.SORT_METHOD_UNSORTED )
+
+        self.change_view()
+
         xbmcplugin.endOfDirectory( int(sys.argv[1]),updateListing=refresh)
 
 
@@ -1611,8 +1641,9 @@ class Main:
               
                 xbmc.Player().play( playlist)            
                 xbmc.executebuiltin("PlayerControl(RepeatAll)")
-                    
-            xbmc.executebuiltin( "SlideShow(%s?action=%%27showpics%%27&method=%%27collection%%27&viewmode=%%27view%%27&page=%%271%%27&collect=%%27%s%%27&name=%%27%s%%27, random) "%(sys.argv[0], self.args.collect, self.args.collect) )
+            command = "SlideShow(%s?action=%%27showpics%%27&method=%%27collection%%27&viewmode=%%27view%%27&page=%%27%%27&collect=%%27%s%%27&name=%%27%s%%27, notrandom) "%(sys.argv[0], self.args.collect, self.args.collect)
+            common.log('', command, xbmc.LOGNOTICE)
+            xbmc.executebuiltin( command )
             return
 
         if self.args.viewmode=="zip":
@@ -1767,6 +1798,8 @@ class Main:
         xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_DATE )
         xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_PROGRAM_COUNT )
         xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_LABEL )
+
+        self.change_view()
 
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
