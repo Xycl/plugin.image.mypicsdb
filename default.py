@@ -91,6 +91,9 @@ class Main:
 
         # change for ruuk's plugin screensaver
         self.parm= self.parm.replace('&plugin_slideshow_ss=true', '')
+        
+        # for peppe_sr due to his used skin widget plugin
+        self.parm= self.parm.replace('&reload=', '')
 
         sys.argv[2] = self.parm
         parm = self.cleanup(self.parm[ 1 : ])

@@ -1,4 +1,8 @@
-2015/11/07 --> v 13.3.7
+2016/06/06 --> v 13.3.8
+Fix:    Backslash escape when deleting pictures from DB
+Fix:    Parameter "reload=" removed when using the skin widget plugin
+
+2016/06/06 --> v 13.3.7
 Update: Language files from Transifex
 
 2015/09/07 --> v 13.3.6

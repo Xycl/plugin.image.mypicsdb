@@ -615,6 +615,7 @@ class MyPictureDB(object):
     def del_pic(self, picpath, picfile=None): 
     
         if picfile:
+            picpath = picpath.replace("\\", "\\\\")
             self.cur.request("""DELETE FROM Files WHERE idFolder = (SELECT idFolder FROM Folders WHERE FullPath Like '%s_') AND strFilename=? """%picpath,(picfile, ))
     
         else:
