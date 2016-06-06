@@ -244,7 +244,7 @@ class Main:
                 except:
                     pass
 
-                if rating:
+                if int(rating)>0:
                     common.log("Main.add_picture", "Picture has rating")
                     suffix = suffix + "[COLOR=C0FFFF00]"+("*"*int(rating))+"[/COLOR][COLOR=C0C0C0C0]"+("*"*(5-int(rating)))+"[/COLOR]"
 
