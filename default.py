@@ -7,7 +7,7 @@ __addonname__ = 'plugin.image.mypicsdb'
 # common depends on __addonname__
 import resources.lib.common as common
 
-import os, sys, time
+import os, sys, time, re
 from os.path import join,isfile,basename,dirname,splitext
 from urllib import unquote_plus
 
@@ -93,7 +93,8 @@ class Main:
         self.parm= self.parm.replace('&plugin_slideshow_ss=true', '')
         
         # for peppe_sr due to his used skin widget plugin
-        self.parm= self.parm.replace('&reload=', '')
+        p = re.compile('&reload=[^&]*')
+        self.parm = p.sub('', self.parm)
 
         sys.argv[2] = self.parm
         parm = self.cleanup(self.parm[ 1 : ])
