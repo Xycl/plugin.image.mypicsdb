@@ -36,7 +36,8 @@
         <summary lang="pt_BR">Gerenciador de Imagens Avançado</summary>
         <summary lang="sk">Pokročilý správca obrázkov</summary>
         <summary lang="sv">Avancerad bildhanterare</summary>
-        <summary lang="zh">高级图片管理器</summary>
+        <summary lang="zh_CN">高级图片管理器</summary>
+        <summary lang="zh_TW">進階圖片管理員</summary>		
         <description lang="be">Manage your pictures as you do for musics and videos[CR]Then you'll be able to sort your pictures by day/month/year, keywords and much more</description>
         <description lang="bg">Управлявайте снимките си по същия начин както музиката и видеото[CR]Така ще можете да подреждате снимките си по ден/месец/година, ключови думи и други.</description>
         <description lang="ca">Administra les teves imatges tal com ho fas amb la música i el vídeos[CR]Llavors podràs ordenar les teves fotografies per dia/mes/any, paraules clau i molt més</description>
@@ -56,6 +57,7 @@
         <description lang="hu">Kezelje a képeit úgy, mint a zenéit és a videóit[CR]Lehetséges lesz a képek rendezése dátum, kulcsszavak és egyebek alapján.</description>
         <description lang="it">Gestisci le tue foto come fai per la musica ed i video [CR] Sarai in grado di ordinare le tue foto per giorno/mese/anno, parole chiave e molto altro</description>
         <description lang="ko">음악과 비디오를 관리하는 것처럼 사진도 관리하세요[CR]그러면 사진을 년/월/일 또는 키워드 등으로 정렬할 수 있습니다.</description>
+        <description lang="zh_TW">以管理你的音樂和影片的方式來管理你的照片。[CR]這樣，你就可以用年/月/日/、及關鍵詞、以及更多方式來將圖片排序。</description>		
         <description lang="lt">Tvarkykite savo nuotraukas kaip tai darote su muzika ir vaizdo įrašais[CR]Tada galėsite rūšiuoti nuotraukas pagal dieną/mėnesį/metus, raktinius žodžius ir daug daugiau</description>
         <description lang="nl">Toon uw afbeeldingen zoals voor muziek en video’s. Op basis van meta-gegevens in de afbeeldingen kunt een slideshow starten, zoals op datums, categorieën, trefwoorden of andere EXIF/IPTC/XMP tags.</description>
         <description lang="pl">Zarządzanie obrazami tak jak muzyką i materiałami wideo[CR]Wtyczka umożliwia sortowanie obrazów według dnia, miesiąca, roku, słowach kluczowych i wielu innych.</description>
