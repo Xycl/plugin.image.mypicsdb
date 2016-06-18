@@ -20,9 +20,85 @@ msgctxt "#30001"
 msgid "Database"
 msgstr "資料庫"
 
+#Date formats : use the date formatting you found in this : http://docs.python.org/library/time.html#time.strftime
+
+#. date format
+msgctxt "#30002"
+msgid "%A %d %B %Y"
+msgstr "%Y %B %A %d"
+
+#. month format
+msgctxt "#30003"
+msgid "%B %Y"
+msgstr "%Y %B"
+
+#. year format
+msgctxt "#30004"
+msgid "%Y"
+msgstr "%Y"
+
+msgctxt "#30005"
+msgid "Mo.|Tu.|We.|Th.|Fr.|Sa.|Su."
+msgstr "週一|週二|週三|週四|週五|週六|週日"
+
+msgctxt "#30006"
+msgid "Jan.|Feb.|Mar|Apr.|May|Jun.|Jul.|Aug.|Sep.|Oct.|Nov.|Dec."
+msgstr "1月|2月|3月|4月|5月|6月|7月|8月|9月|10月|11月|12月"
+
+msgctxt "#30007"
+msgid "Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday"
+msgstr "星期一|星期二|星期三|星期四|星期五|星期六|星期日"
+
+msgctxt "#30008"
+msgid "January|February|March|April|May|June|July|August|September|October|November|December"
+msgstr "一月|二月|三月|四月五月|六月|七月|八月|九月|十月|十一月|十二月"
+
 msgctxt "#30009"
 msgid "Add-on settings"
 msgstr "附加元件設定"
+
+#empty strings from id 30010 to 30019
+
+msgctxt "#30020"
+msgid "Picture folder"
+msgstr "圖片夾"
+
+msgctxt "#30021"
+msgid "Remove from database missing pictures"
+msgstr "從資料庫移除不存在的圖片"
+
+msgctxt "#30022"
+msgid "Recursive scan ( all sub-folders will be scanned for pictures )"
+msgstr "遞歸掃描 (將掃描所有子目錄的圖片)"
+
+msgctxt "#30023"
+msgid "Picture extensions"
+msgstr "圖片檔副檔名"
+
+msgctxt "#30024"
+msgid "Perform scan at addon startup"
+msgstr "當附加元件啟動時進行掃描"
+
+msgctxt "#30025"
+msgid "Initialize the database at next addon startup"
+msgstr "下次附加元件啟動時初始化資料庫"
+
+#. setting
+msgctxt "#30026"
+msgid "Use the picture as fanart for pictures"
+msgstr "用其中一張圖片作為圖片集的背景圖"
+
+msgctxt "#30027"
+msgid "Settings for the dialog scan popup"
+msgstr "掃描對話方塊設定"
+
+msgctxt "#30028"
+msgid "Video extensions"
+msgstr "影片檔副檔名"
+
+msgctxt "#30029"
+msgid "Use the videos"
+msgstr "啟用影片檔"
 
 msgctxt "#30030"
 msgid "General"
@@ -32,9 +108,57 @@ msgctxt "#30031"
 msgid "Files"
 msgstr "檔案"
 
+msgctxt "#30032"
+msgid "Age of recent files (days)"
+msgstr "最新加入定義 (日數)"
+
+msgctxt "#30033"
+msgid "Menu Items"
+msgstr "功能表項目"
+
+msgctxt "#30034"
+msgid "Display all items"
+msgstr "顯示所有項目"
+
+msgctxt "#30035"
+msgid "Number of pics per page"
+msgstr "每頁顯示圖片數量"
+
+#empty strings from id 30036 to 30039
+
+msgctxt "#30040"
+msgid "Only display pictures with rating of at least"
+msgstr "僅顯示評分不指定分數的圖片"
+
 msgctxt "#30041"
 msgid "All"
 msgstr "全部"
+
+msgctxt "#30042"
+msgid "1 star"
+msgstr "一星"
+
+msgctxt "#30043"
+msgid "2 stars"
+msgstr "二星"
+
+msgctxt "#30044"
+msgid "3 stars"
+msgstr "三星"
+
+msgctxt "#30045"
+msgid "4 stars"
+msgstr "四星"
+
+msgctxt "#30046"
+msgid "5 stars"
+msgstr "五星"
+
+#empty strings from id 30047 to 30049
+
+msgctxt "#30050"
+msgid "Pics"
+msgstr "圖片"
 
 msgctxt "#30051"
 msgid "Videos"
@@ -44,29 +168,545 @@ msgctxt "#30052"
 msgid "Tags"
 msgstr "標籤"
 
+msgctxt "#30053"
+msgid "Excluded Files"
+msgstr "要排除的檔案"
+
+msgctxt "#30054"
+msgid "Images without a date (%s pics)"
+msgstr "沒有日期的圖像 (%s 張)"
+
+#empty strings from id 30055 to 30059
+
+msgctxt "#30060"
+msgid "Locate on disk"
+msgstr "在磁碟找尋"
+
+msgctxt "#30061"
+msgid "Archive those pictures"
+msgstr "把這些圖片封存"
+
+msgctxt "#30062"
+msgid "Export those pictures to..."
+msgstr "匯出這些圖片至 ..."
+
+msgctxt "#30063"
+msgid "Add the file to archive :"
+msgstr "新增檔案至封存區："
+
+#. %s will be replaced by the name of the archive
+msgctxt "#30064"
+msgid "The archive '%s' already exists in"
+msgstr "封存檔 '%s'  已存在"
+
+msgctxt "#30065"
+msgid "Overwrite ?"
+msgstr "要覆蓋嗎？"
+
+msgctxt "#30066"
+msgid "Archive canceled."
+msgstr "已取消封存"
+
+msgctxt "#30067"
+msgid "Adding the picture to archive..."
+msgstr "正新增檔案至封存區 ..."
+
+msgctxt "#30068"
+msgid "The archiving has been canceled !"
+msgstr "封存程序已被取消！"
+
+#. %s errors while zipping %s files
+msgctxt "#30069"
+msgid "%s errors while archiving %s files"
+msgstr "出現了 %s 錯誤，在封存 %s 個檔案期間"
+
+#. %s files successfully Zipped !!
+msgctxt "#30070"
+msgid "%s pictures successfully archived !!"
+msgstr "已成功封存了 %s 張圖片！"
+
+msgctxt "#30071"
+msgid "Localization of the picture on disk"
+msgstr "本地花磁碟上的圖片"
+
+#empty strings from id 30072 to 30097
+
+msgctxt "#30098"
+msgid "Global search"
+msgstr "全域搜索"
+
+msgctxt "#30099"
+msgid "Paths of picture folders"
+msgstr "圖片夾的途徑"
+
+msgctxt "#30100"
+msgid "All images %s (%s pics)"
+msgstr "全部圖像 %s (%s 張圖片)"
+
+msgctxt "#30101"
+msgid "Browse by Date"
+msgstr "按日期瀏覽"
+
+msgctxt "#30102"
+msgid "Browse by Folders"
+msgstr "按資料夾瀏覽"
+
+#empty strings from id 30103 to 30104
+
+msgctxt "#30105"
+msgid "Date ranges"
+msgstr "日期範圍"
+
+msgctxt "#30106"
+msgid "Add a new date range"
+msgstr "新增一個日期範圍"
+
+msgctxt "#30107"
+msgid "Choose the start date"
+msgstr ""
+
+msgctxt "#30108"
+msgid "Choose the end date"
+msgstr "選擇結束日期"
+
+msgctxt "#30109"
+msgid "Pics from %s to %s"
+msgstr "由 %s 至 %s 的圖片"
+
+msgctxt "#30110"
+msgid "Input a title for this date range :"
+msgstr "為日期範圍命名"
+
+msgctxt "#30111"
+msgid "Delete this date range"
+msgstr "刪除此日期範圍"
+
+msgctxt "#30112"
+msgid "Rename this date range"
+msgstr "重新命名日期範圍"
+
+msgctxt "#30113"
+msgid "From %s to %s"
+msgstr "由 %s 至 %s"
+
+msgctxt "#30114"
+msgid "Input manually date"
+msgstr "輸入日期範圍"
+
+msgctxt "#30115"
+msgid "Word to search for"
+msgstr "要搜尋的文字"
+
+#. %s replaced respectively by : number of results, searched term, field where found
+msgctxt "#30116"
+msgid "%s results for '%s' in '%s'"
+msgstr "有 %s 個吻合 '%s' 的結果，在 '%s' 個檔案內"
+
+msgctxt "#30117"
+msgid "Start date of the date range"
+msgstr "日期範圍的起始日"
+
+msgctxt "#30118"
+msgid "End date of the date range"
+msgstr "日期範圍的結束日"
+
+#. %s replaced by searched term
+msgctxt "#30119"
+msgid "The search for '%s' did not match in the whole database"
+msgstr "此資料庫內並沒有吻合 '%s' 的圖片"
+
+msgctxt "#30120"
+msgid "New global search"
+msgstr "新增全域搜索"
+
+msgctxt "#30121"
+msgid "Stored search words"
+msgstr "著儲存搜索文字"
+
+msgctxt "#30122"
+msgid "Browse by Tags"
+msgstr "按標籤瀏覽"
+
 msgctxt "#30123"
 msgid "Help"
 msgstr "說明"
+
+#empty strings from id 30124 to 30129
+
+msgctxt "#30130"
+msgid "The %s latest pics"
+msgstr "%s 的最新圖片"
+
+msgctxt "#30131"
+msgid "Recent pics (number of images)"
+msgstr "最近加入圖片 (張數)"
+
+msgctxt "#30132"
+msgid "Random pics (number of images)"
+msgstr "隨機圖片 (張數)"
+
+#empty strings from id 30133 to 30147
+
+msgctxt "#30148"
+msgid "Choose a music playlist"
+msgstr "選擇音樂播放表"
+
+msgctxt "#30149"
+msgid "Add playlist to collection"
+msgstr "新增播放表到圖片集"
+
+msgctxt "#30150"
+msgid "Collections"
+msgstr "圖片集"
+
+msgctxt "#30151"
+msgid "Remove from the collection"
+msgstr "從圖片集中移除"
+
+msgctxt "#30152"
+msgid "Add to collection..."
+msgstr "新增至圖片集 ..."
+
+msgctxt "#30153"
+msgid "Input a new title"
+msgstr "輸入新的標題"
+
+msgctxt "#30154"
+msgid "Picture added in"
+msgstr "圖片已新增至 ..."
+
+msgctxt "#30155"
+msgid "Input a title for the new collection"
+msgstr "輸入新增圖片集的標題"
+
+msgctxt "#30156"
+msgid "Choose a collection"
+msgstr "選擇新增"
+
+msgctxt "#30157"
+msgid "New collection"
+msgstr "新增圖片集"
+
+msgctxt "#30158"
+msgid "Remove this collection"
+msgstr "移除這個圖片集"
+
+msgctxt "#30159"
+msgid "Rename this collection"
+msgstr "重新命名這個圖片集"
+
+msgctxt "#30160"
+msgid "Create a new collection"
+msgstr "建立圖片集"
+
+#. %s replaced by the number of pictures added
+msgctxt "#30161"
+msgid "%s pictures added in"
+msgstr "已加入了 %s 張圖片"
+
+msgctxt "#30162"
+msgid "Import album from Picasa xml"
+msgstr "從 Picasa xml 檔匯入相簿"
+
+msgctxt "#30163"
+msgid "Unable to read Picasa xml"
+msgstr "無法讀取 Picasa xml 檔"
+
+msgctxt "#30164"
+msgid "Specify date range"
+msgstr "指定日期範圍"
+
+msgctxt "#30165"
+msgid "Following files are missing in MyPicsDB and could not be imported:[CR][CR]"
+msgstr "MyPicsDB 資料庫內沒有以下檔案，故無法匯入：[CR][CR]"
+
+msgctxt "#30166"
+msgid "Picture \"%s\" in \"%s\"[CR]"
+msgstr "圖片 \"%s\" 在 \"%s\"[CR]"
+
+msgctxt "#30167"
+msgid "Import errors"
+msgstr "匯入錯誤"
+
+msgctxt "#30168"
+msgid "Import album from saved filter settings"
+msgstr "從已儲存的過濾條件匯入相簿"
+
+msgctxt "#30169"
+msgid "Show pictures"
+msgstr "顯示圖片"
+
+#empty strings from id 30170 to 30179
+
+msgctxt "#30180"
+msgid "Choose the destination for the export"
+msgstr "選擇匯出目的資料夾"
+
+msgctxt "#30181"
+msgid "Do you want to create a folder to export pictures ?"
+msgstr "要新增用作匯出圖片目的資料夾嗎？"
+
+msgctxt "#30182"
+msgid "Input the folder name"
+msgstr "輸入資料夾名稱"
+
+msgctxt "#30183"
+msgid "picture export canceled !"
+msgstr "已取消匯出圖片！"
+
+msgctxt "#30184"
+msgid "Picture exporting..."
+msgstr "正匯出圖片 ..."
+
+#. %s replaced by the filename that is beeing copied
+msgctxt "#30185"
+msgid "Exporting '%s' to :"
+msgstr "正匯出 '%s' 至："
+
+#. %s replaced by the filename that is beeing copied
+msgctxt "#30186"
+msgid "a file '%s' already exists"
+msgstr "已有一個 '%s' 檔案存在"
+
+msgctxt "#30187"
+msgid "Overwrite ?"
+msgstr "要覆蓋它嗎？"
+
+msgctxt "#30188"
+msgid "Export finished !"
+msgstr "已完成匯出程序"
+
+#. %s[number of files] copied to %s[distination folder]
+msgctxt "#30189"
+msgid "%s pictures copied to %s"
+msgstr "已複製了 %s 張圖片到 %s"
+
+msgctxt "#30190"
+msgid "Exported pictures"
+msgstr "已匯出的圖片"
+
+#empty strings from id 30191 to 30200
+
+msgctxt "#30201"
+msgid "Folder to scan"
+msgstr "要掃描的資料夾"
+
+msgctxt "#30202"
+msgid "Browse this folder recursively"
+msgstr "重覆瀏覽這個資料夾"
+
+msgctxt "#30203"
+msgid "Delete the database entries if picture does not exists anymore"
+msgstr "如果圖片不再存在，刪除有關圖片的資訊"
+
+msgctxt "#30204"
+msgid "Path added !"
+msgstr "而新增途徑"
+
+msgctxt "#30205"
+msgid "Path deleted !"
+msgstr "而刪除途徑"
+
+msgctxt "#30206"
+msgid "Do a scan now"
+msgstr "現在進行掃描"
+
+msgctxt "#30207"
+msgid "Delete this path from database"
+msgstr "從資料庫刪除此途徑"
+
+msgctxt "#30208"
+msgid "[B]Add[/B] a path to database"
+msgstr "[B]新增[/B] 途徑至資料庫"
+
+msgctxt "#30209"
+msgid "Uploads from last %s days"
+msgstr "上傳最近 %s 日的圖片"
+
+msgctxt "#30210"
+msgid "Remove this path from excluded"
+msgstr "從排除清單內刪除此途徑"
+
+msgctxt "#30211"
+msgid "Add a folder to [B]exclude[/B]"
+msgstr "新增資料夾到[B]排除[/B]清單"
+
+msgctxt "#30212"
+msgid "Exclude this folder from database"
+msgstr "從資料庫內排除除此資料夾"
+
+msgctxt "#30213"
+msgid "Search for new & changed pictures"
+msgstr "搜尋新增及剛修改過的圖片"
+
+msgctxt "#30214"
+msgid "Yes = scan all pictures."
+msgstr "是 = 掃描所有圖片。"
+
+msgctxt "#30215"
+msgid "No = scan only modified/new pictures."
+msgstr "否 = 僅掃描已修改及新增的圖片。"
+
+msgctxt "#30216"
+msgid "[B]Add[/B] all Kodi pictures sources to database"
+msgstr "[B]新增[/B]所有 Kodi 圖片資源到資料庫"
+
+msgctxt "#30217"
+msgid "You must rescan the folders"
+msgstr "您必須重新掃描資料夾"
+
+msgctxt "#30218"
+msgid "to exclude the pictures!"
+msgstr "來排除您指定的圖片"
+
+#empty string with id 30219
+
+msgctxt "#30220"
+msgid "Google Map"
+msgstr "Google 地圖"
+
+#. %0.2f%% will be replaced by the percent of download for a map
+msgctxt "#30221"
+msgid "Fetching the map... (%0.2f%%)"
+msgstr "正提取有關地圖 ... (%0.2f%%)"
+
+#. %s will be replaced by the zoom level in a map
+msgctxt "#30222"
+msgid "Zoom=%s"
+msgstr "放大=%s"
+
+msgctxt "#30223"
+msgid "Use up / down arrows to zoom in / out"
+msgstr "使用 上/下 箭咀來 縮細/放大"
 
 msgctxt "#30224"
 msgid "Close"
 msgstr "關閉"
 
+msgctxt "#30225"
+msgid "Zoom In"
+msgstr "放大"
+
+msgctxt "#30226"
+msgid "Zoom Out"
+msgstr "縮細"
+
+#empty strings from id 30227 to 30240
+
+msgctxt "#30241"
+msgid "preparing"
+msgstr "準備中"
+
+msgctxt "#30242"
+msgid "refreshing"
+msgstr "整理中"
+
+msgctxt "#30243"
+msgid "passing"
+msgstr "進行中"
+
+msgctxt "#30244"
+msgid "adding"
+msgstr "新增中"
+
+msgctxt "#30245"
+msgid "re-scan"
+msgstr "重新掃描"
+
+msgctxt "#30246"
+msgid "deleting"
+msgstr "刪除中"
+
+msgctxt "#30247"
+msgid "Please wait..."
+msgstr "請稍候 ..."
+
+#. %s respectively changed by number : scanned, added, deleted, modified
+msgctxt "#30248"
+msgid "%s scanned / %s added / %s deleted / %s modified"
+msgstr "已掃描 %s 張 / 已新增 %s 張 / 已刪除 %s 張 / 已修改 %s 張"
+
+msgctxt "#30249"
+msgid "Search for new pictures"
+msgstr "搜尋新增圖片"
+
 msgctxt "#30250"
 msgid "Are you sure?"
 msgstr "你確定嗎？"
+
+#empty strings from id 30252 to 30299
+
+msgctxt "#30300"
+msgid "file name"
+msgstr "檔案名稱"
+
+msgctxt "#30301"
+msgid "path"
+msgstr "途徑"
+
+msgctxt "#30302"
+msgid "path (thumbnail)"
+msgstr "途徑 (縮圖)"
+
+msgctxt "#30303"
+msgid "Show the slideshow"
+msgstr "顯示投影片"
+
+#empty strings from id 30304 to 30599
+
+msgctxt "#30600"
+msgid "Filter Wizard"
+msgstr "過濾精靈"
 
 msgctxt "#30601"
 msgid "Tags"
 msgstr "標籤"
 
+msgctxt "#30602"
+msgid "Contents"
+msgstr "內容"
+
+#empty strings from id 30603 to 30606
+
+msgctxt "#30607"
+msgid "Last used filter"
+msgstr "上次使用的過濾器"
+
+msgctxt "#30608"
+msgid "Select filter"
+msgstr "選取過濾器"
+
+msgctxt "#30609"
+msgid "Enter filter name"
+msgstr "輸入過濾器名稱"
+
+msgctxt "#30610"
+msgid "Please select tags (red checkbox means \"not\")"
+msgstr "請選擇標籤 (紅色的核選方塊代表 \"不含\"))"
+
+msgctxt "#30611"
+msgid "1 tag checked"
+msgstr "已核選了 1 個標籤"
+
+msgctxt "#30612"
+msgid "%s tags checked"
+msgstr "已核選了 %s 個標籤 "
+
 msgctxt "#30613"
 msgid "OK"
-msgstr "OK"
+msgstr "確定"
 
 msgctxt "#30614"
 msgid "Cancel"
 msgstr "取消"
+
+msgctxt "#30615"
+msgid "Match all tags"
+msgstr "符合所有標籤"
+
+msgctxt "#30616"
+msgid "Load"
+msgstr "載入"
 
 msgctxt "#30617"
 msgid "Save"
@@ -80,13 +720,65 @@ msgctxt "#30619"
 msgid "Delete"
 msgstr "刪除"
 
+msgctxt "#30620"
+msgid "Translate your tags"
+msgstr "翻譯您的標籤"
+
+msgctxt "#30621"
+msgid "Close Editor"
+msgstr "關閉編輯器"
+
+msgctxt "#30622"
+msgid "Leave translation empty to hide tag type in MyPicsDB"
+msgstr "空置編輯器以從 MyPicsDB 隱藏標籤類別"
+
+msgctxt "#30623"
+msgid "Translation for %s"
+msgstr "%s 的翻譯"
+
+#empty strings from id 30624 to 30649
+
 msgctxt "#30650"
 msgid "Debugging"
-msgstr "除錯"
+msgstr "測錯程序"
+
+msgctxt "#30651"
+msgid "Enable debugging (regardless of Kodi settings)"
+msgstr "啟用測錯程序 (忽略 Kodi 的系統設定)"
+
+msgctxt "#30652"
+msgid "Filter:"
+msgstr "過濾器："
+
+msgctxt "#30653"
+msgid "New Filter"
+msgstr "新增過濾器"
+
+msgctxt "#30654"
+msgid "Show %s random pictures"
+msgstr "顯示 %s 隨機圖片"
+
+msgctxt "#30655"
+msgid "Saved filter wizard settings"
+msgstr "已儲存的過濾精靈設定"
+
+#empty strings from id 30656 to 30659
+
+msgctxt "#30660"
+msgid "Database Settings"
+msgstr "資料庫設定"
 
 msgctxt "#30661"
 msgid "Database Backend"
 msgstr "資料庫"
+
+msgctxt "#30662"
+msgid "Sqlite"
+msgstr "Sqlite"
+
+msgctxt "#30663"
+msgid "MySql"
+msgstr "MySql"
 
 msgctxt "#30664"
 msgid "User"
@@ -96,17 +788,35 @@ msgctxt "#30665"
 msgid "Password"
 msgstr "密碼"
 
+msgctxt "#30666"
+msgid "IP-Address or Name"
+msgstr "網址或名稱"
+
 msgctxt "#30667"
 msgid "Port"
-msgstr "遠端伺服器埠號"
+msgstr "通訊埠"
+
+msgctxt "#30668"
+msgid "MySql DB Name"
+msgstr "MySql 資料庫名稱"
+
+msgctxt "#30669"
+msgid "Sqlite DB Name"
+msgstr "Sqlite 資料庫名稱"
+
+#empty strings from id 30670 to 30699
 
 msgctxt "#30700"
 msgid "Country"
 msgstr "國家"
 
+msgctxt "#30701"
+msgid "Country Code"
+msgstr "國家碼"
+
 msgctxt "#30702"
 msgid "State"
-msgstr "州"
+msgstr "省份"
 
 msgctxt "#30703"
 msgid "City"
@@ -116,13 +826,29 @@ msgctxt "#30704"
 msgid "Location"
 msgstr "位置"
 
+msgctxt "#30705"
+msgid "Event"
+msgstr "事件"
+
+msgctxt "#30706"
+msgid "Date Added"
+msgstr "加入日期"
+
+msgctxt "#30707"
+msgid "Date Created"
+msgstr "創建日期"
+
+msgctxt "#30708"
+msgid "Date/Time Created"
+msgstr "創建日期及時間"
+
 msgctxt "#30709"
 msgid "Description"
 msgstr "描述"
 
 msgctxt "#30710"
 msgid "Headline"
-msgstr "標題"
+msgstr "主旨"
 
 msgctxt "#30711"
 msgid "Title"
@@ -130,16 +856,64 @@ msgstr "標題"
 
 msgctxt "#30712"
 msgid "Creator"
-msgstr "建立者"
+msgstr "創建者"
+
+msgctxt "#30713"
+msgid "Creator Title"
+msgstr "創建者稱謂"
+
+msgctxt "#30714"
+msgid "Copyright"
+msgstr "版權"
 
 msgctxt "#30715"
 msgid "Label"
 msgstr "標籤"
 
+msgctxt "#30716"
+msgid "Image Rating"
+msgstr "圖像評分"
+
+msgctxt "#30717"
+msgid "Keyword"
+msgstr "關鍵詞"
+
 msgctxt "#30718"
 msgid "Category"
 msgstr "類別"
 
+msgctxt "#30719"
+msgid "Supplemental Category"
+msgstr "補充類別"
+
+msgctxt "#30720"
+msgid "Person"
+msgstr "人仕"
+
+msgctxt "#30721"
+msgid "Image Width"
+msgstr "圖像闊度"
+
+msgctxt "#30722"
+msgid "Image Length"
+msgstr "圖像長度"
+
 msgctxt "#30723"
 msgid "Orientation"
-msgstr "方位"
+msgstr "圖片方向"
+
+msgctxt "#30724"
+msgid "Flash"
+msgstr "閃光燈"
+
+msgctxt "#30725"
+msgid "Image Model"
+msgstr "圖像模組"
+
+msgctxt "#30726"
+msgid "Image Make"
+msgstr "圖像結構"
+
+msgctxt "#30727"
+msgid "Image Artist"
+msgstr "攝影師"
