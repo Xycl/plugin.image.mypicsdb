@@ -147,6 +147,7 @@ class VFSScanner:
         # delete all entries with "sha is null"
         self.picsdeleted += self.mpdb.del_pics_wo_sha(self.scan_is_cancelled)
 
+        common.log("VFSScanner.dispatcher", common.getstring(30248)%(self.picsscanned,self.picsadded,self.picsdeleted,self.picsupdated), xbmc.LOGNOTICE)
         common.show_notification(common.getstring(30000), common.getstring(30248)%(self.picsscanned,self.picsadded,self.picsdeleted,self.picsupdated) )
         
 
