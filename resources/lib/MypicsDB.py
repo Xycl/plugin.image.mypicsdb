@@ -472,9 +472,6 @@ class MyPictureDB(object):
                         id_tagcontents=[row for row in self.cur.request("SELECT idTagContent FROM TagsInFiles WHERE idFile=?", (id_file,))]
                         self.cur.execute("Delete From TagsInFiles Where idFile=?", (id_file,))
                         
-                        for id_tagcontent in id_tagcontents:
-                            self.cur.execute("Delete From TagContents Where idTagContent= ?", (id_tagcontent[0],))
-
                         self.cur.execute( """Update Files set ftype=?, Thumb=?, ImageRating=?, ImageDateTime=?, Sha=? where idFile=?""", ( dictionnary["ftype"], dictionnary["Thumb"], dictionnary["Image Rating"], imagedatetime, sha, str(id_file) ) )
                         
                     except:
