@@ -1,3 +1,6 @@
+2016/11/10 --> v 14.1.11
+Update: Language files from Transifex
+
 2016/11/10 --> v 14.1.10
 Fix:    MySql select on collections
 Fix:    MySql different port than 3306
