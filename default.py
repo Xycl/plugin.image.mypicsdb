@@ -1395,7 +1395,7 @@ class Main:
         START_TIME = time.time()
         # Get general statistics and set properties
         Count = MPDB.cur.request( """SELECT COUNT(*) FROM Files WHERE ImageDateTime IS NOT NULL""" )[0]
-        Collections = MPDB.cur.request( """SELECT COUNT(*) FROM collections""" )[0]
+        Collections = MPDB.cur.request( """SELECT COUNT(*) FROM Collections""" )[0]
         Categories = MPDB.cur.request( """select count(distinct tf.idFile) from TagTypes tt, TagContents tc, TagsInFiles tf where tt.idTagType = tc.idTagType and tc.idTagContent = tf.idTagContent and tt.TagTranslation = ( select TagTranslation from TagTypes tti where tti.TagType = 'Category')""" )[0]
         Folders = MPDB.cur.request( """SELECT COUNT(*) FROM Folders WHERE HasPics = 1""" )[0]
         WINDOW.clearProperty( "MyPicsDB%s.Count" %(_method))

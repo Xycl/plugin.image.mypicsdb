@@ -130,7 +130,7 @@ class MysqlConnection(BaseConnection):
         else:
             self.db_address = db_address
 
-        self.connection = database.connect(db = db_name, user = db_user, passwd = db_pass, host = db_address) #, port = db_port)
+        self.connection = database.connect(db = db_name, user = db_user, passwd = db_pass, host = db_address, port = int(db_port))
         self.connection.set_charset('utf8')
         self.connection.set_unicode(True)
 
