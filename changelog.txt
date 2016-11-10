@@ -1,3 +1,7 @@
+2016/11/10 --> v 13.4.0
+Fix:    MySql select on collections
+Fix:    MySql different port than 3306
+
 2016/06/10 --> v 13.3.9
 Fix:    Regular expression introduced to remove parameter reload=xxx
 
