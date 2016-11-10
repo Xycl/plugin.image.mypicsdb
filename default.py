@@ -1407,9 +1407,18 @@ class Main:
         WINDOW.clearProperty( "MyPicsDB%s.Folders" %(_method))
         WINDOW.setProperty ( "MyPicsDB%s.Folders" %(_method), str(Folders[0]) )
         # Build query string
-        _query = """SELECT b.FolderName, a.strPath, a.strFilename, ImageDateTime """
-        _query += """FROM Files AS a, Folders AS b """
-        _query += """WHERE ImageDateTime IS NOT NULL AND a.idFolder = b.idFolder """
+        _query = """SELECT b.FolderName, a.strPath, a.strFilename, ImageDateTime, TagContent """
+        _query += """FROM Files AS a """
+        _query += """     INNER JOIN Folders AS b """
+        _query += """     ON a.idFolder = b.idFolder """
+        _query += """     LEFT OUTER JOIN (SELECT a.idFile, a.idTagContent, b.TagContent """
+        _query += """                      FROM TagsInFiles AS a, TagContents AS b, TagTypes AS c """
+        _query += """                      WHERE a.idTagContent = b.idTagContent """
+        _query += """                        AND b.idtagType = c.idTagType """
+        _query += """                        AND c.tagType = 'Caption/abstract' """
+        _query += """                     ) AS c """
+        _query += """     ON a.idFile = c.idFile """
+        _query += """WHERE ImageDateTime IS NOT NULL """
         if _method == "Latest":
             # Get latest pictures based on shooted date time or added date time
             _sort = m.args.sort
@@ -1439,6 +1448,8 @@ class Main:
             WINDOW.setProperty( "MyPicsDB%s.%d.Name" % ( _method, _count ), _picture[2] )
             WINDOW.clearProperty( "MyPicsDB%s.%d.Date" % ( _method, _count ) )
             WINDOW.setProperty( "MyPicsDB%s.%d.Date" % ( _method, _count ), _picture[3] )
+            WINDOW.clearProperty( "MyPicsDB%s.%d.Comment" % ( _method, _count ) )
+            WINDOW.setProperty( "MyPicsDB%s.%d.Comment" % ( _method, _count ), _picture[4] )
             # Store path into CommonCache
             cache.set("MyPicsDB%s.%d" %( _method, _count ), ( _path ))
         # Store number of pictures fetched into CommonCache
@@ -1451,6 +1462,7 @@ class Main:
                 cache.set("MyPicsDB%s.%d" %( _method, _i ), "")
                 WINDOW.clearProperty( "MyPicsDB%s.%d.Name" % ( _method, _i ) )
                 WINDOW.clearProperty( "MyPicsDB%s.%d.Date" % ( _method, _i ) )
+                WINDOW.clearProperty( "MyPicsDB%s.%d.Comment" % ( _method, _i ) )
         # Display execution time
         t = ( time.time() - START_TIME )
         if t >= 60: return "%.3fm" % ( t / 60.0 )
