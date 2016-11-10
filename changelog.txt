@@ -1,3 +1,6 @@
+2016/11/10 --> v 14.2.1
+Update: Merged all github pull requests
+
 2016/11/10 --> v 14.1.11
 Update: Language files from Transifex
 
