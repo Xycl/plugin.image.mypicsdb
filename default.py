@@ -517,9 +517,9 @@ class Main:
 
         #maintenant, on liste les photos si il y en a, du dossier en cours
         if min_rating > 0:
-            picsfromfolder = [row for row in MPDB.cur.request_with_binds("SELECT p.FullPath, f.strFilename, f.ImageDateTime FROM Files f, Folders p WHERE f.idFolder=p.idFolder AND f.idFolder=? AND f.ImageRating > ? order by f.imagedatetime", (self.args.folderid, min_rating, ) )]
+            picsfromfolder = [row for row in MPDB.cur.request_with_binds("SELECT p.FullPath, f.strFilename FROM Files f, Folders p WHERE f.idFolder=p.idFolder AND f.idFolder=? AND f.ImageRating > ? order by f.imagedatetime", (self.args.folderid, min_rating, ) )]
         else:
-            picsfromfolder = [row for row in MPDB.cur.request_with_binds("SELECT p.FullPath, f.strFilename, f.ImageDateTime FROM Files f, Folders p WHERE f.idFolder=p.idFolder AND f.idFolder=? order by f.imagedatetime", (self.args.folderid, ) )]
+            picsfromfolder = [row for row in MPDB.cur.request_with_binds("SELECT p.FullPath, f.strFilename FROM Files f, Folders p WHERE f.idFolder=p.idFolder AND f.idFolder=? order by f.imagedatetime", (self.args.folderid, ) )]
 
         count = 0
         for path, filename in picsfromfolder:
