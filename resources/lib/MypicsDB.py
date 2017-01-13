@@ -613,7 +613,7 @@ class MyPictureDB(object):
     
         if picfile:
             picpath = picpath.replace("\\", "\\\\")
-            self.cur.request("""DELETE FROM Files WHERE idFolder = (SELECT idFolder FROM Folders WHERE FullPath Like '%s_') AND strFilename=? """%picpath,(picfile, ))
+            self.cur.request("""DELETE FROM Files WHERE idFolder = (SELECT idFolder FROM Folders WHERE FullPath Like ?) AND strFilename=? """,(picpath,picfile, ))
     
         else:
     
