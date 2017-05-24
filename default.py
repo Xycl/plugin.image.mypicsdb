@@ -522,7 +522,7 @@ class Main:
             picsfromfolder = [row for row in MPDB.cur.request_with_binds("SELECT p.FullPath, f.strFilename FROM Files f, Folders p WHERE f.idFolder=p.idFolder AND f.idFolder=? order by f.imagedatetime", (self.args.folderid, ) )]
 
         count = 0
-        for path, filename, _imagedatetime in picsfromfolder:
+        for path, filename in picsfromfolder:
             path     = common.smart_unicode(path)
             filename = common.smart_unicode(filename)
 

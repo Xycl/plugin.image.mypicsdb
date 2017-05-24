@@ -1,3 +1,6 @@
+2017/0524 --> v 14.3.1
+Update:    Pull requests from Claude merged
+
 2017/02/28 --> v 14.3.0
 Fix:    Error when viewing picture by folder was fixed
 
