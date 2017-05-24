@@ -103,7 +103,7 @@ class MyPictureDB(object):
                 pass
 
             try:
-                self.cur.execute("CREATE INDEX idxTagsInFiles3 ON TagsInFiles(idFile,idTagContent)")
+                self.cur.execute("CREATE UNIQUE INDEX idxTagsInFiles3 ON TagsInFiles(idFile,idTagContent)")
             except:
                 pass
                 
