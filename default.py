@@ -296,7 +296,7 @@ class Main:
         common.log("Main.show_home", "start")
 
         display_all = common.getaddon_setting('m_all')=='true'
-         # last scan picture added
+        # last scan picture added
         if common.getaddon_setting('m_1')=='true' or display_all:
             self.add_directory(common.getstring(30209)%common.getaddon_setting("recentnbdays"),[("method","recentpicsdb"),("period",""),("value",""),("page","1"),("viewmode","view")],
                         "showpics",join(PIC_PATH,"folder_recent_added.png"))
