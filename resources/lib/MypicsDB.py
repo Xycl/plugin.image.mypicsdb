@@ -1658,7 +1658,7 @@ class MyPictureDB(object):
             rating_select = ''
 
         if self.con.get_backend() == "mysql":    
-            return [t for (t,) in self.cur.request("""SELECT DISTINCT date_format(ImageDateTime, '%%Y') FROM Files f where ImageDateTime is NOT NULL %s ORDER BY ImageDateTime ASC"""%rating_select)]
+            return [t for (t,) in self.cur.request("""SELECT DISTINCT date_format(ImageDateTime, '%%Y') as ImageDateTime FROM Files f where ImageDateTime is NOT NULL %s ORDER BY ImageDateTime ASC"""%rating_select)]
         else:
             return [t for (t,) in self.cur.request("""SELECT DISTINCT strftime("%Y",ImageDateTime) FROM Files f where ImageDateTime NOT NULL """ + rating_select + """ ORDER BY ImageDateTime ASC""")]
 
@@ -1670,7 +1670,7 @@ class MyPictureDB(object):
             rating_select = ''
             
         if self.con.get_backend() == "mysql":    
-            return [t for (t,) in self.cur.request("""SELECT distinct date_format(ImageDateTime, '%%Y-%%m') FROM Files f where date_format(ImageDateTime, '%%Y') = '%s' """%year + rating_select + """ ORDER BY ImageDateTime ASC""")]
+            return [t for (t,) in self.cur.request("""SELECT distinct date_format(ImageDateTime, '%%Y-%%m') as ImageDateTime FROM Files f where date_format(ImageDateTime, '%%Y') = '%s' """%year + rating_select + """ ORDER BY ImageDateTime ASC""")]
         else:
             return [t for (t,) in self.cur.request("""SELECT distinct strftime("%%Y-%%m",ImageDateTime) FROM Files f where strftime("%%Y",ImageDateTime) = '%s' """%year + rating_select + """ ORDER BY ImageDateTime ASC""")]
 
@@ -1682,7 +1682,7 @@ class MyPictureDB(object):
             rating_select = ''
             
         if self.con.get_backend() == "mysql":    
-            return [t for (t,) in self.cur.request("""SELECT distinct date_format(ImageDateTime, '%%Y-%%m-%%d') FROM Files f where date_format(ImageDateTime, '%%Y-%%m') = '%s' """%year_month + rating_select + """ ORDER BY ImageDateTime ASC""")]
+            return [t for (t,) in self.cur.request("""SELECT distinct date_format(ImageDateTime, '%%Y-%%m-%%d') as ImageDateTime FROM Files f where date_format(ImageDateTime, '%%Y-%%m') = '%s' """%year_month + rating_select + """ ORDER BY ImageDateTime ASC""")]
         else:
             return [t for (t,) in self.cur.request("""SELECT distinct strftime("%%Y-%%m-%%d",ImageDateTime) FROM Files f where strftime("%%Y-%%m",ImageDateTime) = '%s' """%year_month + rating_select + """ ORDER BY ImageDateTime ASC""")]
 
@@ -1719,7 +1719,7 @@ class MyPictureDB(object):
     def get_pics_dates(self):
         """return all different dates from 'EXIF DateTimeOriginal'"""
         if self.con.get_backend() == "mysql":
-            return [t for (t,) in self.cur.request("""SELECT DISTINCT date_format(ImageDateTime, '%Y-%m-%d') FROM Files f WHERE length(trim(ImageDateTime))>8 AND ImageDateTime> 0 ORDER BY ImageDateTime ASC""")]
+            return [t for (t,) in self.cur.request("""SELECT DISTINCT date_format(ImageDateTime, '%Y-%m-%d') as ImageDateTime FROM Files f WHERE length(trim(ImageDateTime))>8 AND ImageDateTime> 0 ORDER BY ImageDateTime ASC""")]
         else:
             return [t for (t,) in self.cur.request("""SELECT DISTINCT strftime("%Y-%m-%d",ImageDateTime) FROM Files f WHERE length(trim(ImageDateTime))>8  ORDER BY ImageDateTime ASC""")]
 
