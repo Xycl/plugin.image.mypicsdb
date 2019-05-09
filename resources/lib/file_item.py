@@ -12,7 +12,7 @@ THUMBS_CACHE_PATH = os.path.join( xbmc.translatePath( "special://profile/" ), "T
 class Thumbnails:
     def get_cached_thumb( self, path1, path2, SPLIT=False ):
         # get the locally cached thumb
-        filename = xbmc.getCacheThumbName( path1 )
+        filename = xbmc.getCacheThumbName( path1 ) 
         if SPLIT:
             thumb = os.path.join( filename[ 0 ], filename )
         else:

@@ -21,7 +21,7 @@ class Viewer:
     WINDOW = 10147
     CONTROL_LABEL = 1
     CONTROL_TEXTBOX = 5
-
+ 
     def __init__( self, *args, **kwargs ):
         # activate the text viewer window
         xbmc.executebuiltin( "ActivateWindow(%d)" % ( self.WINDOW, ) )

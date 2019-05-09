@@ -164,15 +164,15 @@ class MyPictureDB(object):
                 common.log("MPDB.make_new_base >> Dropping table", "%s"%table)
                 try:
                     self.cur.execute("""DROP TABLE %s"""%table)
-                except Exception,msg:
+                except Exception as msg:  
                     pass
                     #common.log("MPDB.make_new_base", "DROP TABLE %s"%table, xbmc.LOGERROR )
                     #common.log("MPDB.make_new_base", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
-    
+                
         # table: version
         try:
             self.cur.execute("""CREATE TABLE DBVersion ( strVersion VARCHAR(20))""")
-        except Exception,msg:
+        except Exception as msg:
             if str(msg).find("already exists") > -1:
                 pass
             else: 
@@ -198,7 +198,7 @@ class MyPictureDB(object):
                                                    ImageDateTime DATETIME, 
                                                    Sha %s, 
                                                    CONSTRAINT UNI_FILE UNIQUE (strPath,strFilename))"""%(self.con.get_ddl_primary_key(), self.con.get_ddl_varchar(200), self.con.get_ddl_varchar(128), self.con.get_ddl_varchar(40), self.con.get_ddl_varchar(1024), self.con.get_ddl_varchar(40), self.con.get_ddl_varchar(100)))
-        except Exception,msg:
+        except Exception as msg:
             if str(msg).find("already exists") > -1:
                 pass
             else: 
@@ -208,7 +208,7 @@ class MyPictureDB(object):
         #table 'Folders'
         try:
             self.cur.execute("CREATE TABLE Folders (idFolder INTEGER %s, FolderName %s, ParentFolder INTEGER, FullPath %s UNIQUE, HasPics INTEGER)"%(self.con.get_ddl_primary_key(), self.con.get_ddl_varchar(255), self.con.get_ddl_varchar(255)))
-        except Exception,msg:
+        except Exception as msg:
             if str(msg).find("already exists") > -1:
                 pass
             else:
@@ -218,7 +218,7 @@ class MyPictureDB(object):
         #table 'Collections'
         try:
             self.cur.execute("CREATE TABLE Collections (idCol INTEGER %s, CollectionName %s UNIQUE, PlayListName %s)"%(self.con.get_ddl_primary_key(), self.con.get_ddl_varchar(255), self.con.get_ddl_varchar(255)))
-        except Exception,msg:
+        except Exception as msg:
             if str(msg).find("already exists") > -1:
                 pass
             else: 
@@ -228,7 +228,7 @@ class MyPictureDB(object):
         #table 'FilesInCollections'
         try:
             self.cur.execute("CREATE TABLE FilesInCollections (idCol INTEGER, idFile INTEGER NOT NULL, Constraint UNI_COLLECTION UNIQUE (idCol,idFile))")
-        except Exception,msg:
+        except Exception as msg:
             if str(msg).find("already exists") > -1:
                 pass
             else: 
@@ -238,7 +238,7 @@ class MyPictureDB(object):
         #table 'Periodes'
         try:
             self.cur.execute("CREATE TABLE Periodes(idPeriode INTEGER %s, PeriodeName %s UNIQUE NOT NULL, DateStart DATETIME NOT NULL, DateEnd DATETIME NOT NULL, CONSTRAINT UNI_PERIODE UNIQUE (PeriodeName,DateStart,DateEnd) )"%(self.con.get_ddl_primary_key(), self.con.get_ddl_varchar(255)))
-        except Exception,msg:
+        except Exception as msg:
             if str(msg).find("already exists") > -1:
                 pass
             else: 
@@ -248,7 +248,7 @@ class MyPictureDB(object):
         #table 'Rootpaths'
         try:
             self.cur.execute("CREATE TABLE Rootpaths (idRoot INTEGER %s, Path %s UNIQUE NOT NULL, Recursive INTEGER NOT NULL, Remove INTEGER NOT NULL, Exclude INTEGER DEFAULT 0)"%(self.con.get_ddl_primary_key(), self.con.get_ddl_varchar(255)))
-        except Exception,msg:
+        except Exception as msg:
             if str(msg).find("already exists") > -1:
                 pass
             else: 
@@ -258,7 +258,7 @@ class MyPictureDB(object):
         #table 'TagTypes'
         try:
             self.cur.execute("CREATE TABLE TagTypes (idTagType INTEGER %s, TagType %s, TagTranslation %s, CONSTRAINT UNI_TAG UNIQUE(TagType) )"%(self.con.get_ddl_primary_key(), self.con.get_ddl_varchar(128), self.con.get_ddl_varchar(128)))
-        except Exception,msg:
+        except Exception as msg:
             if str(msg).find("already exists") > -1:
                 pass
             else:
@@ -268,7 +268,7 @@ class MyPictureDB(object):
         #table 'TagContent'
         try:
             self.cur.execute("CREATE TABLE TagContents (idTagContent INTEGER %s, idTagType INTEGER, TagContent %s, CONSTRAINT UNI_TAG UNIQUE(idTagType, TagContent) )"%(self.con.get_ddl_primary_key(), self.con.get_ddl_varchar(255)))
-        except Exception,msg:
+        except Exception as msg:
             if str(msg).find("already exists") > -1:
                 pass
             else:
@@ -278,7 +278,7 @@ class MyPictureDB(object):
         #table 'TagsInFiles'
         try:
             self.cur.execute("CREATE TABLE TagsInFiles (idTagContent INTEGER, idFile INTEGER NOT NULL)")
-        except Exception,msg:
+        except Exception as msg:
             if str(msg).find("already exists") > -1:
                 pass
             else:
@@ -288,7 +288,7 @@ class MyPictureDB(object):
         #table 'FilterWizard'
         try:
             self.cur.execute("""create table FilterWizard (pkFilter integer %s, strFilterName %s unique, bMatchAll integer, StartDate date, EndDate date)"""%(self.con.get_ddl_primary_key(), self.con.get_ddl_varchar(255)))
-        except Exception,msg:
+        except Exception as msg:
             if str(msg).find("already exists") > -1:
                 pass
             else:
@@ -298,7 +298,7 @@ class MyPictureDB(object):
         #table 'FilterWizardItems'
         try:
             self.cur.execute("""create table FilterWizardItems (idItems integer %s, fkFilter integer, strItem %s, nState integer, FOREIGN KEY(fkFilter) REFERENCES FilterWizard(pkFilter))"""%(self.con.get_ddl_primary_key(), self.con.get_ddl_varchar(255)))
-        except Exception,msg:
+        except Exception as msg:
             if str(msg).find("already exists") > -1:
                 pass
             else:
@@ -308,7 +308,7 @@ class MyPictureDB(object):
         #table GlobalSearch
         try:
             self.cur.execute("""CREATE TABLE GlobalSearch(pkSearch integer %s, strSearchString %s unique)"""%(self.con.get_ddl_primary_key(), self.con.get_ddl_varchar(255)))
-        except Exception,msg:
+        except Exception as msg:
             if str(msg).find("already exists") > -1:
                 pass
             else:
@@ -319,7 +319,7 @@ class MyPictureDB(object):
         try:
             self.cur.execute("""CREATE TABLE DynDataInCollections(idCol integer, fkForeignKey integer, TableName %s)"""%(self.con.get_ddl_varchar(50)))
             self.cur.execute("""CREATE UNIQUE INDEX idxDDIC1 ON DynDataInCollections(idCol, TableName)""")
-        except Exception,msg:
+        except Exception as msg:
             if str(msg).find("already exists") > -1:
                 pass
             else:
@@ -330,39 +330,39 @@ class MyPictureDB(object):
         try:
             self.cur.execute("CREATE INDEX idxFilesInCollections1 ON FilesInCollections(idCol)")
             self.cur.execute("CREATE INDEX idxFilesInCollections2 ON FilesInCollections(idFile)")
-        except Exception,msg:
+        except Exception as msg:
             pass
     
     
         # Index creation for new tag tables
         try:
             self.cur.execute("CREATE INDEX idxTagTypes1 ON TagTypes(idTagType)")
-        except Exception,msg:
+        except Exception as msg:
             pass
     
         try:
             self.cur.execute("CREATE INDEX idxTagContent1 ON TagContents(idTagContent)")
-        except Exception,msg:
+        except Exception as msg:
             pass
     
         try:
             self.cur.execute("CREATE INDEX idxTagsInFiles1 ON TagsInFiles(idTagContent)")
             self.cur.execute("CREATE INDEX idxTagsInFiles2 ON TagsInFiles(idFile)")
             self.cur.execute("CREATE INDEX idxTagsInFiles3 ON TagsInFiles(idFile,idTagContent)")
-        except Exception,msg:
+        except Exception as msg:
             pass
     
         try:
             self.cur.execute("CREATE INDEX idxFolders1 ON Folders(idFolder)")
             self.cur.execute("CREATE INDEX idxFolders2 ON Folders(ParentFolder)")
-        except Exception,msg:
+        except Exception as msg:
             pass
     
         try:
             self.cur.execute("CREATE INDEX idxFiles1 ON Files(idFile, idFolder)")
             self.cur.execute("CREATE INDEX idxFiles2 ON Files(ImageDateTime)")
             
-        except Exception,msg:
+        except Exception as msg:
             pass
     
         self.con.commit()
@@ -383,7 +383,7 @@ class MyPictureDB(object):
             self.cur.execute( "delete from TagTypes where idTagType not in (select idTagType from TagContents) and TagType = TagTranslation")
             self.con.commit()
             
-        except Exception,msg:
+        except Exception as msg:
             common.log("MPDB.cleanup_keywords", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
             raise
     
@@ -396,10 +396,10 @@ class MyPictureDB(object):
     
         try:
             count = self.cur.request("SELECT count(*) FROM Files WHERE strPath = ? AND strFilename = ?",(picpath,picfile,) )
-        except Exception,msg:
+        except Exception as msg:
             common.log("MPDB.pic_exists", "EXCEPTION >> pic_exists %s,%s"%(picpath,picfile), xbmc.LOGERROR )
             common.log("MPDB.pic_exists", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
-            raise Exception, msg
+            raise Exception( msg)
         if count==0:
             retour= False
         else:
@@ -414,11 +414,11 @@ class MyPictureDB(object):
 
         full_filename = []
         try:
-            pictures = [row for row in self.cur.request( u"SELECT f.strPath, f.strFilename FROM Files f,Folders p WHERE f.idFolder=p.idFolder AND p.FullPath=(?) order by f.idFile",(path,))]
+            pictures = [row for row in self.cur.request( u"SELECT f.strPath, f.strFilename, f.idFile FROM Files f,Folders p WHERE f.idFolder=p.idFolder AND p.FullPath=(?) order by f.idFile",(path,))]
             for entry in pictures:
                 full_filename.append(join(entry[0], entry[1]))
 
-        except Exception,msg:
+        except Exception as msg:
             common.log( "", "path = "%path, xbmc.LOGERROR )
             common.log( "", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
             self.cur.close()
@@ -481,7 +481,7 @@ class MyPictureDB(object):
                 self.cur.execute( """INSERT INTO Files(idFolder, strPath, strFilename, ftype, DateAdded,  Thumb,  ImageRating, ImageDateTime, Sha) values (?, ?, ?, ?, ?, ?, ?, ?, ?)""", 
                           ( dictionnary["idFolder"],  dictionnary["strPath"], dictionnary["strFilename"], dictionnary["ftype"], dictionnary["DateAdded"], dictionnary["Thumb"], dictionnary["Image Rating"], imagedatetime, sha ) )
 
-        except Exception,msg:
+        except Exception as msg:
     
             common.log("file_insert", "path = %s"%common.smart_unicode(filename).encode('utf-8'), xbmc.LOGERROR)
             common.log("file_insert",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
@@ -494,7 +494,7 @@ class MyPictureDB(object):
         try:
             id_file = [row[0] for row in self.cur.request("SELECT idFile FROM Files WHERE strPath = ? AND strFilename = ?",(path,filename,) )] [0]
             self.tags_insert(id_file, filename, path, dictionnary)
-        except Exception,msg:
+        except Exception as msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )             
     
         self.con.commit()
@@ -533,7 +533,7 @@ class MyPictureDB(object):
                                 # not in list therefore insert into table TagTypes
                                 try:
                                     self.cur.execute(" INSERT INTO TagTypes(tagType, TagTranslation) VALUES(?, ?) ",(tag_type,tag_type))
-                                except Exception,msg:
+                                except Exception as msg:
                                     if str(msg)=="column TagType is not unique" or "Duplicate entry" in str(msg) or "UNIQUE constraint" in str(msg):
                                         pass
                                     else:
@@ -544,7 +544,7 @@ class MyPictureDB(object):
                                 # select the key of the tag from table TagTypes
                                 try:
                                     id_tag_type= [row[0] for row in self.cur.request("SELECT min(idTagType) FROM TagTypes WHERE TagType = ? ",(tag_type,) )][0]
-                                except Exception,msg:
+                                except Exception as msg:
                                     common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )             
 
                                 self.tagTypeDBKeys[tag_type] = id_tag_type
@@ -555,7 +555,7 @@ class MyPictureDB(object):
                                 
                             try:
                                 self.cur.execute(" INSERT INTO TagContents(idTagType,TagContent) VALUES(?,?) ",(id_tag_type,common.smart_unicode(value)))
-                            except Exception,msg:
+                            except Exception as msg:
                                 if str(msg)=="columns idTagType, TagContent are not unique" or "Duplicate entry" in str(msg) or "UNIQUE constraint" in str(msg):
                                     pass
                                 else:
@@ -571,7 +571,7 @@ class MyPictureDB(object):
                                 self.cur.execute(" INSERT INTO TagsInFiles(idTagContent,idFile) SELECT t.idTagContent, %d FROM TagContents t WHERE t.idTagType=%d AND t.TagContent = ? "%(idfile,id_tag_type), (common.smart_unicode(value),))
 
                             # At first column was named idTag then idTagContent
-                            except Exception,msg:
+                            except Exception as msg:
                                 if str(msg)=="PRIMARY KEY must be unique" or "Duplicate entry" in str(msg) or "UNIQUE constraint" in str(msg):
                                     pass
                                 else:
@@ -621,13 +621,13 @@ class MyPictureDB(object):
                 if picpath:
                     try:
                         idpath = self.cur.request("""SELECT idFolder FROM Folders WHERE FullPath = ? """, (picpath,))[0][0]
-                    except Exception,msg:
+                    except Exception as msg:
                         common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )             
 
                 else:
                     try:
                         idpath = self.cur.request("""SELECT idFolder FROM Folders WHERE FullPath is null""")[0][0]
-                    except Exception,msg:
+                    except Exception as msg:
                         common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )             
 
                 common.log( "del_pic", "(%s,%s)"%( common.smart_utf8(picpath),common.smart_utf8(picfile)) )
@@ -854,7 +854,7 @@ class MyPictureDB(object):
 
         try:
             rows = [row for row in self.cur.request( "select count(*) from FilterWizard where strFilterName = ? ",(filter_name, ))] [0][0]
-        except Exception,msg:
+        except Exception as msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )             
             rows = 0
 
@@ -865,7 +865,7 @@ class MyPictureDB(object):
 
         try:
             filter_key = [row for row in self.cur.request( "select pkFilter from FilterWizard where strFilterName = ? ",(filter_name, ))] [0][0]
-        except Exception,msg:
+        except Exception as msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )             
             return
 
@@ -884,7 +884,7 @@ class MyPictureDB(object):
         #
         try:
             rows = [row for row in self.cur.request( "select count(*) from FilterWizard where strFilterName = ? ",(filter_name, ))] [0][0]
-        except Exception,msg:
+        except Exception as msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )             
 
         if rows > 0:
@@ -971,9 +971,9 @@ class MyPictureDB(object):
             rows_from_filter = []
         #filterwizard_get_pics_from_filter      
         if min_rating > 0:
-            row = [row for row in self.cur.request( """SELECT strPath,strFilename FROM Files WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') >= ? AND idFile IN (SELECT idFile FROM FilesInCollections WHERE idCol IN (SELECT idCol FROM Collections WHERE CollectionName=?)) ORDER BY ImageDateTime ASC""",(min_rating, colname,))]
+            row = [row for row in self.cur.request( """SELECT strPath,strFilename, ImageDateTime FROM Files WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') >= ? AND idFile IN (SELECT idFile FROM FilesInCollections WHERE idCol IN (SELECT idCol FROM Collections WHERE CollectionName=?)) ORDER BY ImageDateTime ASC""",(min_rating, colname,))]
         else:
-            row = [row for row in self.cur.request( """SELECT strPath,strFilename FROM Files WHERE idFile IN (SELECT idFile FROM FilesInCollections WHERE idCol IN (SELECT idCol FROM Collections WHERE CollectionName=?)) ORDER BY ImageDateTime ASC""",(colname,))]
+            row = [row for row in self.cur.request( """SELECT strPath,strFilename, ImageDateTime FROM Files WHERE idFile IN (SELECT idFile FROM FilesInCollections WHERE idCol IN (SELECT idCol FROM Collections WHERE CollectionName=?)) ORDER BY ImageDateTime ASC""",(colname,))]
         row.extend(rows_from_filter)
         return row
 
@@ -1176,7 +1176,7 @@ class MyPictureDB(object):
             latitude =  (int(lD)+(int(lM)/60.0)+(int(lS)/3600.0)) * (latR=="S" and -1 or 1)
             longitude = (int(LD)+(int(LM)/60.0)+(int(LS)/3600.0)) * (lonR=="W" and -1 or 1)
             return (latitude,longitude)
-        except Exception,msg:
+        except Exception as msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
             return None
 
@@ -1196,7 +1196,7 @@ class MyPictureDB(object):
 
         try:
             rows = [row for row in self.cur.request( """SELECT path,recursive,remove,exclude FROM Rootpaths WHERE path=? """, (common.smart_unicode(path),) )][0]
-        except Exception,msg:
+        except Exception as msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
             rows = []
         
@@ -1225,7 +1225,7 @@ class MyPictureDB(object):
     
         try:
             cptremoved = self.cur.request( """SELECT count(*) FROM Files WHERE idFolder='%s'"""%idpath )[0][0]
-        except Exception,msg:
+        except Exception as msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
             return 0
             
@@ -1237,7 +1237,7 @@ class MyPictureDB(object):
             self.cur.request( """DELETE FROM FilesInCollections WHERE idFile in (SELECT idFile FROM Files WHERE idFolder='%s')"""%idchild )
             try:
                 cptremoved = cptremoved + self.cur.request( """SELECT count(*) FROM Files WHERE idFolder='%s'"""%idchild)[0][0]
-            except Exception,msg:
+            except Exception as msg:
                 common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
                 return 0
 
@@ -1254,7 +1254,7 @@ class MyPictureDB(object):
                 if self.cur.request( """SELECT count(*) FROM Files WHERE datetime(ImageDateTime) BETWEEN '%s' AND '%s'"""%(datestart,dateend) )[0][0]==0:
                     self.cur.request( """DELETE FROM Periodes WHERE PeriodeName='%s'"""%periodname )
             self.cleanup_keywords()
-        except Exception,msg:
+        except Exception as msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
 
         self.con.commit()
@@ -1265,9 +1265,9 @@ class MyPictureDB(object):
         """Look for given keyword and return the list of pictures.
     If tag is not given, pictures with no keywords are returned"""
         if tag is not None: 
-            return [row for row in self.cur.request( "SELECT distinct strPath,strFilename FROM Files f, TagContents tc, TagsInFiles tif, TagTypes tt WHERE f.idFile = tif.idFile AND tif.idTagContent = tc.idTagContent AND tc.TagContent = ? and tc.idTagType = tt.idTagType  and length(trim(tt.TagTranslation))>0 and tt.TagTranslation = ?  order by imagedatetime ",(tag.encode("utf8"),tag_type.encode("utf8")) )]
+            return [row for row in self.cur.request( "SELECT distinct strPath,strFilename, imagedatetime FROM Files f, TagContents tc, TagsInFiles tif, TagTypes tt WHERE f.idFile = tif.idFile AND tif.idTagContent = tc.idTagContent AND tc.TagContent = ? and tc.idTagType = tt.idTagType  and length(trim(tt.TagTranslation))>0 and tt.TagTranslation = ?  order by imagedatetime ",(tag.encode("utf8"),tag_type.encode("utf8")) )]
         else: 
-            return [row for row in self.cur.request( "SELECT distinct strPath,strFilename FROM Files WHERE idFile NOT IN (SELECT DISTINCT idFile FROM TagsInFiles) order by imagedatetime " )]
+            return [row for row in self.cur.request( "SELECT distinct strPath,strFilename, imagedatetime FROM Files WHERE idFile NOT IN (SELECT DISTINCT idFile FROM TagsInFiles) order by imagedatetime " )]
     
     
     def default_tagtypes_translation(self):
@@ -1432,7 +1432,7 @@ class MyPictureDB(object):
                 return self.cur.request("""SELECT count(distinct TagContent) FROM tagsInFiles tif, TagContents tc, TagTypes tt WHERE tif.idTagContent = tc.idTagContent AND tc.idTagType = tt.idTagType and length(trim(tt.TagTranslation))>0 and tt.idTagType =? """, (tagType,) )[0][0]
             else:
                 return self.cur.request("""SELECT count(*) FROM TagTypes where length(trim(TagTranslation))>0""" )[0][0]
-        except Exception,msg:
+        except Exception as msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
             return 0
             
@@ -1474,7 +1474,7 @@ class MyPictureDB(object):
                 return self.cur.request("""select count(distinct idFile) from  TagContents tc, TagsInFiles tif, TagTypes tt  where tc.idTagContent = tif.idTagContent and tc.TagContent = ? and tc.idTagType = tt.idTagType and tt.TagTranslation = ? """,(kw, tagType))[0][0]
             else:
                 return self.cur.request("""SELECT count(*) FROM Files WHERE idFile not in (SELECT DISTINCT idFile FROM TagsInFiles)""" )[0][0]
-        except Exception,msg:
+        except Exception as msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
             return 0
     
@@ -1509,7 +1509,7 @@ class MyPictureDB(object):
             else:
                 count = self.cur.request("""select count(*) from Files f, Folders p where f.idFolder=p.idFolder and p.FullPath like '%s%%' %s"""%(folderPath, rating_select))[0][0]            
             
-        except Exception,msg:
+        except Exception as msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
         
         return count
@@ -1597,7 +1597,7 @@ class MyPictureDB(object):
                 Emodifier = "''"
                 Smodifier = "''"
         
-            request = """SELECT strPath,strFilename FROM Files WHERE ImageDateTime BETWEEN %s AND %s """%(Smodifier, Emodifier) + rating_select + """ ORDER BY ImageDateTime ASC"""
+            request = """SELECT strPath,strFilename, ImageDateTime FROM Files WHERE ImageDateTime BETWEEN %s AND %s """%(Smodifier, Emodifier) + rating_select + """ ORDER BY ImageDateTime ASC"""
         else:
             if DateEnd[1]=="%Y-%m-%d":
                 Emodifier = "'start of day','+1 days','-1 minutes'"
@@ -1612,7 +1612,7 @@ class MyPictureDB(object):
                 Emodifier = "''"
                 Smodifier = "''"
         
-            request = """SELECT strPath,strFilename FROM Files WHERE datetime(ImageDateTime) BETWEEN datetime('%s',%s) AND datetime('%s',%s)"""%(DS,Smodifier,DE,Emodifier) + rating_select + """ ORDER BY ImageDateTime ASC"""
+            request = """SELECT strPath,strFilename, ImageDateTime FROM Files WHERE datetime(ImageDateTime) BETWEEN datetime('%s',%s) AND datetime('%s',%s)"""%(DS,Smodifier,DE,Emodifier) + rating_select + """ ORDER BY ImageDateTime ASC"""
         return [row for row in self.cur.request(request)]
 
         
@@ -1633,9 +1633,9 @@ class MyPictureDB(object):
                 print_exc()
                 #log ("pics_for_period ( periodtype = ['date'|'month'|'year'] , date = corresponding to the period (year|year-month|year-month-day)")
             if min_rating > 0:
-                request = """SELECT strPath,strFilename FROM Files WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') >= '%s' AND ImageDateTime BETWEEN %s AND %s ORDER BY ImageDateTime ASC"""%(min_rating, sdate, edate)
+                request = """SELECT strPath,strFilename, ImageDateTime FROM Files WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') >= '%s' AND ImageDateTime BETWEEN %s AND %s ORDER BY ImageDateTime ASC"""%(min_rating, sdate, edate)
             else:
-                request = """SELECT strPath,strFilename FROM Files WHERE ImageDateTime BETWEEN %s AND %s ORDER BY ImageDateTime ASC"""%(sdate, edate)
+                request = """SELECT strPath,strFilename, ImageDateTime FROM Files WHERE ImageDateTime BETWEEN %s AND %s ORDER BY ImageDateTime ASC"""%(sdate, edate)
         else:
             try:
                 sdate,modif1,modif2 = {'year' :['%s-01-01'%date,'start of year','+1 years'],
@@ -1645,9 +1645,9 @@ class MyPictureDB(object):
                 print_exc()
                 #log ("pics_for_period ( periodtype = ['date'|'month'|'year'] , date = corresponding to the period (year|year-month|year-month-day)")
             if min_rating > 0:
-                request = """SELECT strPath,strFilename FROM Files WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') >= '%s' AND datetime(ImageDateTime) BETWEEN datetime('%s','%s') AND datetime('%s','%s','%s') ORDER BY ImageDateTime ASC;"""%(min_rating,sdate,modif1,sdate,modif1,modif2)
+                request = """SELECT strPath,strFilename, ImageDateTime FROM Files WHERE COALESCE(case ImageRating when '' then '0' else ImageRating end,'0') >= '%s' AND datetime(ImageDateTime) BETWEEN datetime('%s','%s') AND datetime('%s','%s','%s') ORDER BY ImageDateTime ASC;"""%(min_rating,sdate,modif1,sdate,modif1,modif2)
             else:
-                request = """SELECT strPath,strFilename FROM Files WHERE datetime(ImageDateTime) BETWEEN datetime('%s','%s') AND datetime('%s','%s','%s') ORDER BY ImageDateTime ASC;"""%(sdate,modif1,sdate,modif1,modif2)
+                request = """SELECT strPath,strFilename, ImageDateTime FROM Files WHERE datetime(ImageDateTime) BETWEEN datetime('%s','%s') AND datetime('%s','%s','%s') ORDER BY ImageDateTime ASC;"""%(sdate,modif1,sdate,modif1,modif2)
         return [row for row in self.cur.request(request)]
 
 
@@ -1729,7 +1729,7 @@ class MyPictureDB(object):
             (rows, ) = [row for (row,) in self.cur.request( "SELECT coalesce(ImageDateTime, '0') FROM Files WHERE strPath=? AND strFilename=? ",(path,filename) )]
 
             return str(rows)
-        except Exception,msg:
+        except Exception as msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
             return None
 
@@ -1738,7 +1738,7 @@ class MyPictureDB(object):
         try:
             (date, rating) = [row for row in self.cur.request( "SELECT coalesce(ImageDateTime, '0'), ImageRating FROM Files WHERE strPath=? AND strFilename=? ",(path,filename) )][0]
             return (date, rating)
-        except Exception,msg:
+        except Exception as msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
             return None
         

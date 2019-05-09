@@ -21,6 +21,10 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 __addonname__ = 'plugin.image.mypicsdb'
 
+
+from __future__ import print_function
+
+
 # xbmc modules
 import xbmc
 import resources.lib.common as common
@@ -316,7 +320,7 @@ class VFSScanner:
                 try:
 
                     self.mpdb.file_insert(path, filename, picentry, sqlupdate, filesha)
-                except Exception, msg:
+                except Exception as msg:
                     common.log("VFSScanner._addpath", 'Unable to insert picture "%s"'%pic, xbmc.LOGERROR)
                     common.log("VFSScanner._addpath", '"%s" - "%s"'%(Exception, msg), xbmc.LOGERROR)
                     continue
@@ -355,7 +359,7 @@ class VFSScanner:
                 
     
         """
-        except Exception,msg:
+        except Exception as msg:
             print_exc
             common.log( "VFSScanner._addpath", "pic = filename")
             pass
@@ -373,7 +377,7 @@ class VFSScanner:
                 exif = self._get_exif(fullpath)
                 picentry.update(exif)
                 common.log( "VFSScanner._get_metas()._get_exif()", "Finished reading EXIF tags")
-            except Exception,msg:
+            except Exception as msg:
                 common.log( "VFSScanner._get_metas()._get_exif()", "Exception", xbmc.LOGERROR)
                 common.log( "VFSScanner._get_metas()._get_exif()", msg, xbmc.LOGERROR)
 
@@ -386,7 +390,7 @@ class VFSScanner:
                 iptc = self._get_iptc(fullpath)
                 picentry.update(iptc)
                 common.log( "VFSScanner._get_metas()._get_iptc()", "Finished reading IPTC tags")
-            except Exception,msg:
+            except Exception as msg:
                 common.log( "VFSScanner._get_metas()_get_iptc()", "Exception", xbmc.LOGERROR)
                 common.log( "VFSScanner._get_metas()._get_iptc()", msg, xbmc.LOGERROR)
 
@@ -400,7 +404,7 @@ class VFSScanner:
                 xmp = self._get_xmp(fullpath)
                 picentry.update(xmp)
                 common.log( "VFSScanner._get_metas()._get_xmp()", "Finished reading XMP tags")
-            except Exception,msg:
+            except Exception as msg:
                 common.log( "VFSScanner._get_metas()._get_xmp()", "Exception", xbmc.LOGERROR)
                 common.log( "VFSScanner._get_metas()._get_xmp()", msg, xbmc.LOGERROR)
 
@@ -516,7 +520,7 @@ class VFSScanner:
                 # We've to open the file without memory mapped file support.
                 tags = EXIF_file(f, details=False)
                 common.log( "VFSScanner._get_exif()", 'EXIF_file without mmap support returned')
-            except Exception,msg:
+            except Exception as msg:
                 common.log("VFSScanner._get_exif", picfile , xbmc.LOGERROR)
                 common.log("VFSScanner._get_exif", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
                     
@@ -545,7 +549,7 @@ class VFSScanner:
                     tagvalue = tags[tag].__str__()
                 try:
                     picentry[tag]=tagvalue
-                except Exception, msg:
+                except Exception as msg:
                     common.log("VFSScanner._get_exif",  picfile , xbmc.LOGERROR)
                     common.log("VFSScanner._get_exif",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
                     
@@ -564,7 +568,7 @@ class VFSScanner:
 
             tags = xmpclass.get_xmp(os.path.dirname(fullpath), os.path.basename(fullpath))
 
-        except Exception, msg:
+        except Exception as msg:
             common.log("VFSScanner._get_xmp", 'Error reading XMP tags for "%s"'%(fullpath), xbmc.LOGERROR)
             common.log("VFSScanner._get_xmp",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
         
@@ -574,7 +578,7 @@ class VFSScanner:
 
         try:
             info = IPTCInfo(fullpath)
-        except Exception,msg:
+        except Exception as msg:
             if not type(msg.args[0])==type(int()):
                 if msg.args[0].startswith("No IPTC data found."):
                     return {}

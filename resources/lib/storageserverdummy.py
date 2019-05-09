@@ -21,7 +21,7 @@ class StorageServer:
         return ""
 
     def getMulti(self, name, items):
-        return ""
+        return "" 
 
     def lock(self, name):
         return False

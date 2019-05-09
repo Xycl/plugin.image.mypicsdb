@@ -20,7 +20,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import xbmc, xbmcgui
 import common
-from urllib2 import Request, urlopen
+from urllib2 import Request, urlopen 
 from urllib import urlencode
 from os.path import join,isfile,basename
 import os

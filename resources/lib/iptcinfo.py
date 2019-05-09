@@ -19,7 +19,7 @@ IPTCInfo - Python module for extracting and modifying IPTC image meta-data
 
 Ported from Josh Carter's Perl IPTCInfo-1.9.pm by Tamás Gulácsi
 
-Ever wish you add information to your photos like a caption, the place
+Ever wish you add information to your photos like a caption, the place 
 you took it, the date, and perhaps even keywords and categories? You
 already can. The International Press Telecommunications Council (IPTC)
 defines a format for exchanging meta-information in news content, and
@@ -440,7 +440,7 @@ def _getSetSomeList(name):
             self._data[name] = list(value)
         elif isinstance(value, basestring):
             self._data[name] = [value]
-            print 'Warning: IPTCInfo.%s is a list!' % name
+            print ('Warning: IPTCInfo.%s is a list!' % name)
         else:
             raise ValueError('IPTCInfo.%s is a list!' % name)
 
@@ -1366,4 +1366,4 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     if len(sys.argv) > 1:
         info = IPTCInfo(sys.argv[1])
-        print info
+        print (info)

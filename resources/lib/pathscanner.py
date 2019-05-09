@@ -19,7 +19,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
 
-import os, urllib
+import os, urllib 
 import xbmc, xbmcvfs
 import common
 import json
@@ -150,7 +150,7 @@ class Scanner(object):
                         else:
                             file_list.append(filename)
                             
-            except Exception,msg:
+            except Exception as msg:
                 common.log("Scanner.listdir", 'Path "%s"'%path, xbmc.LOGERROR )
                 common.log("Scanner.listdir", "%s - %s"%(Exception,msg), xbmc.LOGERROR )
                 

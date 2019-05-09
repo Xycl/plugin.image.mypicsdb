@@ -21,7 +21,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 import xbmc
 import xbmcgui
 import MypicsDB
-import common
+import common 
 
 
 STATUS_LABEL    = 100

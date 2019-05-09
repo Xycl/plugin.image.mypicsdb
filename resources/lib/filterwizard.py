@@ -19,7 +19,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
 import xbmc, xbmcgui
-from time import strftime,strptime
+from time import strftime,strptime 
 import datetime
 import MypicsDB
 import common

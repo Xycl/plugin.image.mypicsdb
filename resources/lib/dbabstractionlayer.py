@@ -12,7 +12,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
@@ -269,7 +269,7 @@ class BaseCursor(object):
                     except:
                         pass
                 self.connection.commit()
-            except Exception,msg:
+            except Exception as msg:
                 try:
                     common.log("Database abstraction layer",  "The request failed :", xbmc.LOGERROR )
                     common.log("Database abstraction layer",  "%s - %s"%(Exception,str(msg)), xbmc.LOGERROR )
@@ -286,7 +286,7 @@ class BaseCursor(object):
                         i=i+1
                 except:
                     pass
-        except Exception,msg:
+        except Exception as msg:
             try:
                 common.log("Database abstraction layer",  "The request failed :", xbmc.LOGERROR )
                 common.log("Database abstraction layer",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )

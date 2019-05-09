@@ -4,6 +4,10 @@
 
 __addonname__ = 'plugin.image.mypicsdb'
 
+
+from __future__ import print_function
+
+
 # common depends on __addonname__
 import resources.lib.common as common
 
@@ -23,8 +27,8 @@ try:
     # test json has not loads, call error
     if not hasattr( simplejson, "loads" ):
         raise Exception( "Hmmm! Error with json %r" % dir( simplejson ) )
-except Exception, e:
-    print "[MyPicsDB] %s" % str( e )
+except Exception as e:
+    print ("[MyPicsDB] %s" % str( e ))
     import simplejson
 
 # MikeBZH44: commoncache for MyPicsDB with 1 hour timeout
@@ -70,8 +74,10 @@ files_fields_description={"strFilename":common.getstring(30300),
 class _Info:
     def __init__( self, *args, **kwargs ):
         self.__dict__.update( kwargs )
+        
     def has_key(self, key):
         return key in self.__dict__
+    
     def __setitem__(self,key,value):
         self.__dict__[key]=value
 
@@ -100,8 +106,11 @@ class Main:
         parm = self.cleanup(self.parm[ 1 : ])
         common.log("Main.get_args", parm)
 
-        args= "self.args = _Info(%s)" % ( parm )
-        exec args
+
+#TODO: possible Issue due to exec
+        #args= "self.args = _Info(%s)" % ( parm )
+        #exec args
+        self.args = _Info(parm)
         if not hasattr(self.args, 'page'):
             self.args.page=''
 
@@ -192,7 +201,7 @@ class Main:
                 
                 if exiftime:
                     date = exiftime and strftime("%d.%m.%Y",strptime(exiftime,"%Y-%m-%d %H:%M:%S")) or ""
-            except Exception,msg:
+            except Exception as msg:
                 common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
             
 
@@ -270,7 +279,7 @@ class Main:
                 liz.addContextMenuItems(contextmenu,replacemenu)
 
             return xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=fullfilepath,listitem=liz,isFolder=False)
-        except Exception,msg:
+        except Exception as msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
 
     def change_view(self):
@@ -1112,7 +1121,7 @@ class Main:
                     MPDB.delete_root( self.args.delpath) 
                     if self.args.delpath != 'neverexistingpath':
                         common.show_notification(common.getstring(30000),common.getstring(30205),3000,join(home,"icon.png"))
-            except IndexError,msg:
+            except IndexError as msg:
                 common.log("Main.show_roots", 'delroot IndexError %s - %s'%( IndexError,msg), xbmc.LOGERROR )
 
         elif self.args.do=="rootclic":
@@ -1740,7 +1749,7 @@ class Main:
                             os.mkdir(join(dstpath,subfolder))
                             dstpath = join(dstpath,subfolder)
                             dirok = True
-                        except Exception,msg:
+                        except Exception as msg:
                             print_exc()
                             dialog.ok(common.getstring(30000),"Error#%s : %s"%msg.args)
                     else:

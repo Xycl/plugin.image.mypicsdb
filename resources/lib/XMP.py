@@ -19,7 +19,7 @@ tag_set = {'MPReg:PersonDisplayName' : 'MPReg:PersonDisplayName',
            'Iptc4xmpExt:Sublocation' : 'Iptc4xmpExt:Sublocation', 
            'Iptc4xmpExt:Event' : 'Iptc4xmpExt:Event', 
            'Iptc4xmpExt:WorldRegion' : 'Iptc4xmpExt:WorldRegion', 
-           'Iptc4xmpExt:ProvinceState' : 'Iptc4xmpExt:ProvinceState', 
+           'Iptc4xmpExt:ProvinceState' : 'Iptc4xmpExt:ProvinceState',  
            'Iptc4xmpExt:Event' : 'Iptc4xmpExt:Event', 
 
            'Iptc4xmpCore:Location' : 'Iptc4xmpCore:Location',
