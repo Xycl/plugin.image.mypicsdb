@@ -128,7 +128,15 @@ msgctxt "#30035"
 msgid "Number of pics per page"
 msgstr ""
 
-#empty strings from id 30036 to 30039
+msgctxt "#30036"
+msgid "Popup dialog during scan"
+msgstr ""
+
+msgctxt "#30037"
+msgid "Popup dialog at the end of scan"
+msgstr ""
+
+#empty strings from id 30038 to 30039
 
 msgctxt "#30040"
 msgid "Only display pictures with rating of at least"
