@@ -2,7 +2,7 @@
 ==================================================================================
 Don't change the plugin configuration unless you know what you do!
 
-a) You must add picture sources to XBMC
+a) You must add picture sources to kodi
 b) Within MyPicsDB (not in the configuration) select menu "Paths of pictures folders" to add these paths to the database.
 
 Excluding paths
@@ -24,10 +24,10 @@ a) You must create a database:
 CREATE DATABASE MyPicsDB CHARACTER SET utf8 COLLATE utf8_bin;
 
 b) Create a user (if not already done for music and movies):
-CREATE USER 'xbmc'@'%' IDENTIFIED BY 'xbmc';
+CREATE USER 'kodi'@'%' IDENTIFIED BY 'kodi';
 
 c) give him rights
-GRANT ALL ON *.* TO 'xbmc'@'%';
+GRANT ALL ON *.* TO 'kodi'@'%';
 
 d) Go to plugin settings and enable MySql. Set the correct user and password (they are case sensitive)!
 
@@ -54,16 +54,16 @@ This means that the already entered paths are still available and that you can s
 ==================================================================================
    Idea from Fungify 
    
-   To auto update the database you can use the following XBMC command:
-   RunScript("C:\Users\Name\AppData\Roaming\XBMC\addons\plugin.image.mypicsdb\scanpa​th.py",--database)
+   To auto update the database you can use the following kodi command:
+   RunScript("C:\Users\Name\AppData\Roaming\kodi\addons\plugin.image.mypicsdb\scanpa​th.py",--database)
    (Name is your Windows user!)
    
    Frodo:
-   Use the service "The Scheduler" (http://forum.xbmc.org/showthread.php?tid=144378) and create a custom built-in script with the above command.
+   Use the service "The Scheduler" (http://forum.kodi.org/showthread.php?tid=144378) and create a custom built-in script with the above command.
    
    Eden:
    Update MyPicsDB via HTTP API with a cron job.
-   wget --directory-prefix=tmp --http-user=<xbmc username> --http-passwd=<xbmc password> "http://Servername:Portnumber/xbmcCmds/xbmcHttp?command=ExecBuiltIn&parameter=XBMC.RunScript("<full path to plugin>\plugin.image.mypicsdb\scanpath.py",--database)
+   wget --directory-prefix=tmp --http-user=<kodi username> --http-passwd=<kodi password> "http://Servername:Portnumber/kodiCmds/kodiHttp?command=ExecBuiltIn&parameter=kodi.RunScript("<full path to plugin>\plugin.image.mypicsdb\scanpath.py",--database)
 
    
 6) For skinners
@@ -72,7 +72,7 @@ This means that the already entered paths are still available and that you can s
 
 a) For skinners, MyPicsDB can be called with following parameters to populate window properties :
 
-  XBMC.RunScript(plugin.image.mypicsdb,0,?action='setproperties'&method ='Latest|Random'&sort ='Shooted|Added'&limit=10)
+  kodi.RunScript(plugin.image.mypicsdb,0,?action='setproperties'&method ='Latest|Random'&sort ='Shooted|Added'&limit=10)
 
   Parameters are :
 
@@ -107,7 +107,7 @@ a) For skinners, MyPicsDB can be called with following parameters to populate wi
 
   b) To run a slideshow when user clicks on a picture :
 
-  <onclick>XBMC.RunScript(plugin.image.mypicsdb,0,?action='slideshow'&method='Random'&current=1)</onclick>
+  <onclick>kodi.RunScript(plugin.image.mypicsdb,0,?action='slideshow'&method='Random'&current=1)</onclick>
 
   Parameters :
 

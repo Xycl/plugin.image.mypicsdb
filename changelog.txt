@@ -118,7 +118,7 @@ Fix:    Background progress dialog.
 
 2014/05/15 --> v 12.3.13
 New:    MyPicsDB update window will be hidden when playing a Video - only in Gotham !!!
-New:    Possibility to include all XBMC pictures sources at once.
+New:    Possibility to include all Kodi pictures sources at once.
 Update: Language files from Transifex
 
 2014/03/18 --> v 12.3.12
@@ -188,7 +188,7 @@ Fix:    Debug message removed.
 Fix:    Load/Save and change Filter Wizard settings.
 
 2013/11/15 --> v 12.2.0
-New:    Support of Ruuk's Plugin Slideshow Screensaver ( HTTP://http://forum.xbmc.org/showthread.php?tid=153057 ).
+New:    Support of Ruuk's Plugin Slideshow Screensaver ( HTTP://http://forum.kodi.org/showthread.php?tid=153057 ).
 
 2013/10/29 --> v 12.1.7
 Update: Language files from Transifex.
@@ -434,7 +434,7 @@ Fix:    Synonym for Iptc4xmpCore:Country changed from 'Country' to 'Country Code
 Fix:    Skin set properties for picture categories produced an SQL error.
 
 2012/12/03 --> v 1.2.9
-Update: Changed version number to 3 digits due to request from XBMC team.
+Update: Changed version number to 3 digits due to request from kodi team.
 
 2012/12/03 --> v 1.2.8.4
 Fix:    Fanart picture for list items removed.
@@ -586,7 +586,7 @@ New:    New tag filter wizard.
 
 2012/04/16 --> v 0.7.0
 Update: XMP parser stabilised and corrected.
-Update: New french translation by mikebzh44 from forum.xbmc.org.
+Update: New french translation by mikebzh44 from forum.kodi.org.
 Fixed:  Tags and TagTypes count(*) select corrected.
 
 2012/04/12 --> v 0.6.9
@@ -618,7 +618,7 @@ Fixed:  DB init error.
 Fixed:  Changed string dutch & french string.xml from id 30201 till id 30213.
 
 2012/03/23 --> v 0.6.2
-Fixed:  Changed string handling. Internally only unicodes are used which are encoded/decoded for use with xbmc or filesystem.
+Fixed:  Changed string handling. Internally only unicodes are used which are encoded/decoded for use with kodi or filesystem.
 Update: Dutch translations by mhdebokx.
 
 2012/03/13 --> v 0.6.1
@@ -689,7 +689,7 @@ New way to select pictures to add in the database.
 2010/09/08 --> v 0.1.2
 -the uggly log system was missing a file preventing plugin to start.
   (the log system is not used now, need to remove it later)
--the database is now stored in the XBMC\userdata\Database directory, just next to myvideos, mymusic, myprograms databases
+-the database is now stored in the kodi\userdata\Database directory, just next to myvideos, mymusic, myprograms databases
 -the userdata/addon_data was not setted correctly.
 
 2010/09/07 --> v 0.1.1
@@ -699,5 +699,5 @@ First beta dharma release as version 0.1.1
 First attempt in porting the plugin to the new dharma addon system
 
 2010/07/29
-Very first version just before xbmc dharma release : beta 1
+Very first version just before kodi dharma release : beta 1
 
